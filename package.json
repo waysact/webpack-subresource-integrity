@@ -1,0 +1,44 @@
+{
+  "name": "webpack-subresource-integrity",
+  "version": "0.1.0",
+  "description": "Webpack plugin for ensuring subresource integrity",
+  "main": "index",
+  "scripts": {
+    "test": "karma start",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waysact/webpack-subresource-integrity.git"
+  },
+  "keywords": [
+    "webpack",
+    "plugin",
+    "sri",
+    "subresource",
+    "integrity"
+  ],
+  "author": "Julian Scheid <julian@waysact.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/waysact/webpack-subresource-integrity/issues"
+  },
+  "homepage": "https://github.com/waysact/webpack-subresource-integrity#readme",
+  "dependencies": {
+    "webpack-core": "^0.6.8"
+  },
+  "devDependencies": {
+    "babel-eslint": "^4.1.6",
+    "eslint": "^1.10.3",
+    "eslint-config-airbnb-es5": "^1.0.8",
+    "eslint-plugin-react": "^3.12.0",
+    "expect": "^1.13.4",
+    "karma": "^0.13.15",
+    "karma-chrome-launcher": "^0.2.2",
+    "karma-firefox-launcher": "^0.1.7",
+    "karma-mocha": "^0.2.1",
+    "karma-webpack": "^1.7.0",
+    "mocha": "^2.3.4",
+    "webpack": "^1.12.6"
+  }
+}
