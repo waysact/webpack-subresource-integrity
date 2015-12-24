@@ -10,10 +10,8 @@ Integrity is ensured automatically for lazy-loaded chunks (loaded via
 [support for SRI](http://caniuse.com/#feat=subresource-integrity).
 
 It's your responsibility to include the `integrity` attribute in the
-HTML for top-level chunks.
-[Obviously](https://en.wikipedia.org/wiki/Merkle_tree), SRI for
-lazy-loaded chunks is pointless unless integrity of the top-level
-chunks is ensured as well.
+HTML for top-level chunks.  Obviously, SRI for lazy-loaded chunks is
+pointless unless integrity of the top-level chunks is ensured as well.
 
 ## Usage
 
