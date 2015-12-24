@@ -51,7 +51,6 @@ module.exports = function karmaConfig(config) {
       'Chrome',
       'Firefox'
     ],
-    singleRun: true,
     frameworks: [
       'mocha'
     ],

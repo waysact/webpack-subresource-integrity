@@ -4,7 +4,7 @@
   "description": "Webpack plugin for ensuring subresource integrity",
   "main": "index",
   "scripts": {
-    "test": "karma start",
+    "test": "karma start --single-run",
     "lint": "eslint ."
   },
   "repository": {
