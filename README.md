@@ -55,3 +55,15 @@ rel="stylesheet">` tags in your initial DOM.
 * This plugin uses some black magic and thus might break in arbitrary
   ways for future webpack releases, even point releases.  You have
   been warned.  Tested with webpack 1.12.9 and webpack-core 0.6.8.
+
+## Contributing
+
+If you have discovered a bug or have a feature suggestion, feel free to create an issue on Github.
+
+You are also welcome to correct any spelling mistakes or any language issues.
+
+## License
+
+Copyright (c) 2015 Waysact Pty Ltd
+
+MIT (see `LICENSE`)
