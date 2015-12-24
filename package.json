@@ -40,5 +40,11 @@
     "karma-webpack": "^1.7.0",
     "mocha": "^2.3.4",
     "webpack": "^1.12.6"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md",
+    "index.js"
+  ]
 }
