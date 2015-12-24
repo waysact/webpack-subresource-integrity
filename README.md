@@ -1,5 +1,7 @@
 # webpack-subresource-integrity
 
+[![Build Status](https://travis-ci.org/waysact/webpack-subresource-integrity.svg?branch=master)](https://travis-ci.org/waysact/webpack-subresource-integrity)
+
 A Webpack plugin for ensuring
 [subresource integrity](http://www.w3.org/TR/SRI/).
 
