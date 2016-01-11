@@ -60,6 +60,6 @@ You are also welcome to correct any spelling mistakes or any language issues.
 
 ## License
 
-Copyright (c) 2015 Waysact Pty Ltd
+Copyright (c) 2015, 2016 Waysact Pty Ltd
 
 MIT (see [`LICENSE`](LICENSE))
