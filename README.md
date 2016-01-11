@@ -62,4 +62,4 @@ You are also welcome to correct any spelling mistakes or any language issues.
 
 Copyright (c) 2015 Waysact Pty Ltd
 
-MIT (see `LICENSE`)
+MIT (see [`LICENSE`](LICENSE))
