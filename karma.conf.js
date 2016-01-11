@@ -27,7 +27,7 @@ function nextCreate(filesPromise, serveStaticFile, basePath, urlRoot, client) {
   return function nextMiddleware(request, response, next) {
     var requestUrl = request.normalizedUrl.replace(/\?.*/, '');
     requestUrl = requestUrl.substr(urlRoot.length - 1);
-    if (requestUrl === '/context.html') {
+    if (requestUrl === '/context.html' && toplevelIntegrity && toplevelIntegrity.startsWith('sha')) {
       var prevWrite = response.write;
       response.write = function nextWrite(chunk, encoding) {
         var nextChunk = chunk.replace(
