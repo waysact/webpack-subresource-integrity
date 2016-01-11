@@ -18,30 +18,13 @@ function WebIntegrityJsonpMainTemplatePlugin() {}
 
 WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(mainTemplate) {
   /*
-   *  Patch require-ensure code to add the integrity attribute.
-   *
-   *  It would be nice to add the integrity attribute through an
-   *  official hook, but none exists currently.  The alternative of
-   *  replacing the entire lazy loading infrastructure isn't
-   *  desirable either.
+   *  Patch jsonp-script code to add the integrity attribute.
    */
-  mainTemplate.plugin('require-ensure', function requireEnsurePlugin(source) {
-    var regex = /^([\t ]*)head\.appendChild\(script\);$/gm;
-    var match = regex.exec(source);
-    if (!match) {
-      throw new Error('No match found, you seem to be using an incompatible webpack version');
-    }
-
-    if (regex.exec(source)) {
-      throw new Error('Multiple matches found, you seem to be using an incompatible webpack version');
-    }
-
-    var head = source.substring(0, match.index);
-    var tail = source.substring(match.index);
-    return head +
-      match[1] +
-      'script.integrity = sriHashes[chunkId];\n' +
-      tail;
+  mainTemplate.plugin('jsonp-script', function jsonpScriptPlugin(source) {
+    return this.asString([
+      source,
+      'script.integrity = sriHashes[chunkId];',
+    ]);
   });
 
   /*

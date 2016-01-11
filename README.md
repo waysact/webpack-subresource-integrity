@@ -52,10 +52,6 @@ rel="stylesheet">` tags in your initial DOM.
   characters.  You might want to hold off using SRI if you need to
   support older Chrome versions.
 
-* This plugin uses some black magic and thus might break in arbitrary
-  ways for future webpack releases, even point releases.  You have
-  been warned.  Tested with webpack 1.12.9 and webpack-core 0.6.8.
-
 ## Contributing
 
 If you have discovered a bug or have a feature suggestion, feel free to create an issue on Github.
