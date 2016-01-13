@@ -128,7 +128,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
         }
       });
 
-      Array.forEach(Object.values(assets), function forEachAsset(asset) {
+      Object.values(assets).forEach(function forEachAsset(asset) {
         if (!asset.integrity) {
           asset.integrity = computeIntegrity(asset.source());
         }
