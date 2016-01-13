@@ -23,7 +23,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(mainTemplat
   mainTemplate.plugin('jsonp-script', function jsonpScriptPlugin(source) {
     return this.asString([
       source,
-      'script.integrity = sriHashes[chunkId];',
+      'script.integrity = sriHashes[chunkId];'
     ]);
   });
 
@@ -67,6 +67,14 @@ function SubresourceIntegrityPlugin(algorithms) {
 
 SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
   var algorithms = this.algorithms;
+
+  function computeIntegrity(source) {
+    return algorithms.map(function mapAlgo(algo) {
+      var hash = crypto.createHash(algo).update(source, 'utf8').digest('base64');
+      return algo + '-' + hash;
+    }).join(' ');
+  }
+
   compiler.plugin('compilation', function compilationPlugin(compilation) {
     /*
      * Double plug-in registration in order to push our
@@ -109,11 +117,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
           assets[chunkFile] = newAsset;
 
           var newSource = newAsset.source();
-          hashByChunkId[chunk.id] = newAsset.integrity =
-            algorithms.map(function mapAlgo(algo) {
-              var hash = crypto.createHash(algo).update(newSource, 'utf8').digest('base64');
-              return algo + '-' + hash;
-            }).join(' ');
+          hashByChunkId[chunk.id] = newAsset.integrity = computeIntegrity(newSource);
         }
         return [ chunk.id ].concat(depChunkIds);
       }
@@ -121,6 +125,12 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       compilation.chunks.forEach(function forEachChunk(chunk) {
         if (chunk.entry) {
           processChunkRecursive(chunk);
+        }
+      });
+
+      Array.forEach(Object.values(assets), function forEachAsset(asset) {
+        if (!asset.integrity) {
+          asset.integrity = computeIntegrity(asset.source());
         }
       });
 

@@ -41,8 +41,8 @@ not copied over by webpack's stats module so you'll have to access the
         var integrity = stats.compilation.assets[stats.toJson().assetsByChunkName.main].integrity;
     });
 
-Use that value to generate the `<script>` and `<link
-rel="stylesheet">` tags in your initial DOM.
+Use that value to generate the `<script>` and `<link>` tags in your
+initial DOM.
 
 ## Caveats
 

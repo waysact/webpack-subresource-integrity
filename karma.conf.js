@@ -1,7 +1,8 @@
 var SriPlugin = require('./index');
 var karmaMiddleware = require('karma/lib/middleware/karma');
 
-var toplevelIntegrity;
+var toplevelScriptIntegrity;
+var stylesheetIntegrity;
 
 /*
  *  Simple webpack plugin that records the top-level chunk's integrity
@@ -10,9 +11,14 @@ var toplevelIntegrity;
 function GetIntegrityPlugin() {}
 GetIntegrityPlugin.prototype.apply = function apply(compiler) {
   compiler.plugin('done', function donePlugin(stats) {
-    var asset = stats.compilation.assets['test/test.js'];
+    var asset;
+    asset = stats.compilation.assets['test/test.js'];
     if (asset) {
-      toplevelIntegrity = asset.integrity;
+      toplevelScriptIntegrity = asset.integrity;
+    }
+    asset = stats.compilation.assets['stylesheet.css'];
+    if (asset) {
+      stylesheetIntegrity = asset.integrity;
     }
   });
 };
@@ -27,12 +33,20 @@ function nextCreate(filesPromise, serveStaticFile, basePath, urlRoot, client) {
   return function nextMiddleware(request, response, next) {
     var requestUrl = request.normalizedUrl.replace(/\?.*/, '');
     requestUrl = requestUrl.substr(urlRoot.length - 1);
-    if (requestUrl === '/context.html' && toplevelIntegrity && toplevelIntegrity.startsWith('sha')) {
+    if (requestUrl === '/context.html' &&
+        toplevelScriptIntegrity &&
+        toplevelScriptIntegrity.startsWith('sha') &&
+        stylesheetIntegrity &&
+        stylesheetIntegrity.startsWith('sha')) {
       var prevWrite = response.write;
       response.write = function nextWrite(chunk, encoding) {
         var nextChunk = chunk.replace(
           'src="/base/test/test.js',
-          'integrity="' + toplevelIntegrity + '" src="/base/test/test.js');
+          'integrity="' + toplevelScriptIntegrity + '" src="/base/test/test.js');
+        nextChunk = nextChunk.replace(
+          'rel="stylesheet"',
+          'rel="stylesheet" integrity="' + stylesheetIntegrity + '"'
+        );
         prevWrite.call(response, nextChunk, encoding);
       };
     }
@@ -55,7 +69,8 @@ module.exports = function karmaConfig(config) {
       'mocha'
     ],
     files: [
-      'test/test.js'
+      'test/test.js',
+      'test/stylesheet.css'
     ],
     preprocessors: {
       'test/test.js': ['webpack']
@@ -71,6 +86,13 @@ module.exports = function karmaConfig(config) {
         new SriPlugin(['sha256', 'sha384']),
         new GetIntegrityPlugin()
       ],
+      module: {
+        loaders: [{
+          test: /\.css$/,
+          loader: 'file-loader?name=stylesheet.css'
+        }]
+      },
+
       devtool: 'source-map' // to force multiple files per chunk
     }
   });
