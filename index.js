@@ -128,11 +128,14 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
         }
       });
 
-      Object.values(assets).forEach(function forEachAsset(asset) {
-        if (!asset.integrity) {
-          asset.integrity = computeIntegrity(asset.source());
+      for (var key in assets) {
+        if (assets.hasOwnProperty(key)) {
+          var asset = assets[key];
+          if (!asset.integrity) {
+            asset.integrity = computeIntegrity(asset.source());
+          }
         }
-      });
+      }
 
       callback();
     });
