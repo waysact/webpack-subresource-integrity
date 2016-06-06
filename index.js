@@ -80,9 +80,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
      * Double plug-in registration in order to push our
      * plugin to the end of the plugin stack.
      */
-    compiler.plugin('this-compilation', function thisCompilationPlugin(thisCompilation) {
-      thisCompilation.mainTemplate.apply(new WebIntegrityJsonpMainTemplatePlugin());
-    });
+    thisCompilation.mainTemplate.apply(new WebIntegrityJsonpMainTemplatePlugin());
 
     /*
      *  Calculate SRI values for each chunk and replace the magic
