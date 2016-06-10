@@ -1,5 +1,5 @@
 var crypto = require('crypto');
-var path = require('path')
+var path = require('path');
 var ReplaceSource = require('webpack-core/lib/ReplaceSource');
 
 function makePlaceholder(id) {
@@ -80,30 +80,28 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
   /* html-webpack-plugin has added an event so we can pre-process the html tags before they
    inject them. This does the work.
    */
-  function processTag(tag,compilation)
-  {
+  function processTag(tag, compilation) {
     if (!tag.attributes) return;
     var src =  tag.attributes.href; // link tags have href
-    if (!src)
+    if (!src) {
       src = tag.attributes.src; // script tags have src
-    if (!src)
-      return;
-    var base = path.basename(src);
-    var asset = compilation.assets[base]
-    if (asset && asset.integrity)
-    {
-      tag.attributes.integrity= asset.integrity;
-      tag.attributes.crossorigin = "anonymous";
     }
-
+    if (!src) {
+      return;
+    }
+    var base = path.basename(src);
+    var asset = compilation.assets[base];
+    if (asset && asset.integrity) {
+      tag.attributes.integrity = asset.integrity;
+      tag.attributes.crossorigin = 'anonymous';
+    }
   }
-  function supportHtmlWebpack(compilation,pluginArgs,callback)
-  {
-    pluginArgs.head.forEach(function(tag) {
-      processTag(tag,compilation);
+  function supportHtmlWebpack(compilation, pluginArgs, callback) {
+    pluginArgs.head.forEach(function ptag(tag) {
+      processTag(tag, compilation);
     });
-    pluginArgs.body.forEach(function(tag) {
-      processTag(tag,compilation);
+    pluginArgs.body.forEach(function ptag(tag) {
+      processTag(tag, compilation);
     });
     callback(null);
   }
@@ -177,7 +175,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
      *  html-webpack support:
      *    Modify the asset tags before webpack injects them for anything with an integrity value.
      */
-    compilation.plugin('html-webpack-plugin-alter-asset-tags', supportHtmlWebpack.bind(this,compilation));
+    compilation.plugin('html-webpack-plugin-alter-asset-tags', supportHtmlWebpack.bind(this, compilation));
   });
 };
 
