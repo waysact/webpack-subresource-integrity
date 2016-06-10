@@ -35,9 +35,9 @@
     "expect": "^1.13.4",
     "file-loader": "^0.8.5",
     "karma": "^0.13.15",
-    "karma-chrome-launcher": "^0.2.2",
-    "karma-firefox-launcher": "^0.1.7",
-    "karma-mocha": "^0.2.1",
+    "karma-chrome-launcher": "^1.0.1",
+    "karma-firefox-launcher": "^1.0.0",
+    "karma-mocha": "^1.0.1",
     "karma-webpack": "^1.7.0",
     "mocha": "^2.3.4",
     "webpack": "^1.12.11"
