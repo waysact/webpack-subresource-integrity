@@ -1,4 +1,5 @@
 var crypto = require('crypto');
+var path = require('path')
 var ReplaceSource = require('webpack-core/lib/ReplaceSource');
 
 function makePlaceholder(id) {
@@ -65,6 +66,7 @@ function SubresourceIntegrityPlugin(algorithms) {
   }
 }
 
+
 SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
   var algorithms = this.algorithms;
 
@@ -73,6 +75,37 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       var hash = crypto.createHash(algo).update(source, 'utf8').digest('base64');
       return algo + '-' + hash;
     }).join(' ');
+  }
+
+  /* html-webpack-plugin has added an event so we can pre-process the html tags before they
+   inject them. This does the work.
+   */
+  function processTag(tag,compilation)
+  {
+    if (!tag.attributes) return;
+    var src =  tag.attributes.href; // link tags have href
+    if (!src)
+      src = tag.attributes.src; // script tags have src
+    if (!src)
+      return;
+    var base = path.basename(src);
+    var asset = compilation.assets[base]
+    if (asset && asset.integrity)
+    {
+      tag.attributes.integrity= asset.integrity;
+      tag.attributes.crossorigin = "anonymous";
+    }
+
+  }
+  function supportHtmlWebpack(compilation,pluginArgs,callback)
+  {
+    pluginArgs.head.forEach(function(tag) {
+      processTag(tag,compilation);
+    });
+    pluginArgs.body.forEach(function(tag) {
+      processTag(tag,compilation);
+    });
+    callback(null);
   }
 
   compiler.plugin('compilation', function compilationPlugin(compilation) {
@@ -139,6 +172,12 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
 
       callback();
     });
+
+    /*
+     *  html-webpack support:
+     *    Modify the asset tags before webpack injects them for anything with an integrity value.
+     */
+    compilation.plugin('html-webpack-plugin-alter-asset-tags', supportHtmlWebpack.bind(this,compilation));
   });
 };
 
