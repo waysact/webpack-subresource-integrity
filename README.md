@@ -13,6 +13,7 @@ It's your responsibility to include the `integrity` attribute in the
 HTML for top-level chunks.  Obviously, SRI for lazy-loaded chunks is
 pointless unless integrity of the top-level chunks is ensured as well.
 
+
 ## Usage
 
 ### Installing the Plugin
@@ -43,6 +44,29 @@ not copied over by webpack's stats module so you'll have to access the
 
 Use that value to generate the `<script>` and `<link>` tags in your
 initial DOM.
+
+#### integrity for html-webpack-plugin users
+
+The plugin installs a hook for 'html-webpack-plugin' that does this for 
+you automatically if you're using injection. (This requires version 2.21.0 or greater.)
+
+If you're using a template with 'html-webpack-plugin'
+you need to generate the integrity and crossorigin attributes using something like this:
+
+
+    <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
+    <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>" 
+        <% var basename = path.basename(htmlWebpackPlugin.files.chunks[chunk].entry);
+              if (compilation.assets[basename] && 
+                    compilation.assets[basename].integrity) {%>
+        integrity = "<%= compilation.assets[basename].integrity %>"
+        crossorigin="anonymous"
+        <% } %>
+        ></script>
+    <% } %>
+    
+The above assumes that you have path.basename() available from your template. 
+
 
 ## Caveats
 
