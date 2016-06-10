@@ -56,6 +56,9 @@ initial DOM.
 
 If you have discovered a bug or have a feature suggestion, feel free to create an issue on Github.
 
+Pull requests are welcome. Please run `npm test` and `npm run lint` on
+your branch before submitting it.
+
 You are also welcome to correct any spelling mistakes or any language issues.
 
 ## License
