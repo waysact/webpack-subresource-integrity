@@ -95,6 +95,11 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       tag.attributes.integrity = asset.integrity;
       tag.attributes.crossorigin = 'anonymous';
     }
+    else {
+      compilation.errors.push(new Error(
+          "webpack-subresource-integrity: cannot determine hash for asset '" +
+          base + "', the resource will be unprotected."));
+    }
   }
   function supportHtmlWebpack(compilation, pluginArgs, callback) {
     pluginArgs.head.forEach(function ptag(tag) {
