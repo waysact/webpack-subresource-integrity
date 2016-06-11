@@ -16,7 +16,8 @@
     "plugin",
     "sri",
     "subresource",
-    "integrity"
+    "integrity",
+    "html-webpack-plugin"
   ],
   "author": "Julian Scheid <julian@waysact.com>",
   "license": "MIT",
