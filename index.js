@@ -77,39 +77,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
     }).join(' ');
   }
 
-  /* html-webpack-plugin has added an event so we can pre-process the html tags before they
-   inject them. This does the work.
-   */
-  function processTag(tag, compilation) {
-    if (!tag.attributes) return;
-    var src =  tag.attributes.href; // link tags have href
-    if (!src) {
-      src = tag.attributes.src; // script tags have src
-    }
-    if (!src) {
-      return;
-    }
-    var base = path.basename(src);
-    var asset = compilation.assets[base];
-    if (asset && asset.integrity) {
-      tag.attributes.integrity = asset.integrity;
-      tag.attributes.crossorigin = 'anonymous';
-    }
-    else {
-      compilation.errors.push(new Error(
-          "webpack-subresource-integrity: cannot determine hash for asset '" +
-          base + "', the resource will be unprotected."));
-    }
-  }
-  function supportHtmlWebpack(compilation, pluginArgs, callback) {
-    pluginArgs.head.forEach(function ptag(tag) {
-      processTag(tag, compilation);
-    });
-    pluginArgs.body.forEach(function ptag(tag) {
-      processTag(tag, compilation);
-    });
-    callback(null);
-  }
+
 
   compiler.plugin('compilation', function compilationPlugin(compilation) {
     /*
@@ -176,10 +144,48 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       callback();
     });
 
+    function getTagSrc(tag) {
+      // Get asset path - src from scripts and href from links
+      return tag.attributes.href || tag.attributes.src;
+    }
+
+
+    function filterTag(tag) {
+      // Process only script and link tags with a url
+      return (tag.tagName === 'script' || tag.tagName === 'link') && getTagSrc(tag);
+    }
+    function getIntegrityChecksumForAsset(src) {
+      var asset = compilation.assets[path.basename(src)];
+      return  asset && asset.integrity;
+    }
+
+    function processTag(tag) {
+      var checksum = getIntegrityChecksumForAsset(getTagSrc(tag));
+      if (!checksum) {
+        compilation.errors.push(new Error(
+            "webpack-subresource-integrity: cannot determine hash for asset '" +
+            src + "', the resource will be unprotected."));
+        return;
+      }
+      // Add integrity check sums
+      tag.attributes.integrity = checksum;
+      tag.attributes.crossorigin = 'anonymous';
+    }
+
+    function supportHtmlWebpack(compilation, pluginArgs, callback) {
+      /* html-webpack-plugin has added an event so we can pre-process the html tags before they
+       inject them. This does the work.
+       */
+
+
+      pluginArgs.head.filter(filterTag).forEach(processTag);
+      pluginArgs.body.filter(filterTag).forEach(processTag);
+      callback(null);
+    }
     /*
-     *  html-webpack support:
-     *    Modify the asset tags before webpack injects them for anything with an integrity value.
-     */
+      *  html-webpack support:
+      *    Modify the asset tags before webpack injects them for anything with an integrity value.
+      */
     compilation.plugin('html-webpack-plugin-alter-asset-tags', supportHtmlWebpack.bind(this, compilation));
   });
 };
