@@ -3,20 +3,24 @@
 [![Build Status](https://travis-ci.org/waysact/webpack-subresource-integrity.svg?branch=master)](https://travis-ci.org/waysact/webpack-subresource-integrity)
 
 A Webpack plugin for ensuring
-[subresource integrity](http://www.w3.org/TR/SRI/).
+[subresource integrity](http://www.w3.org/TR/SRI/) on
+[supported browsers](http://caniuse.com/#feat=subresource-integrity).
 
 Integrity is ensured automatically for lazy-loaded chunks (loaded via
-`require.ensure`) on browsers that have
-[support for SRI](http://caniuse.com/#feat=subresource-integrity).
+`require.ensure`).
 
 It's your responsibility to include the `integrity` attribute in the
 HTML for top-level chunks.  Obviously, SRI for lazy-loaded chunks is
 pointless unless integrity of the top-level chunks is ensured as well.
 
+[html-webpack-plugin](https://github.com/ampedandwired/html-webpack-plugin)
+users can get the `integrity` attribute set automatically, see below.
 
 ## Usage
 
 ### Installing the Plugin
+
+    $ npm install webpack-subresource-integrity --save-dev
 
 Pass an array of
 [hash algorithms](http://www.w3.org/TR/SRI/#cryptographic-hash-functions)
@@ -35,38 +39,46 @@ to the plugin constructor:
 
 The correct value for the `integrity` attribute can be retrieved from
 the `integrity` property of webpack assets.  However, that property is
-not copied over by webpack's stats module so you'll have to access the
-"original" asset on the `compilation` object.  Something like this:
+not copied over by webpack's `stats` module so you'll have to access
+the "original" asset on the `compilation` object.  Something like
+this:
 
     compiler.plugin("done", stats => {
         var integrity = stats.compilation.assets[stats.toJson().assetsByChunkName.main].integrity;
     });
 
-Use that value to generate the `<script>` and `<link>` tags in your
-initial DOM.
+Use that value to generate the `integrity` attribute for tags such as
+`<script>` and `<link>`.  Note that you are also
+[required to set the `crossorigin` attribute](https://www.w3.org/TR/SRI/#cross-origin-data-leakage).
 
-#### integrity for html-webpack-plugin users
+#### `html-webpack-plugin` Integration
 
-The plugin installs a hook for 'html-webpack-plugin' that does this for 
-you automatically if you're using injection. (This requires version 2.21.0 or greater.)
+The plugin installs a hook for `html-webpack-plugin` that adds the
+`integrity` attribute automatically when using injection. (This
+requires version `2.21.0` or later.)  The `crossorigin` attribute will
+be set to `anonymous` in this case.
 
-If you're using a template with 'html-webpack-plugin'
-you need to generate the integrity and crossorigin attributes using something like this:
+If you're using a template with `html-webpack-plugin` you need to
+generate the `integrity` and `crossorigin` attributes using something
+like this:
 
+```ejs
+<% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
+  <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>"
 
-    <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
-    <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>" 
-        <% var basename = path.basename(htmlWebpackPlugin.files.chunks[chunk].entry);
-              if (compilation.assets[basename] && 
-                    compilation.assets[basename].integrity) {%>
-        integrity = "<%= compilation.assets[basename].integrity %>"
-        crossorigin="anonymous"
-        <% } %>
-        ></script>
+    <% var basename = path.basename(htmlWebpackPlugin.files.chunks[chunk].entry);
+       if (compilation.assets[basename] && compilation.assets[basename].integrity) { %>
+
+          integrity="<%= compilation.assets[basename].integrity %>"
+          crossorigin="anonymous"
+
     <% } %>
-    
-The above assumes that you have path.basename() available from your template. 
+  ></script>
+<% } %>
+```
 
+(The above assumes that you have `path.basename()` available from your
+template.)
 
 ## Caveats
 
