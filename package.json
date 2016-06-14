@@ -1,6 +1,6 @@
 {
   "name": "webpack-subresource-integrity",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Webpack plugin for ensuring subresource integrity",
   "main": "index",
   "scripts": {
