@@ -8,6 +8,38 @@ var select = require('soupselect').select;
 var expect = require('expect');
 var tmp = require('tmp');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
+
+describe('webpack-subresource-integrity', function describe() {
+  it('should handle circular dependencies gracefully', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    function cleanup() {
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      tmpDir.removeCallback();
+    }
+    var webpackConfig = {
+      entry: {
+        chunk1: path.join(__dirname, './chunk1.js'),
+        chunk2: path.join(__dirname, './chunk2.js')
+      },
+      output: {
+        path: tmpDir.name
+      },
+      plugins: [
+        new CommonsChunkPlugin({ name: 'chunk1', chunks: ['chunk2'] }),
+        new CommonsChunkPlugin({ name: 'chunk2', chunks: ['chunk1'] }),
+        new SriPlugin(['sha256', 'sha384'])
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      cleanup();
+
+      expect(result.compilation.assets['bundle.js'].integrity).toMatch(/^sha/);
+
+      callback(err);
+    });
+  });
+});
 
 describe('html-webpack-plugin', function describe() {
   it('should warn when the checksum cannot be found', function it(callback) {

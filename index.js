@@ -92,8 +92,14 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
      */
     compilation.plugin('optimize-assets', function optimizeAssetsPlugin(assets, callback) {
       var hashByChunkId = {};
+      var visitedByChunkId = {};
       function processChunkRecursive(chunk) {
         var depChunkIds = [];
+
+        if (visitedByChunkId[chunk.id]) {
+          return [];
+        }
+        visitedByChunkId[chunk.id] = true;
 
         chunk.chunks.forEach(function mapChunk(depChunk) {
           depChunkIds = depChunkIds.concat(processChunkRecursive(depChunk));
