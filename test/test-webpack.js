@@ -10,6 +10,35 @@ var tmp = require('tmp');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 describe('html-webpack-plugin', function describe() {
+  it('should warn when the checksum cannot be found', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    function cleanup() {
+      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
+      fs.unlinkSync(path.join(tmpDir.name, 'test.png'));
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      tmpDir.removeCallback();
+    }
+    var webpackConfig = {
+      entry: path.join(__dirname, './a.js'),
+      output: {
+        path: tmpDir.name
+      },
+      plugins: [
+        new HtmlWebpackPlugin({ favicon: 'test/test.png' }),
+        new SriPlugin(['sha256', 'sha384'])
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.warnings.length).toEqual(1);
+      expect(result.compilation.warnings[0]).toBeAn(Error);
+      expect(result.compilation.warnings[0].message).toEqual(
+        "webpack-subresource-integrity: cannot determine hash for asset 'test.png', the resource will be unprotected."
+      );
+      cleanup();
+      callback(err);
+    });
+  });
+
   it('should include integrity attributes in output', function it(callback) {
     var tmpDir = tmp.dirSync();
     function cleanup() {

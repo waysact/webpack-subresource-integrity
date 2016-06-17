@@ -162,7 +162,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       var src = getTagSrc(tag);
       var checksum = getIntegrityChecksumForAsset(src);
       if (!checksum) {
-        compilation.errors.push(new Error(
+        compilation.warnings.push(new Error(
             "webpack-subresource-integrity: cannot determine hash for asset '" +
             src + "', the resource will be unprotected."));
         return;
