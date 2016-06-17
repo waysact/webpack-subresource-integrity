@@ -29,7 +29,7 @@ describe('html-webpack-plugin', function describe() {
         ]
       },
       plugins: [
-        new HtmlWebpackPlugin(),
+        new HtmlWebpackPlugin({ hash: true }),
         new ExtractTextPlugin('styles.css'),
         new SriPlugin(['sha256', 'sha384'])
       ]

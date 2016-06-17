@@ -144,7 +144,8 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
 
     function getTagSrc(tag) {
       // Get asset path - src from scripts and href from links
-      return tag.attributes.href || tag.attributes.src;
+      var src = tag.attributes.href || tag.attributes.src;
+      return src && src.replace(/\?[a-zA-Z0-9]+$/, '');
     }
 
     function filterTag(tag) {
