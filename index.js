@@ -77,8 +77,6 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
     }).join(' ');
   }
 
-
-
   compiler.plugin('compilation', function compilationPlugin(compilation) {
     /*
      * Double plug-in registration in order to push our
@@ -149,18 +147,19 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       return tag.attributes.href || tag.attributes.src;
     }
 
-
     function filterTag(tag) {
       // Process only script and link tags with a url
       return (tag.tagName === 'script' || tag.tagName === 'link') && getTagSrc(tag);
     }
+
     function getIntegrityChecksumForAsset(src) {
       var asset = compilation.assets[path.basename(src)];
-      return  asset && asset.integrity;
+      return asset && asset.integrity;
     }
 
     function processTag(tag) {
-      var checksum = getIntegrityChecksumForAsset(getTagSrc(tag));
+      var src = getTagSrc(tag);
+      var checksum = getIntegrityChecksumForAsset(src);
       if (!checksum) {
         compilation.errors.push(new Error(
             "webpack-subresource-integrity: cannot determine hash for asset '" +
@@ -172,11 +171,10 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       tag.attributes.crossorigin = 'anonymous';
     }
 
-    function supportHtmlWebpack(compilation, pluginArgs, callback) {
+    function supportHtmlWebpack(pluginArgs, callback) {
       /* html-webpack-plugin has added an event so we can pre-process the html tags before they
        inject them. This does the work.
        */
-
 
       pluginArgs.head.filter(filterTag).forEach(processTag);
       pluginArgs.body.filter(filterTag).forEach(processTag);
@@ -186,7 +184,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       *  html-webpack support:
       *    Modify the asset tags before webpack injects them for anything with an integrity value.
       */
-    compilation.plugin('html-webpack-plugin-alter-asset-tags', supportHtmlWebpack.bind(this, compilation));
+    compilation.plugin('html-webpack-plugin-alter-asset-tags', supportHtmlWebpack);
   });
 };
 
