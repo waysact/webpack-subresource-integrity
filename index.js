@@ -131,7 +131,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       }
 
       compilation.chunks.forEach(function forEachChunk(chunk) {
-        if (chunk.entry) {
+        if (('hasRuntime' in chunk && chunk.hasRuntime()) || chunk.entry) {
           processChunkRecursive(chunk);
         }
       });
