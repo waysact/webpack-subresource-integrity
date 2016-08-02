@@ -131,6 +131,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       }
 
       compilation.chunks.forEach(function forEachChunk(chunk) {
+        // chunk.entry was removed in Webpack 2. Use hasRuntime() for this check instead (if it exists)
         if (('hasRuntime' in chunk && chunk.hasRuntime()) || chunk.entry) {
           processChunkRecursive(chunk);
         }
