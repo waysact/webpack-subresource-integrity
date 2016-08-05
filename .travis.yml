@@ -4,14 +4,14 @@ node_js:
 addons:
   firefox: latest
 env:
-  - SUFFIX=
-  - SUFFIX=@beta
+  - WEBPACK_SUFFIX=
+  - WEBPACK_SUFFIX=@beta
 install:
   - npm install --ignore-scripts
   - npm rm webpack
   - npm rm extract-text-webpack-plugin
-  - npm install "webpack""$SUFFIX" --ignore-scripts
-  - npm install "extract-text-webpack-plugin""$SUFFIX" --ignore-scripts
+  - npm install "webpack""$WEBPACK_SUFFIX" --ignore-scripts || true
+  - npm install "extract-text-webpack-plugin""$WEBPACK_SUFFIX" --ignore-scripts || true
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
