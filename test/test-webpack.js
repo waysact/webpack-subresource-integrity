@@ -23,7 +23,8 @@ describe('webpack-subresource-integrity', function describe() {
         chunk2: path.join(__dirname, './chunk2.js')
       },
       output: {
-        path: tmpDir.name
+        path: tmpDir.name,
+        filename: 'bundle.js'
       },
       plugins: [
         new CommonsChunkPlugin({ name: 'chunk1', chunks: ['chunk2'] }),
@@ -53,7 +54,8 @@ describe('html-webpack-plugin', function describe() {
     var webpackConfig = {
       entry: path.join(__dirname, './a.js'),
       output: {
-        path: tmpDir.name
+        path: tmpDir.name,
+        filename: 'bundle.js'
       },
       plugins: [
         new HtmlWebpackPlugin({ favicon: 'test/test.png' }),
@@ -82,7 +84,8 @@ describe('html-webpack-plugin', function describe() {
     var webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
-        path: tmpDir.name
+        path: tmpDir.name,
+        filename: 'bundle.js'
       },
       module: {
         loaders: [
