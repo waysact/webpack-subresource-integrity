@@ -8,6 +8,7 @@ var select = require('soupselect').select;
 var expect = require('expect');
 var tmp = require('tmp');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var ExtractTextPluginVersion = require('extract-text-webpack-plugin/package.json').version;
 var CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
 
 describe('webpack-subresource-integrity', function describe() {
@@ -81,6 +82,14 @@ describe('html-webpack-plugin', function describe() {
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       tmpDir.removeCallback();
     }
+    var extractTextLoader;
+    if (ExtractTextPluginVersion.match(/^1\./)) {
+      // extract-text-webpack-plugin 1.x
+      extractTextLoader = ExtractTextPlugin.extract('style-loader', 'css-loader');
+    } else {
+      // extract-text-webpack-plugin 2.x
+      extractTextLoader = ExtractTextPlugin.extract({ fallbackLoader: 'style-loader', loader: 'css-loader' });
+    }
     var webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
@@ -89,7 +98,7 @@ describe('html-webpack-plugin', function describe() {
       },
       module: {
         loaders: [
-          { test: /\.css$/, loader: ExtractTextPlugin.extract('style-loader', 'css-loader') }
+          { test: /\.css$/, loader: extractTextLoader }
         ]
       },
       plugins: [
