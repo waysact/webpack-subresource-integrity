@@ -1,6 +1,6 @@
 {
   "name": "webpack-subresource-integrity",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Webpack plugin for ensuring subresource integrity (SRI)",
   "main": "index",
   "scripts": {
