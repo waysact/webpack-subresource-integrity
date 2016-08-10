@@ -17,7 +17,7 @@ module.exports = function chunk2(callback) {
     Array.prototype.slice.call(document.getElementsByTagName('link')).forEach(forEachElement);
     expect(resourcesWithIntegrity).toInclude('stylesheet.css');
     expect(resourcesWithIntegrity).toInclude('test.js');
-    expect(resourcesWithIntegrity.filter(function filter(item) { return item.match(/^\d+\.chunk.js$/); }).length).toBe(2);
+    expect(resourcesWithIntegrity.filter(function filter(item) { return item.match(/^\d+\.(chunk|bundle).js$/); }).length).toBe(2);
     expect(window.getComputedStyle(document.getElementsByTagName('body')[0]).backgroundColor).toEqual('rgb(200, 201, 202)');
     callback();
   } catch (e) {
