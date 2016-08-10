@@ -161,28 +161,32 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
     }
 
     function getIntegrityChecksumForAsset(src) {
-      var asset = compilation.assets[path.basename(src)];
+      var asset = compilation.assets[src];
       return asset && asset.integrity;
-    }
-
-    function processTag(tag) {
-      var src = getTagSrc(tag);
-      var checksum = getIntegrityChecksumForAsset(src);
-      if (!checksum) {
-        compilation.warnings.push(new Error(
-            "webpack-subresource-integrity: cannot determine hash for asset '" +
-            src + "', the resource will be unprotected."));
-        return;
-      }
-      // Add integrity check sums
-      tag.attributes.integrity = checksum;
-      tag.attributes.crossorigin = 'anonymous';
     }
 
     function supportHtmlWebpack(pluginArgs, callback) {
       /* html-webpack-plugin has added an event so we can pre-process the html tags before they
        inject them. This does the work.
-       */
+      */
+      var htmlOutputDir = path.dirname(pluginArgs.plugin.options.filename);
+
+      function processTag(tag) {
+        var src = path.relative(compiler.options.output.path,
+                                path.resolve(compiler.options.output.path,
+                                             htmlOutputDir,
+                                             getTagSrc(tag)));
+        var checksum = getIntegrityChecksumForAsset(src);
+        if (!checksum) {
+          compilation.warnings.push(new Error(
+            "webpack-subresource-integrity: cannot determine hash for asset '" +
+              src + "', the resource will be unprotected."));
+          return;
+        }
+        // Add integrity check sums
+        tag.attributes.integrity = checksum;
+        tag.attributes.crossorigin = 'anonymous';
+      }
 
       pluginArgs.head.filter(filterTag).forEach(processTag);
       pluginArgs.body.filter(filterTag).forEach(processTag);
