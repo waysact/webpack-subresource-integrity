@@ -64,21 +64,13 @@ like this:
 
 ```ejs
 <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
-  <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>"
-
-    <% var basename = path.basename(htmlWebpackPlugin.files.chunks[chunk].entry);
-       if (compilation.assets[basename] && compilation.assets[basename].integrity) { %>
-
-          integrity="<%= compilation.assets[basename].integrity %>"
+  <% var src = htmlWebpackPlugin.files.chunks[chunk].entry; %>
+  <script src="<%= src %>"
+          integrity="<%= compilation.assets[src].integrity %>"
           crossorigin="anonymous"
-
-    <% } %>
   ></script>
 <% } %>
 ```
-
-(The above assumes that you have `path.basename()` available from your
-template.)
 
 ## Caveats
 
