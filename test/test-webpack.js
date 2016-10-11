@@ -169,6 +169,7 @@ describe('html-webpack-plugin', function describe() {
         cleanup();
         callback(err);
       }
+      expect(result.compilation.warnings).toEqual([]);
       var jsIntegrity = result.compilation.assets['subdir/bundle.js'].integrity;
       expect(jsIntegrity).toMatch(/^sha/);
 
@@ -188,6 +189,53 @@ describe('html-webpack-plugin', function describe() {
       });
       var parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'assets/admin.html'), 'utf-8'));
+    });
+  });
+
+  it('should work when setting publicPath', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    function cleanup() {
+      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      tmpDir.removeCallback();
+    }
+    var webpackConfig = {
+      entry: path.join(__dirname, './dummy.js'),
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js',
+        publicPath: '/'
+      },
+      plugins: [
+        new HtmlWebpackPlugin(),
+        new SriPlugin(['sha256', 'sha384'])
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      if (err) {
+        cleanup();
+        callback(err);
+      }
+      expect(result.compilation.warnings).toEqual([]);
+      var jsIntegrity = result.compilation.assets['bundle.js'].integrity;
+      expect(jsIntegrity).toMatch(/^sha/);
+
+      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+        if (error) {
+          cleanup();
+          callback(error);
+        } else {
+          var scripts = select(dom, 'script');
+          expect(scripts.length).toEqual(1);
+          expect(scripts[0].attribs.crossorigin).toEqual('anonymous');
+          expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
+
+          cleanup();
+          callback();
+        }
+      });
+      var parser = new htmlparser.Parser(handler);
+      parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
     });
   });
 });

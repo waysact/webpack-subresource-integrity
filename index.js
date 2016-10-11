@@ -175,7 +175,8 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
         var src = path.relative(compiler.options.output.path,
                                 path.resolve(compiler.options.output.path,
                                              htmlOutputDir,
-                                             getTagSrc(tag)));
+                                             path.relative(compiler.options.output.publicPath || '',
+                                                           getTagSrc(tag))));
         var checksum = getIntegrityChecksumForAsset(src);
         if (!checksum) {
           compilation.warnings.push(new Error(
