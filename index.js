@@ -191,7 +191,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
 
       pluginArgs.head.filter(filterTag).forEach(processTag);
       pluginArgs.body.filter(filterTag).forEach(processTag);
-      callback(null);
+      callback(null, pluginArgs);
     }
     /*
       *  html-webpack support:
