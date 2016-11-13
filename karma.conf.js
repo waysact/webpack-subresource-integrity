@@ -28,8 +28,8 @@ GetIntegrityPlugin.prototype.apply = function apply(compiler) {
  *  loading the top-level chunk.
  */
 var prevCreate = karmaMiddleware.create;
-function nextCreate(filesPromise, serveStaticFile, basePath, urlRoot, client) {
-  var prevMiddleware = prevCreate(filesPromise, serveStaticFile, basePath, urlRoot, client);
+function nextCreate(filesPromise, serveStaticFile, serveFile, injector, basePath, urlRoot, upstreamProxy) {
+  var prevMiddleware = prevCreate(filesPromise, serveStaticFile, serveFile, injector, basePath, urlRoot, upstreamProxy);
   return function nextMiddleware(request, response, next) {
     var requestUrl = request.normalizedUrl.replace(/\?.*/, '');
     requestUrl = requestUrl.substr(urlRoot.length - 1);
