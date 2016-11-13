@@ -11,6 +11,15 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var ExtractTextPluginVersion = require('extract-text-webpack-plugin/package.json').version;
 var CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
 
+function createExtractTextLoader() {
+  if (ExtractTextPluginVersion.match(/^1\./)) {
+    // extract-text-webpack-plugin 1.x
+    return ExtractTextPlugin.extract('style-loader', 'css-loader');
+  }
+  // extract-text-webpack-plugin 2.x
+  return ExtractTextPlugin.extract({ fallbackLoader: 'style-loader', loader: 'css-loader' });
+}
+
 describe('webpack-subresource-integrity', function describe() {
   it('should handle circular dependencies gracefully', function it(callback) {
     var tmpDir = tmp.dirSync();
@@ -82,14 +91,6 @@ describe('html-webpack-plugin', function describe() {
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       tmpDir.removeCallback();
     }
-    var extractTextLoader;
-    if (ExtractTextPluginVersion.match(/^1\./)) {
-      // extract-text-webpack-plugin 1.x
-      extractTextLoader = ExtractTextPlugin.extract('style-loader', 'css-loader');
-    } else {
-      // extract-text-webpack-plugin 2.x
-      extractTextLoader = ExtractTextPlugin.extract({ fallbackLoader: 'style-loader', loader: 'css-loader' });
-    }
     var webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
@@ -98,7 +99,7 @@ describe('html-webpack-plugin', function describe() {
       },
       module: {
         loaders: [
-          { test: /\.css$/, loader: extractTextLoader }
+          { test: /\.css$/, loader: createExtractTextLoader() }
         ]
       },
       plugins: [
@@ -189,6 +190,72 @@ describe('html-webpack-plugin', function describe() {
       });
       var parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'assets/admin.html'), 'utf-8'));
+    });
+  });
+
+  it('should work with subdirectories and a custom template', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    function cleanup() {
+      fs.unlinkSync(path.join(tmpDir.name, 'admin.html'));
+      fs.unlinkSync(path.join(tmpDir.name, 'subdir/styles.css'));
+      fs.unlinkSync(path.join(tmpDir.name, 'subdir/bundle.js'));
+      fs.rmdirSync(path.join(tmpDir.name, 'subdir'));
+      tmpDir.removeCallback();
+    }
+    var webpackConfig = {
+      entry: path.join(__dirname, './dummy.js'),
+      output: {
+        path: tmpDir.name,
+        filename: 'subdir/bundle.js'
+      },
+      module: {
+        loaders: [
+          { test: /\.css$/, loader: createExtractTextLoader() }
+        ]
+      },
+      plugins: [
+        new HtmlWebpackPlugin({
+          hash: true,
+          inject: false,
+          filename: 'admin.html',
+          template: path.join(__dirname, 'index.ejs')
+        }),
+        new ExtractTextPlugin('subdir/styles.css'),
+        new SriPlugin(['sha256', 'sha384'])
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      if (err) {
+        cleanup();
+        callback(err);
+      }
+      expect(result.compilation.warnings).toEqual([]);
+      var jsIntegrity = result.compilation.assets['subdir/bundle.js'].integrity;
+      expect(jsIntegrity).toMatch(/^sha/);
+      var cssIntegrity = result.compilation.assets['subdir/styles.css'].integrity;
+      expect(cssIntegrity).toMatch(/^sha/);
+
+      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+        if (error) {
+          cleanup();
+          callback(error);
+        } else {
+          var scripts = select(dom, 'script');
+          expect(scripts.length).toEqual(1);
+          expect(scripts[0].attribs.crossorigin).toEqual('anonymous');
+          expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
+
+          var links = select(dom, 'link');
+          expect(links.length).toEqual(1);
+          expect(links[0].attribs.crossorigin).toEqual('anonymous');
+          expect(links[0].attribs.integrity).toEqual(cssIntegrity);
+
+          cleanup();
+          callback();
+        }
+      });
+      var parser = new htmlparser.Parser(handler);
+      parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'admin.html'), 'utf-8'));
     });
   });
 

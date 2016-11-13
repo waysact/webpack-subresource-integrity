@@ -15,6 +15,17 @@ function findDepChunks(chunk, allDepChunkIds) {
   });
 }
 
+function htmlWebpackAssetSrc(compiler, htmlWebpackPlugin, src) {
+  return path.relative(
+    compiler.options.output.path,
+    path.resolve(
+      compiler.options.output.path,
+      path.dirname(htmlWebpackPlugin.options.filename),
+      path.relative(
+        compiler.options.output.publicPath || '',
+        src.replace(/\?[a-zA-Z0-9]+$/, ''))));
+}
+
 function WebIntegrityJsonpMainTemplatePlugin() {}
 
 WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(mainTemplate) {
@@ -151,8 +162,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
 
     function getTagSrc(tag) {
       // Get asset path - src from scripts and href from links
-      var src = tag.attributes.href || tag.attributes.src;
-      return src && src.replace(/\?[a-zA-Z0-9]+$/, '');
+      return tag.attributes.href || tag.attributes.src;
     }
 
     function filterTag(tag) {
@@ -165,18 +175,12 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       return asset && asset.integrity;
     }
 
-    function supportHtmlWebpack(pluginArgs, callback) {
+    function alterAssetTags(pluginArgs, callback) {
       /* html-webpack-plugin has added an event so we can pre-process the html tags before they
        inject them. This does the work.
       */
-      var htmlOutputDir = path.dirname(pluginArgs.plugin.options.filename);
-
       function processTag(tag) {
-        var src = path.relative(compiler.options.output.path,
-                                path.resolve(compiler.options.output.path,
-                                             htmlOutputDir,
-                                             path.relative(compiler.options.output.publicPath || '',
-                                                           getTagSrc(tag))));
+        var src = htmlWebpackAssetSrc(compiler, pluginArgs.plugin, getTagSrc(tag));
         var checksum = getIntegrityChecksumForAsset(src);
         if (!checksum) {
           compilation.warnings.push(new Error(
@@ -193,11 +197,32 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       pluginArgs.body.filter(filterTag).forEach(processTag);
       callback(null, pluginArgs);
     }
+
+    function beforeHtmlGeneration(pluginArgs, callback) {
+      var fileTypes = ['js', 'css'];
+      for (var i = 0; i < fileTypes.length; i++) {
+        var fileType = fileTypes[i];
+        var fileTypeIntegrityKey = fileType + 'Integrity';
+        pluginArgs.assets[fileTypeIntegrityKey] = [];
+        for (var j = 0; j < pluginArgs.assets[fileType].length; j++) {
+          var filePath = pluginArgs.assets[fileType][j];
+          var src = htmlWebpackAssetSrc(compilation.compiler,
+                                        pluginArgs.plugin,
+                                        filePath);
+          pluginArgs.assets[fileTypeIntegrityKey].push(
+            compilation.assets[src].integrity);
+        }
+      }
+
+      callback(null);
+    }
+
     /*
-      *  html-webpack support:
-      *    Modify the asset tags before webpack injects them for anything with an integrity value.
-      */
-    compilation.plugin('html-webpack-plugin-alter-asset-tags', supportHtmlWebpack);
+     *  html-webpack support:
+     *    Modify the asset tags before webpack injects them for anything with an integrity value.
+     */
+    compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
+    compilation.plugin('html-webpack-plugin-before-html-generation', beforeHtmlGeneration);
   });
 };
 
