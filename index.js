@@ -217,22 +217,20 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
       callback(null, pluginArgs);
     }
 
+    /*  Add jsIntegrity and cssIntegrity properties to pluginArgs, to
+     *  go along with js and css properties.  These are later
+     *  accessible on `htmlWebpackPlugin.files`.
+     */
     function beforeHtmlGeneration(pluginArgs, callback) {
-      var fileTypes = ['js', 'css'];
-      for (var i = 0; i < fileTypes.length; i++) {
-        var fileType = fileTypes[i];
-        var fileTypeIntegrityKey = fileType + 'Integrity';
-        pluginArgs.assets[fileTypeIntegrityKey] = [];
-        for (var j = 0; j < pluginArgs.assets[fileType].length; j++) {
-          var filePath = pluginArgs.assets[fileType][j];
-          var src = hwpSrcRelativeOutputPath(compilation.compiler,
-                                             pluginArgs.plugin,
-                                        filePath);
-          pluginArgs.assets[fileTypeIntegrityKey].push(
-            compilation.assets[src].integrity);
-        }
-      }
-
+      ['js', 'css'].forEach(function addIntegrity(fileType) {
+        pluginArgs.assets[fileType + 'Integrity'] =
+          pluginArgs.assets[fileType].map(function assetIntegrity(filePath) {
+            var src = hwpSrcRelativeOutputPath(compilation.compiler,
+                                               pluginArgs.plugin,
+                                               filePath);
+            return compilation.assets[src].integrity;
+          });
+      });
       callback(null);
     }
 
