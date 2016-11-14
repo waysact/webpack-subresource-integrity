@@ -54,21 +54,27 @@ Use that value to generate the `integrity` attribute for tags such as
 #### `html-webpack-plugin` Integration
 
 The plugin installs a hook for `html-webpack-plugin` that adds the
-`integrity` attribute automatically when using injection. (This
-requires version `2.21.0` or later.)  The `crossorigin` attribute will
-be set to `anonymous` in this case.
+`integrity` attribute automatically when `inject: true` (the default).
+This requires `html-webpack-plugin` version `2.21.0` or later.  The
+`crossorigin` attribute will be set to `anonymous` in this case.
 
-If you're using a template with `html-webpack-plugin` you need to
-generate the `integrity` and `crossorigin` attributes using something
-like this:
+If you're using a template with `html-webpack-plugin` and with
+`inject: false`, you can generate the attributes as follows:
 
 ```ejs
-<% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
-  <% var src = htmlWebpackPlugin.files.chunks[chunk].entry; %>
-  <script src="<%= src %>"
-          integrity="<%= compilation.assets[src].integrity %>"
+<% for (var index in htmlWebpackPlugin.files.js) { %>
+  <script src="<%= htmlWebpackPlugin.files.js[index] %>"
+          integrity="<%= htmlWebpackPlugin.files.jsIntegrity[index] %>"
           crossorigin="anonymous"
   ></script>
+<% } %>
+
+<% for (var index in htmlWebpackPlugin.files.css) { %>
+  <link href="<%= htmlWebpackPlugin.files.css[index] %>"
+        integrity="<%= htmlWebpackPlugin.files.cssIntegrity[index] %>"
+        rel="stylesheet"
+        crossorigin="anonymous"
+  >
 <% } %>
 ```
 
