@@ -231,7 +231,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
             return compilation.assets[src].integrity;
           });
       });
-      callback(null);
+      callback(null, pluginArgs);
     }
 
     /*
