@@ -134,6 +134,11 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
 
             var oldSource = assets[chunkFile].source();
 
+            if (oldSource.indexOf('webpackHotUpdate') >= 0) {
+              compilation.warnings.push(new Error(
+                'webpack-subresource-integrity: chunks loaded by HMR are unprotected.'));
+            }
+
             var newAsset = new ReplaceSource(assets[chunkFile]);
 
             depChunkIds.forEach(function forEachChunk(depChunkId) {

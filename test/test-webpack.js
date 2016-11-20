@@ -156,6 +156,34 @@ describe('webpack-subresource-integrity', function describe() {
          });
        });
   });
+
+  it('should warn when used with HMR', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    function cleanup(err) {
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      tmpDir.removeCallback();
+      callback(err);
+    }
+    var webpackConfig = {
+      entry: path.join(__dirname, './dummy.js'),
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js'
+      },
+      plugins: [
+        new webpack.HotModuleReplacementPlugin(),
+        new SriPlugin(['sha256', 'sha384'])
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.warnings.length).toEqual(1);
+      expect(result.compilation.warnings[0]).toBeAn(Error);
+      expect(result.compilation.warnings[0].message).toEqual(
+        'webpack-subresource-integrity: chunks loaded by HMR are unprotected.'
+      );
+      cleanup(err);
+    });
+  });
 });
 
 describe('html-webpack-plugin', function describe() {
