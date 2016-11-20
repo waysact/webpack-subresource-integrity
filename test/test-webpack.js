@@ -10,6 +10,7 @@ var tmp = require('tmp');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var ExtractTextPluginVersion = require('extract-text-webpack-plugin/package.json').version;
 var CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
+var crypto = require('crypto');
 
 function createExtractTextLoader() {
   if (ExtractTextPluginVersion.match(/^1\./)) {
@@ -49,6 +50,111 @@ describe('webpack-subresource-integrity', function describe() {
 
       callback(err);
     });
+  });
+
+  it('supports multiple compilation', function it(callback) {
+    var tmpDir = tmp.dirSync();
+
+    var mainJs = path.join(tmpDir.name, 'main.js');
+    var otherJs = path.join(tmpDir.name, 'other.js');
+
+    var oldOtherJsSource = 'console.log("hello");';
+    var newOtherJsSource = 'console.log("hello2");';
+
+    fs.writeFileSync(mainJs, 'require.ensure(["./other.js"], function(require) { require("./other.js"); });');
+    fs.writeFileSync(otherJs, oldOtherJsSource);
+
+    function cleanup(err) {
+      fs.unlinkSync(path.join(tmpDir.name, 'chunk.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'main.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'other.js'));
+      tmpDir.removeCallback();
+      callback(err);
+    }
+    var webpackConfig = {
+      entry: {
+        bundle: mainJs
+      },
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js',
+        chunkFilename: 'chunk.js'
+      },
+      plugins: [
+        new SriPlugin(['sha256', 'sha384'])
+      ]
+    };
+    var compiler = webpack(webpackConfig);
+    var watching;
+    var callbackCount = 0;
+    function handler(err) {
+      if (err) {
+        cleanup(err);
+        return;
+      }
+
+      if (callbackCount === 0) {
+        setTimeout(function updateCode() {
+          fs.writeFileSync(otherJs, newOtherJsSource);
+        }, 1000); // FIXME -- brittle and slow
+        callbackCount += 1;
+      } else if (callbackCount === 1) {
+        var chunkContents = fs.readFileSync(path.join(tmpDir.name, 'chunk.js'), 'utf-8');
+        var bundleContents = fs.readFileSync(path.join(tmpDir.name, 'bundle.js'), 'utf-8');
+
+        if (chunkContents.indexOf(newOtherJsSource) >= 0) {
+          callbackCount += 1;
+          watching.close(function afterClose() {
+            expect(bundleContents).toMatch(/script\.integrity =/);
+            var hash = crypto.createHash('sha256').update(chunkContents, 'utf8').digest('base64');
+            var regex = /sha256-([^ ]+)/g;
+            var match = regex.exec(bundleContents);
+            expect(match).toExist();
+            expect(match[1]).toEqual(hash);
+            expect(regex.exec(bundleContents)).toNotExist();
+            cleanup(err);
+          });
+        }
+      }
+    }
+    watching = compiler.watch({ aggregateTimeout: 0 }, handler);
+  });
+
+  [[0, 1], [1, 0]].forEach(function withPluginOrder(pluginOrder) {
+    var algo = 'sha256';
+    var plugins = [
+      new webpack.optimize.UglifyJsPlugin(),
+      new SriPlugin([algo])
+    ];
+    it('should work with plugin order ' + pluginOrder,
+       function it(callback) {
+         var tmpDir = tmp.dirSync();
+         function cleanup() {
+           fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+           tmpDir.removeCallback();
+         }
+         var webpackConfig = {
+           entry: path.join(__dirname, './dummy.js'),
+           output: {
+             path: tmpDir.name,
+             filename: 'bundle.js'
+           },
+           plugins: [
+             plugins[pluginOrder[0]],
+             plugins[pluginOrder[1]]
+           ]
+         };
+         webpack(webpackConfig, function webpackCallback(err, result) {
+           var source = fs.readFileSync(path.join(tmpDir.name, 'bundle.js'), 'utf8');
+           var hash = crypto.createHash(algo).update(source, 'utf8').digest('base64');
+           expect(result.compilation.assets['bundle.js'].integrity)
+             .toEqual(algo + '-' + hash);
+
+           cleanup();
+           callback(err);
+         });
+       });
   });
 });
 
