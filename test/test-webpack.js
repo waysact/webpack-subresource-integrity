@@ -439,4 +439,59 @@ describe('html-webpack-plugin', function describe() {
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
     });
   });
+
+  it('should work with output HTML in parent directory', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    var subDir = path.join(tmpDir.name, 'sub');
+
+    function cleanup() {
+      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
+      fs.unlinkSync(path.join(subDir, 'bundle.js'));
+      fs.rmdirSync(subDir);
+      tmpDir.removeCallback();
+    }
+    var webpackConfig = {
+      entry: {
+        main: path.join(__dirname, './dummy.js')
+      },
+      output: {
+        path: subDir,
+        filename: 'bundle.js',
+        publicPath: '/'
+      },
+      plugins: [
+        new HtmlWebpackPlugin({
+          filename: '../index.html',
+          chunks: ['main']
+        }),
+        new SriPlugin(['sha256', 'sha384'])
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      if (err) {
+        cleanup();
+        callback(err);
+      }
+      expect(result.compilation.warnings).toEqual([]);
+      var jsIntegrity = result.compilation.assets['bundle.js'].integrity;
+      expect(jsIntegrity).toMatch(/^sha/);
+
+      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+        if (error) {
+          cleanup();
+          callback(error);
+        } else {
+          var scripts = select(dom, 'script');
+          expect(scripts.length).toEqual(1);
+          expect(scripts[0].attribs.crossorigin).toEqual('anonymous');
+          expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
+
+          cleanup();
+          callback();
+        }
+      });
+      var parser = new htmlparser.Parser(handler);
+      parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
+    });
+  });
 });
