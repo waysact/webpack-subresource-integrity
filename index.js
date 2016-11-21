@@ -137,6 +137,16 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
         this.options.enabled = false;
         return;
       }
+      try {
+        crypto.createHash(hashFuncName);
+      } catch (error) {
+        this.error(
+          compilation,
+          'Cannot use hash function \'' + hashFuncName + '\': ' +
+            error.message);
+        this.options.enabled = false;
+        return;
+      }
       if (standardHashFuncNames.indexOf(hashFuncName) >= 0) {
         foundStandardHashFunc = true;
       }

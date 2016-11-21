@@ -271,6 +271,19 @@ describe('plugin options', function describe() {
     expect(plugin.options.enabled).toBeFalsy();
   });
 
+  it('errors if hash function names contains unsupported digest', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: ['frobnicate']
+    });
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(1);
+    expect(dummyCompilation.warnings.length).toBe(0);
+    expect(dummyCompilation.errors[0].message).toMatch(
+        /Cannot use hash function 'frobnicate': Digest method not supported/);
+    expect(plugin.options.enabled).toBeFalsy();
+  });
+
   it('errors if the crossorigin attribute is not a string', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256'],
