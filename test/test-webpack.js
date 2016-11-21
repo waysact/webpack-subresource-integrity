@@ -302,6 +302,28 @@ describe('plugin options', function describe() {
         /specified a value for the crossorigin option that is not part of the set of standard values/);
   });
 
+  it('accepts anonymous crossorigin without warning', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: ['sha256'],
+      crossorigin: 'anonymous'
+    });
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(0);
+  });
+
+  it('accepts use-credentials crossorigin without warning', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: ['sha256'],
+      crossorigin: 'use-credentials'
+    });
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(0);
+  });
+
   it('uses default options', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256']

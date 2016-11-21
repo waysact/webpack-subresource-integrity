@@ -6,7 +6,7 @@ var ReplaceSource = require('webpack-core/lib/ReplaceSource');
 var standardHashFuncNames = ['sha256', 'sha384', 'sha512'];
 
 // https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
-var standardCrossoriginOptions = ['crossorigin', 'anonymous'];
+var standardCrossoriginOptions = ['anonymous', 'use-credentials'];
 
 function makePlaceholder(id) {
   return '*-*-*-CHUNK-SRI-HASH-' + id + '-*-*-*';
