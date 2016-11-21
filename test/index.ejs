@@ -1,14 +1,14 @@
 <% for (var index in htmlWebpackPlugin.files.js) { %>
   <script src="<%= htmlWebpackPlugin.files.js[index] %>"
           integrity="<%= htmlWebpackPlugin.files.jsIntegrity[index] %>"
-          crossorigin="anonymous"
+          crossorigin="<%= htmlWebpackPlugin.options.sriCrossOrigin %>"
   ></script>
 <% } %>
 
 <% for (var index in htmlWebpackPlugin.files.css) { %>
   <link href="<%= htmlWebpackPlugin.files.css[index] %>"
         integrity="<%= htmlWebpackPlugin.files.cssIntegrity[index] %>"
+        crossorigin="<%= htmlWebpackPlugin.options.sriCrossOrigin %>"
         rel="stylesheet"
-        crossorigin="anonymous"
-  >
+  />
 <% } %>

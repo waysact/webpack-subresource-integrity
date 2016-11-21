@@ -40,7 +40,7 @@ describe('webpack-subresource-integrity', function describe() {
       plugins: [
         new CommonsChunkPlugin({ name: 'chunk1', chunks: ['chunk2'] }),
         new CommonsChunkPlugin({ name: 'chunk2', chunks: ['chunk1'] }),
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
@@ -82,7 +82,7 @@ describe('webpack-subresource-integrity', function describe() {
         chunkFilename: 'chunk.js'
       },
       plugins: [
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     var compiler = webpack(webpackConfig);
@@ -125,7 +125,7 @@ describe('webpack-subresource-integrity', function describe() {
     var algo = 'sha256';
     var plugins = [
       new webpack.optimize.UglifyJsPlugin(),
-      new SriPlugin([algo])
+      new SriPlugin({ hashFuncNames: [algo] })
     ];
     it('should work with plugin order ' + pluginOrder,
        function it(callback) {
@@ -172,17 +172,148 @@ describe('webpack-subresource-integrity', function describe() {
       },
       plugins: [
         new webpack.HotModuleReplacementPlugin(),
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
       expect(result.compilation.warnings.length).toEqual(1);
       expect(result.compilation.warnings[0]).toBeAn(Error);
-      expect(result.compilation.warnings[0].message).toEqual(
-        'webpack-subresource-integrity: chunks loaded by HMR are unprotected.'
-      );
+      expect(result.compilation.warnings[0].message).toMatch(
+          /Chunks loaded by HMR are unprotected./);
       cleanup(err);
     });
+  });
+
+  it('can be disabled', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    function cleanup(err) {
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      tmpDir.removeCallback();
+      callback(err);
+    }
+    var webpackConfig = {
+      entry: path.join(__dirname, './dummy.js'),
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js'
+      },
+      plugins: [
+        new SriPlugin({ hashFuncNames: ['sha256'], enabled: false })
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(typeof result.compilation.assets['bundle.js'].integrity).toBe('undefined');
+      cleanup(err);
+    });
+  });
+});
+
+describe('plugin options', function describe() {
+  it('supports legacy constructor with single hash function name', function it() {
+    var plugin = new SriPlugin('sha256');
+    expect(plugin.options.hashFuncNames).toEqual(['sha256']);
+    expect(plugin.options.deprecatedOptions).toBeTruthy();
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(1);
+    expect(dummyCompilation.warnings[0].message).toMatch(
+        /Passing a string or array to the plugin constructor is deprecated/);
+  });
+
+  it('supports legacy constructor with array of hash function names', function it() {
+    var plugin = new SriPlugin(['sha256', 'sha384']);
+    expect(plugin.options.hashFuncNames).toEqual(['sha256', 'sha384']);
+    expect(plugin.options.deprecatedOptions).toBeTruthy();
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(1);
+    expect(dummyCompilation.warnings[0].message).toMatch(
+        /Passing a string or array to the plugin constructor is deprecated/);
+  });
+
+  it('supports new constructor with array of hash function names', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: ['sha256', 'sha384']
+    });
+    expect(plugin.options.hashFuncNames).toEqual(['sha256', 'sha384']);
+    expect(plugin.options.deprecatedOptions).toBeFalsy();
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(0);
+  });
+
+  it('errors if hash function names is not an array', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: 'sha256'
+    });
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(1);
+    expect(dummyCompilation.warnings.length).toBe(0);
+    expect(dummyCompilation.errors[0].message).toMatch(
+        /options.hashFuncNames must be an array of hash function names, instead got 'sha256'/);
+    expect(plugin.options.enabled).toBeFalsy();
+  });
+
+  it('errors if hash function names contains non-string', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: [1234]
+    });
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(1);
+    expect(dummyCompilation.warnings.length).toBe(0);
+    expect(dummyCompilation.errors[0].message).toMatch(
+        /options.hashFuncNames must be an array of hash function names, but contained 1234/);
+    expect(plugin.options.enabled).toBeFalsy();
+  });
+
+  it('errors if the crossorigin attribute is not a string', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: ['sha256'],
+      crossorigin: 1234
+    });
+    expect(plugin.options.hashFuncNames).toEqual(['sha256']);
+    expect(plugin.options.deprecatedOptions).toBeFalsy();
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(1);
+    expect(dummyCompilation.warnings.length).toBe(0);
+    expect(dummyCompilation.errors[0].message).toMatch(
+        /options.crossorigin must be a string./);
+  });
+
+  it('warns if the crossorigin attribute is not recognized', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: ['sha256'],
+      crossorigin: 'foo'
+    });
+    expect(plugin.options.hashFuncNames).toEqual(['sha256']);
+    expect(plugin.options.crossorigin).toBe('foo');
+    expect(plugin.options.deprecatedOptions).toBeFalsy();
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(1);
+    expect(dummyCompilation.warnings[0].message).toMatch(
+        /specified a value for the crossorigin option that is not part of the set of standard values/);
+  });
+
+  it('uses default options', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: ['sha256']
+    });
+    expect(plugin.options.hashFuncNames).toEqual(['sha256']);
+    expect(plugin.options.crossorigin).toBe('anonymous');
+    expect(plugin.options.enabled).toBeTruthy();
+    expect(plugin.options.deprecatedOptions).toBeFalsy();
+    var dummyCompilation = { warnings: [], errors: [] };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(0);
   });
 });
 
@@ -203,14 +334,14 @@ describe('html-webpack-plugin', function describe() {
       },
       plugins: [
         new HtmlWebpackPlugin({ favicon: 'test/test.png' }),
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
       expect(result.compilation.warnings.length).toEqual(1);
       expect(result.compilation.warnings[0]).toBeAn(Error);
       expect(result.compilation.warnings[0].message).toEqual(
-        "webpack-subresource-integrity: cannot determine hash for asset 'test.png', the resource will be unprotected."
+        "webpack-subresource-integrity: Cannot determine hash for asset 'test.png', the resource will be unprotected."
       );
       cleanup();
       callback(err);
@@ -239,7 +370,7 @@ describe('html-webpack-plugin', function describe() {
       plugins: [
         new HtmlWebpackPlugin({ hash: true }),
         new ExtractTextPlugin('styles.css'),
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
@@ -276,6 +407,48 @@ describe('html-webpack-plugin', function describe() {
     });
   });
 
+  it('should use the crossorigin configuration option', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    function cleanup() {
+      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      tmpDir.removeCallback();
+    }
+    var webpackConfig = {
+      entry: path.join(__dirname, './dummy.js'),
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js'
+      },
+      plugins: [
+        new HtmlWebpackPlugin(),
+        new SriPlugin({ hashFuncNames: ['sha256'], crossorigin: 'foo' })
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err) {
+      if (err) {
+        cleanup();
+        callback(err);
+      }
+
+      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+        if (error) {
+          cleanup();
+          callback(error);
+        } else {
+          var scripts = select(dom, 'script');
+          expect(scripts.length).toEqual(1);
+          expect(scripts[0].attribs.crossorigin).toEqual('foo');
+
+          cleanup();
+          callback();
+        }
+      });
+      var parser = new htmlparser.Parser(handler);
+      parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
+    });
+  });
+
   it('should work with subdirectories', function it(callback) {
     var tmpDir = tmp.dirSync();
     function cleanup() {
@@ -296,7 +469,7 @@ describe('html-webpack-plugin', function describe() {
           hash: true,
           filename: 'assets/admin.html'
         }),
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
@@ -355,7 +528,7 @@ describe('html-webpack-plugin', function describe() {
           template: path.join(__dirname, 'index.ejs')
         }),
         new ExtractTextPlugin('subdir/styles.css'),
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
@@ -409,7 +582,7 @@ describe('html-webpack-plugin', function describe() {
       },
       plugins: [
         new HtmlWebpackPlugin(),
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
@@ -464,7 +637,7 @@ describe('html-webpack-plugin', function describe() {
           filename: '../index.html',
           chunks: ['main']
         }),
-        new SriPlugin(['sha256', 'sha384'])
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
