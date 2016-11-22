@@ -1,7 +1,7 @@
 {
   "name": "webpack-subresource-integrity",
   "version": "0.7.0",
-  "description": "Webpack plugin for ensuring subresource integrity (SRI)",
+  "description": "Webpack plugin for enabling Subresource Integrity",
   "main": "index",
   "scripts": {
     "test": "karma start --single-run && mocha test/test-webpack.js",
