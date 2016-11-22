@@ -11,7 +11,7 @@ manipulation.
 
 ## Features
 
-- Integration with [html-webpack-plugin](https://github.com/ampedandwired/html-webpack-plugin)
+- Optional integration with [html-webpack-plugin](https://github.com/ampedandwired/html-webpack-plugin)
 - Support for code-splitting (integrity for lazy-loaded chunks)
 
 ## Installation
