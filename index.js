@@ -132,7 +132,7 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
       'Please update your code. ' +
         'See https://github.com/waysact/webpack-subresource-integrity/issues/18 for more information.');
   }
-  if (!compilation.compiler.options.output.crossOriginLoading) {
+  if (this.options.enabled && !compilation.compiler.options.output.crossOriginLoading) {
     this.warnOnce(
       compilation,
       'Set webpack option output.crossOriginLoading when using this plugin.');

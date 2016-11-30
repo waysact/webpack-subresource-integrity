@@ -206,6 +206,7 @@ describe('webpack-subresource-integrity', function describe() {
     var tmpDir = tmp.dirSync();
     function cleanup(err) {
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'styles.css'));
       tmpDir.removeCallback();
       callback(err);
     }
@@ -213,15 +214,22 @@ describe('webpack-subresource-integrity', function describe() {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
-        filename: 'bundle.js',
-        crossOriginLoading: 'anonymous'
+        filename: 'bundle.js'
+      },
+      module: {
+        loaders: [
+          { test: /\.css$/, loader: createExtractTextLoader() }
+        ]
       },
       plugins: [
+        new ExtractTextPlugin('styles.css'),
         new SriPlugin({ hashFuncNames: ['sha256'], enabled: false })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
       expect(typeof result.compilation.assets['bundle.js'].integrity).toBe('undefined');
+      expect(result.compilation.warnings).toEqual([]);
+      expect(result.compilation.errors).toEqual([]);
       cleanup(err);
     });
   });
