@@ -21,13 +21,24 @@ function findDepChunks(chunk, allDepChunkIds) {
   });
 }
 
-function WebIntegrityJsonpMainTemplatePlugin() {}
+function WebIntegrityJsonpMainTemplatePlugin(sriPlugin, compilation) {
+  this.sriPlugin = sriPlugin;
+  this.compilation = compilation;
+}
 
 WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(mainTemplate) {
+  var self = this;
+
   /*
    *  Patch jsonp-script code to add the integrity attribute.
    */
   mainTemplate.plugin('jsonp-script', function jsonpScriptPlugin(source) {
+    if (!this.outputOptions.crossOriginLoading) {
+      self.sriPlugin.error(
+        self.compilation,
+        'webpack option output.crossOriginLoading not set, code splitting will not work!'
+      );
+    }
     return this.asString([
       source,
       'script.integrity = sriHashes[chunkId];'
@@ -81,8 +92,7 @@ function SubresourceIntegrityPlugin(options) {
   }
 
   this.options = {
-    enabled: true,
-    crossorigin: 'anonymous'
+    enabled: true
   };
 
   for (var key in useOptions) {
@@ -117,6 +127,11 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
       'Support will be removed in webpack-subresource-integrity 1.0.0. ' +
       'Please update your code. ' +
         'See https://github.com/waysact/webpack-subresource-integrity/issues/18 for more information.');
+  }
+  if (!compilation.compiler.options.output.crossOriginLoading) {
+    this.warnOnce(
+      compilation,
+      'Set webpack option output.crossOriginLoading when using this plugin.');
   }
   if (!Array.isArray(this.options.hashFuncNames)) {
     this.error(
@@ -160,20 +175,31 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
           'See http://www.w3.org/TR/SRI/#cryptographic-hash-functions for more information.');
     }
   }
-  if (typeof this.options.crossorigin !== 'string' &&
-      !(this.options.crossorigin instanceof String)) {
-    this.error(
-      compilation,
-      'options.crossorigin must be a string.');
-    this.options.enabled = false;
-    return;
-  }
-  if (standardCrossoriginOptions.indexOf(this.options.crossorigin) < 0) {
+  if (typeof this.options.crossorigin === 'undefined') {
+    this.options.crossorigin =
+      compilation.compiler.options.output.crossOriginLoading || 'anonymous';
+  } else {
     this.warnOnce(
       compilation,
-      'You\'ve specified a value for the crossorigin option that is not part of the set of standard values. ' +
-        'These are: ' + standardCrossoriginOptions.join(', ') + '. ' +
-        'See https://www.w3.org/TR/SRI/#cross-origin-data-leakage for more information.');
+      'Specifying options.crossorigin is deprecated. ' +
+        'Instead, set webpack option output.crossOriginLoading. ' +
+        'Support will be removed in webpack-subresource-integrity 1.0.0. ' +
+        'See https://github.com/waysact/webpack-subresource-integrity/issues/20 for more information.');
+    if (typeof this.options.crossorigin !== 'string' &&
+        !(this.options.crossorigin instanceof String)) {
+      this.error(
+        compilation,
+        'options.crossorigin must be a string.');
+      this.options.enabled = false;
+      return;
+    }
+    if (standardCrossoriginOptions.indexOf(this.options.crossorigin) < 0) {
+      this.warnOnce(
+        compilation,
+        'You\'ve specified a value for the crossorigin option that is not part of the set of standard values. ' +
+          'These are: ' + standardCrossoriginOptions.join(', ') + '. ' +
+          'See https://www.w3.org/TR/SRI/#cross-origin-data-leakage for more information.');
+    }
   }
 };
 
@@ -204,7 +230,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
         return;
       }
 
-      compilation.mainTemplate.apply(new WebIntegrityJsonpMainTemplatePlugin());
+      compilation.mainTemplate.apply(new WebIntegrityJsonpMainTemplatePlugin(self, compilation));
 
       /*
        *  Calculate SRI values for each chunk and replace the magic
@@ -328,7 +354,16 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
               return compilation.assets[src].integrity;
             });
         });
-        pluginArgs.plugin.options.sriCrossOrigin = self.options.crossorigin;
+        Object.defineProperty(
+          pluginArgs.plugin.options, 'sriCrossOrigin', {
+            get: function get() {
+              self.warnOnce(
+                compilation,
+                'htmlWebpackPlugin.options.sriCrossOrigin is deprecated, use webpackConfig.output.crossOriginLoading instead.'
+              );
+              return self.options.crossorigin;
+            }
+          });
         callback(null, pluginArgs);
       }
 
