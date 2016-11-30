@@ -120,6 +120,10 @@ SubresourceIntegrityPlugin.prototype.error = function error(compilation, message
 };
 
 SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(compilation) {
+  if (this.optionsValidated) {
+    return;
+  }
+  this.optionsValidated = true;
   if (this.options.deprecatedOptions) {
     this.warnOnce(
       compilation,
