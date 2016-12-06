@@ -27,11 +27,13 @@ npm install webpack-subresource-integrity --save-dev
 import SriPlugin from 'webpack-subresource-integrity';
 
 const compiler = webpack({
+    output: {
+        crossOriginLoading: 'anonymous',
+    },
     plugins: [
         new SriPlugin({
             hashFuncNames: ['sha256', 'sha384'],
             enabled: process.env.NODE_ENV === 'production',
-            crossorigin: 'anonymous',
         }),
     ],
 });
@@ -46,8 +48,10 @@ HTML pages.)
 #### With HtmlWebpackPlugin
 
 When html-webpack-plugin is injecting assets into the template (the
-default), the `integrity` attribute will be set automatically.  There
-is nothing else to be done.
+default), the `integrity` attribute will be set automatically.  The
+`crossorigin` attribute will be set as well, to the value of
+`output.crossOriginLoading` webpack option. There is nothing else to
+be done.
 
 #### With HtmlWebpackPlugin({ inject: false })
 
@@ -60,7 +64,7 @@ template as follows:
   <script
      src="<%= htmlWebpackPlugin.files.js[index] %>"
      integrity="<%= htmlWebpackPlugin.files.jsIntegrity[index] %>"
-     crossorigin="<%= htmlWebpackPlugin.options.sriCrossOrigin %>"
+     crossorigin="<%= webpackConfig.output.crossOriginLoading %>"
   ></script>
 <% } %>
 
@@ -68,7 +72,7 @@ template as follows:
   <link
      href="<%= htmlWebpackPlugin.files.css[index] %>"
      integrity="<%= htmlWebpackPlugin.files.cssIntegrity[index] %>"
-     crossorigin="<%= htmlWebpackPlugin.options.sriCrossOrigin %>"
+     crossorigin="<%= webpackConfig.output.crossOriginLoading %>"
      rel="stylesheet"
   />
 <% } %>
@@ -87,6 +91,10 @@ compiler.plugin("done", stats => {
     const integrity = stats.compilation.assets[mainAssetName].integrity;
 });
 ```
+
+Note that you're also required to set the `crossorigin` attribute.  It
+is recommended to set this attribute to the same value as the webpack
+`output.crossOriginLoading` configuration option.
 
 ### Options
 
@@ -110,19 +118,22 @@ development mode.
 
 #### crossorigin
 
-Default value: `"anonymous"`
+**DEPRECATED**. Use webpack option `output.crossOriginLoading'
+instead'.
 
-When using `HtmlWebpackPlugin({ inject: true })`, this option
+~~Default value: `"anonymous"`~~
+
+~~When using `HtmlWebpackPlugin({ inject: true })`, this option
 specifies the value to be used for the `crossorigin` attribute for
-injected assets.
+injected assets.~~
 
-The value will also be available as
+~~The value will also be available as
 `htmlWebpackPlugin.options.sriCrossOrigin` in html-webpack-plugin
-templates.
+templates.~~
 
-See
+~~See
 [SRI: Cross-origin data leakage](https://www.w3.org/TR/SRI/#cross-origin-data-leakage) and
-[MDN: CORS settings attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes)
+[MDN: CORS settings attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes)~~
 
 ## Caveats
 

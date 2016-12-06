@@ -42,10 +42,10 @@ function nextCreate(filesPromise, serveStaticFile, serveFile, injector, basePath
       response.write = function nextWrite(chunk, encoding) {
         var nextChunk = chunk.replace(
           'src="/base/test/test.js',
-          'integrity="' + toplevelScriptIntegrity + '" src="/base/test/test.js');
+          'integrity="' + toplevelScriptIntegrity + '" crossorigin="anonymous" src="/base/test/test.js');
         nextChunk = nextChunk.replace(
           'rel="stylesheet"',
-          'rel="stylesheet" integrity="' + stylesheetIntegrity + '"'
+          'rel="stylesheet" integrity="' + stylesheetIntegrity + '" crossorigin="anonymous"'
         );
         prevWrite.call(response, nextChunk, encoding);
       };
@@ -82,8 +82,13 @@ module.exports = function karmaConfig(config) {
       'karma-mocha'
     ],
     webpack: {
+      output: {
+        crossOriginLoading: 'anonymous'
+      },
       plugins: [
-        new SriPlugin(['sha256', 'sha384']),
+        new SriPlugin({
+          hashFuncNames: ['sha256', 'sha384']
+        }),
         new GetIntegrityPlugin()
       ],
       module: {

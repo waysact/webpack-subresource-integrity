@@ -21,6 +21,20 @@ function createExtractTextLoader() {
   return ExtractTextPlugin.extract({ fallbackLoader: 'style-loader', loader: 'css-loader' });
 }
 
+function testCompilation() {
+  return {
+    warnings: [],
+    errors: [],
+    compiler: {
+      options: {
+        output: {
+          crossOriginLoading: 'anonymous'
+        }
+      }
+    }
+  };
+}
+
 describe('webpack-subresource-integrity', function describe() {
   it('should handle circular dependencies gracefully', function it(callback) {
     var tmpDir = tmp.dirSync();
@@ -35,7 +49,8 @@ describe('webpack-subresource-integrity', function describe() {
       },
       output: {
         path: tmpDir.name,
-        filename: 'bundle.js'
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
       },
       plugins: [
         new CommonsChunkPlugin({ name: 'chunk1', chunks: ['chunk2'] }),
@@ -79,7 +94,8 @@ describe('webpack-subresource-integrity', function describe() {
       output: {
         path: tmpDir.name,
         filename: 'bundle.js',
-        chunkFilename: 'chunk.js'
+        chunkFilename: 'chunk.js',
+        crossOriginLoading: 'anonymous'
       },
       plugins: [
         new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
@@ -138,7 +154,8 @@ describe('webpack-subresource-integrity', function describe() {
            entry: path.join(__dirname, './dummy.js'),
            output: {
              path: tmpDir.name,
-             filename: 'bundle.js'
+             filename: 'bundle.js',
+             crossOriginLoading: 'anonymous'
            },
            plugins: [
              plugins[pluginOrder[0]],
@@ -168,7 +185,8 @@ describe('webpack-subresource-integrity', function describe() {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
-        filename: 'bundle.js'
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
       },
       plugins: [
         new webpack.HotModuleReplacementPlugin(),
@@ -188,6 +206,7 @@ describe('webpack-subresource-integrity', function describe() {
     var tmpDir = tmp.dirSync();
     function cleanup(err) {
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'styles.css'));
       tmpDir.removeCallback();
       callback(err);
     }
@@ -197,12 +216,55 @@ describe('webpack-subresource-integrity', function describe() {
         path: tmpDir.name,
         filename: 'bundle.js'
       },
+      module: {
+        loaders: [
+          { test: /\.css$/, loader: createExtractTextLoader() }
+        ]
+      },
       plugins: [
+        new ExtractTextPlugin('styles.css'),
         new SriPlugin({ hashFuncNames: ['sha256'], enabled: false })
       ]
     };
     webpack(webpackConfig, function webpackCallback(err, result) {
       expect(typeof result.compilation.assets['bundle.js'].integrity).toBe('undefined');
+      expect(result.compilation.warnings).toEqual([]);
+      expect(result.compilation.errors).toEqual([]);
+      cleanup(err);
+    });
+  });
+
+  it('should error when code splitting is used with crossOriginLoading', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    function cleanup(err) {
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      try {
+        fs.unlinkSync(path.join(tmpDir.name, '0.bundle.js'));
+      } catch (e) {
+        fs.unlinkSync(path.join(tmpDir.name, '1.bundle.js'));
+      }
+      tmpDir.removeCallback();
+      callback(err);
+    }
+    var webpackConfig = {
+      entry: path.join(__dirname, './chunk1.js'),
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js'
+      },
+      plugins: [
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.warnings.length).toEqual(1);
+      expect(result.compilation.warnings[0]).toBeAn(Error);
+      expect(result.compilation.warnings[0].message).toMatch(
+          /Set webpack option output.crossOriginLoading when using this plugin/);
+      expect(result.compilation.errors.length).toEqual(1);
+      expect(result.compilation.errors[0]).toBeAn(Error);
+      expect(result.compilation.errors[0].message).toMatch(
+          /webpack option output.crossOriginLoading not set, code splitting will not work!/);
       cleanup(err);
     });
   });
@@ -213,7 +275,7 @@ describe('plugin options', function describe() {
     var plugin = new SriPlugin('sha256');
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
     expect(plugin.options.deprecatedOptions).toBeTruthy();
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(1);
@@ -225,7 +287,7 @@ describe('plugin options', function describe() {
     var plugin = new SriPlugin(['sha256', 'sha384']);
     expect(plugin.options.hashFuncNames).toEqual(['sha256', 'sha384']);
     expect(plugin.options.deprecatedOptions).toBeTruthy();
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(1);
@@ -239,7 +301,7 @@ describe('plugin options', function describe() {
     });
     expect(plugin.options.hashFuncNames).toEqual(['sha256', 'sha384']);
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(0);
@@ -249,7 +311,7 @@ describe('plugin options', function describe() {
     var plugin = new SriPlugin({
       hashFuncNames: 'sha256'
     });
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(1);
     expect(dummyCompilation.warnings.length).toBe(0);
@@ -262,7 +324,7 @@ describe('plugin options', function describe() {
     var plugin = new SriPlugin({
       hashFuncNames: [1234]
     });
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(1);
     expect(dummyCompilation.warnings.length).toBe(0);
@@ -275,7 +337,7 @@ describe('plugin options', function describe() {
     var plugin = new SriPlugin({
       hashFuncNames: ['frobnicate']
     });
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(1);
     expect(dummyCompilation.warnings.length).toBe(0);
@@ -291,12 +353,14 @@ describe('plugin options', function describe() {
     });
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(1);
-    expect(dummyCompilation.warnings.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(1);
     expect(dummyCompilation.errors[0].message).toMatch(
         /options.crossorigin must be a string./);
+    expect(dummyCompilation.warnings[0].message).toMatch(
+        /set webpack option output.crossOriginLoading/);
   });
 
   it('warns if the crossorigin attribute is not recognized', function it() {
@@ -307,34 +371,40 @@ describe('plugin options', function describe() {
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
     expect(plugin.options.crossorigin).toBe('foo');
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
-    expect(dummyCompilation.warnings.length).toBe(1);
+    expect(dummyCompilation.warnings.length).toBe(2);
     expect(dummyCompilation.warnings[0].message).toMatch(
+        /set webpack option output.crossOriginLoading/);
+    expect(dummyCompilation.warnings[1].message).toMatch(
         /specified a value for the crossorigin option that is not part of the set of standard values/);
   });
 
-  it('accepts anonymous crossorigin without warning', function it() {
+  it('accepts anonymous crossorigin without warning about standard values', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256'],
       crossorigin: 'anonymous'
     });
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
-    expect(dummyCompilation.warnings.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(1);
+    expect(dummyCompilation.warnings[0].message).toMatch(
+        /set webpack option output.crossOriginLoading/);
   });
 
-  it('accepts use-credentials crossorigin without warning', function it() {
+  it('accepts use-credentials crossorigin without warning about standard values', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256'],
       crossorigin: 'use-credentials'
     });
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
-    expect(dummyCompilation.warnings.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(1);
+    expect(dummyCompilation.warnings[0].message).toMatch(
+        /set webpack option output.crossOriginLoading/);
   });
 
   it('uses default options', function it() {
@@ -342,13 +412,33 @@ describe('plugin options', function describe() {
       hashFuncNames: ['sha256']
     });
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
-    expect(plugin.options.crossorigin).toBe('anonymous');
     expect(plugin.options.enabled).toBeTruthy();
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = { warnings: [], errors: [] };
+    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
+    expect(plugin.options.crossorigin).toBe('anonymous');
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(0);
+  });
+
+  it('should warn when output.crossOriginLoading is not set', function it() {
+    var plugin = new SriPlugin({ hashFuncNames: ['sha256'] });
+    var dummyCompilation = {
+      warnings: [],
+      errors: [],
+      compiler: {
+        options: {
+          output: {
+            crossOriginLoading: false
+          }
+        }
+      }
+    };
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(1);
+    expect(dummyCompilation.warnings[0].message).toMatch(
+        /Set webpack option output.crossOriginLoading when using this plugin/);
   });
 });
 
@@ -365,7 +455,8 @@ describe('html-webpack-plugin', function describe() {
       entry: path.join(__dirname, './a.js'),
       output: {
         path: tmpDir.name,
-        filename: 'bundle.js'
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
       },
       plugins: [
         new HtmlWebpackPlugin({ favicon: 'test/test.png' }),
@@ -395,7 +486,8 @@ describe('html-webpack-plugin', function describe() {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
-        filename: 'bundle.js'
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
       },
       module: {
         loaders: [
@@ -453,7 +545,8 @@ describe('html-webpack-plugin', function describe() {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
-        filename: 'bundle.js'
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
       },
       plugins: [
         new HtmlWebpackPlugin(),
@@ -497,7 +590,8 @@ describe('html-webpack-plugin', function describe() {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
-        filename: 'subdir/bundle.js'
+        filename: 'subdir/bundle.js',
+        crossOriginLoading: 'anonymous'
       },
       plugins: [
         new HtmlWebpackPlugin({
@@ -535,6 +629,41 @@ describe('html-webpack-plugin', function describe() {
     });
   });
 
+  it('should warn when calling htmlWebpackPlugin.options.sriCrossOrigin', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    var indexEjs = path.join(tmpDir.name, 'index.ejs');
+    function cleanup(err) {
+      fs.unlinkSync(indexEjs);
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
+      tmpDir.removeCallback();
+      callback(err);
+    }
+    fs.writeFileSync(indexEjs, '<% htmlWebpackPlugin.options.sriCrossOrigin  %>');
+    var webpackConfig = {
+      entry: path.join(__dirname, './dummy.js'),
+      output: {
+        filename: 'bundle.js',
+        path: tmpDir.name,
+        crossOriginLoading: 'anonymous'
+      },
+      plugins: [
+        new HtmlWebpackPlugin({
+          template: indexEjs
+        }),
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.warnings.length).toEqual(1);
+      expect(result.compilation.warnings[0]).toBeAn(Error);
+      expect(result.compilation.warnings[0].message).toEqual(
+        'webpack-subresource-integrity: htmlWebpackPlugin.options.sriCrossOrigin is deprecated, use webpackConfig.output.crossOriginLoading instead.'
+      );
+      cleanup(err);
+    });
+  });
+
   it('should work with subdirectories and a custom template', function it(callback) {
     var tmpDir = tmp.dirSync();
     function cleanup() {
@@ -548,7 +677,8 @@ describe('html-webpack-plugin', function describe() {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
-        filename: 'subdir/bundle.js'
+        filename: 'subdir/bundle.js',
+        crossOriginLoading: 'anonymous'
       },
       module: {
         loaders: [
@@ -613,7 +743,8 @@ describe('html-webpack-plugin', function describe() {
       output: {
         path: tmpDir.name,
         filename: 'bundle.js',
-        publicPath: '/'
+        publicPath: '/',
+        crossOriginLoading: 'anonymous'
       },
       plugins: [
         new HtmlWebpackPlugin(),
@@ -665,7 +796,8 @@ describe('html-webpack-plugin', function describe() {
       output: {
         path: subDir,
         filename: 'bundle.js',
-        publicPath: '/'
+        publicPath: '/',
+        crossOriginLoading: 'anonymous'
       },
       plugins: [
         new HtmlWebpackPlugin({

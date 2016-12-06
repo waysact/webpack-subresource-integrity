@@ -4,9 +4,10 @@ module.exports = function chunk2(callback) {
   function forEachElement(el) {
     var src = el.getAttribute('src') || el.getAttribute('href');
     var integrity = el.getAttribute('integrity');
+    var crossorigin = el.getAttribute('crossOrigin');
     if (src) {
       var match = src.match(/[^\/]+\.(js|css)/);
-      if (match && integrity && integrity.match(/^sha\d+-/)) {
+      if (match && crossorigin && integrity && integrity.match(/^sha\d+-/)) {
         resourcesWithIntegrity.push(match[0].toString());
       }
     }
