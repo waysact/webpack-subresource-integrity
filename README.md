@@ -118,8 +118,8 @@ development mode.
 
 #### crossorigin
 
-**DEPRECATED**. Use webpack option `output.crossOriginLoading'
-instead'.
+**DEPRECATED**. Use webpack option `output.crossOriginLoading`
+instead.
 
 ~~Default value: `"anonymous"`~~
 
