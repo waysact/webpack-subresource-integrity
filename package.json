@@ -5,6 +5,7 @@
   "main": "index",
   "scripts": {
     "test": "karma start --single-run && mocha test/test-webpack.js",
+    "mocha": "mocha test/test-webpack.js",
     "lint": "eslint ."
   },
   "repository": {
