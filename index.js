@@ -213,7 +213,10 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
  *  into `compilation.assets`.
  */
 SubresourceIntegrityPlugin.prototype.hwpAssetPath = function hwpAssetPath(src) {
-  return path.relative(this.hwpPublicPath, src.replace(/\?[a-zA-Z0-9]+$/, ''));
+  return path
+    .relative(this.hwpPublicPath, src.replace(/\?[a-zA-Z0-9]+$/, ''))
+    .split(path.sep)
+    .join('/');
 };
 
 SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
