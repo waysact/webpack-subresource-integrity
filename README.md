@@ -96,6 +96,13 @@ Note that you're also required to set the `crossorigin` attribute.  It
 is recommended to set this attribute to the same value as the webpack
 `output.crossOriginLoading` configuration option.
 
+### Web Server Configuration
+
+If your page can be loaded through HTTP, you must set the
+`Cache-Control: no-transform` response header or your page will break
+when assets are loaded through a transforming proxy.
+[See below](#proxies) for more information.
+
 ### Options
 
 #### hashFuncNames
@@ -136,6 +143,26 @@ templates.~~
 [MDN: CORS settings attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes)~~
 
 ## Caveats
+
+### Proxies
+
+By its very nature, SRI can cause your page to break when assets are
+modified by a proxy.  This is because SRI doesn't distinguish between
+malicious and benevolent modifications: any modification will prevent
+an asset from being loaded.
+
+Notably, this issue can arise when your page is loaded through
+[Chrome Data Saver](https://developer.chrome.com/multidevice/data-compression).
+
+This is only a problem when your page can be loaded with plain HTTP,
+since proxies are incapable of modifying encrypted HTTPS responses.
+
+Presumably, you're looking to use SRI because you're concerned about
+security and thus your page is only served through HTTPS anyway.
+However, if you really need to use SRI and HTTP together, you should
+set the `Cache-Control: no-transform` response header.  This will
+instruct all well-behaved proxies (including Chrome Data Saver) to
+refrain from modifying the assets.
 
 ### Browser support
 
