@@ -98,10 +98,10 @@ is recommended to set this attribute to the same value as the webpack
 
 ### Web Server Configuration
 
-If your page can be loaded through HTTP, you must set the
-`Cache-Control: no-transform` response header or your page will break
-when assets are loaded through a transforming proxy.
-[See below](#proxies) for more information.
+If your page can be loaded through plain HTTP (as opposed to HTTPS),
+you must set the `Cache-Control: no-transform` response header or your
+page will break when assets are loaded through a transforming
+proxy.  [See below](#proxies) for more information.
 
 ### Options
 
