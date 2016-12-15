@@ -52,7 +52,7 @@
     "webpack": "^1.12.11"
   },
   "peerDependencies": {
-    "webpack": "^1.12.11 || >=2.1.0-beta <3.0"
+    "webpack": "^1.12.11 || >=2.1.0-beta || 2.2.0-rc.0 <3.0"
   },
   "files": [
     "LICENSE",
