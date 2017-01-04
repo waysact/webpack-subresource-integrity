@@ -194,6 +194,6 @@ only in development mode where SRI is not normally needed.
 
 ## License
 
-Copyright (c) 2015, 2016 Waysact Pty Ltd
+Copyright (c) 2015-2017 Waysact Pty Ltd
 
 MIT (see [LICENSE](LICENSE))
