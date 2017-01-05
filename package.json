@@ -2,10 +2,13 @@
   "name": "webpack-subresource-integrity",
   "version": "0.8.2",
   "description": "Webpack plugin for enabling Subresource Integrity",
+  "engines": {
+    "node": ">=0.12"
+  },
   "main": "index",
   "scripts": {
-    "test": "karma start --single-run && mocha test/test-webpack.js",
-    "mocha": "mocha test/test-webpack.js",
+    "test": "karma start --single-run && mocha --timeout 5000 test/test-webpack.js",
+    "mocha": "mocha --timeout 5000 test/test-webpack.js",
     "lint": "eslint ."
   },
   "repository": {
