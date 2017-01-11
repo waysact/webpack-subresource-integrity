@@ -20,8 +20,6 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - ./node_modules/karma/bin/karma start --single-run --browsers Firefox
-  - |
-    ./node_modules/nyc/bin/nyc.js --reporter=lcovonly \
-      ./node_modules/mocha/bin/mocha test/test-webpack.js && \
-        ./node_modules/coveralls/bin/coveralls.js < ./coverage/lcov.info && \
-        rm -rf ./coverage
+  - $(npm bin)/nyc --reporter=lcovonly $(npm bin)/mocha test/test-webpack.js
+after_script:
+  - $(npm bin)/travis-after-all && $(npm bin)/coveralls < ./coverage/lcov.info

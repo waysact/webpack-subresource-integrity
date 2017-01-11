@@ -54,6 +54,7 @@
     "soupselect": "^0.2.0",
     "style-loader": "^0.13.1",
     "tmp": "^0.0.31",
+    "travis-after-all": "^1.4.4",
     "webpack": "^1.12.11"
   },
   "peerDependencies": {
