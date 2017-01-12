@@ -20,6 +20,6 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - ./node_modules/karma/bin/karma start --single-run --browsers Firefox
-  - $(npm bin)/nyc --reporter=lcovonly $(npm bin)/mocha test/test-webpack.js
+  - $(npm bin)/nyc --reporter=lcovonly $(npm bin)/mocha --timeout 20000 test/test-webpack.js
 after_script:
   - $(npm bin)/travis-after-all && $(npm bin)/coveralls < ./coverage/lcov.info
