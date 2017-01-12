@@ -7,8 +7,8 @@
   },
   "main": "index",
   "scripts": {
-    "test": "karma start --single-run && mocha --timeout 5000 test/test-webpack.js",
-    "mocha": "mocha --timeout 5000 test/test-webpack.js",
+    "test": "karma start --single-run && mocha --timeout 20000 test/test-webpack.js",
+    "mocha": "mocha --timeout 20000 test/test-webpack.js",
     "lint": "eslint ."
   },
   "repository": {
