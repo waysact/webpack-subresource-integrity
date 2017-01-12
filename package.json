@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^7.1.0",
+    "coveralls": "^2.11.15",
     "css-loader": "^0.26.0",
     "eslint": "^3.10.0",
     "eslint-config-airbnb-es5": "^1.0.9",
@@ -49,9 +50,11 @@
     "karma-mocha": "^1.0.1",
     "karma-webpack": "^1.7.0",
     "mocha": "^3.1.2",
+    "nyc": "^10.0.0",
     "soupselect": "^0.2.0",
     "style-loader": "^0.13.1",
     "tmp": "^0.0.31",
+    "travis-after-all": "^1.4.4",
     "webpack": "^1.12.11"
   },
   "peerDependencies": {
