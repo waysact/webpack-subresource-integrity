@@ -82,6 +82,7 @@ module.exports = function karmaConfig(config) {
       'karma-mocha'
     ],
     webpack: {
+      entry: 'main',
       output: {
         crossOriginLoading: 'anonymous'
       },
