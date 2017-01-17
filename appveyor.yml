@@ -1,12 +1,6 @@
 # Test against this version of Node.js
 environment:
   matrix:
-    - nodejs_version: 0.12
-      WEBPACK_SUFFIX: "@1"
-      ETWP_SUFFIX: "@1"
-    - nodejs_version: 0.12
-      WEBPACK_SUFFIX: "@>=2.2.0-rc <3.0"
-      ETWP_SUFFIX: "@>=2.0.0-beta <3.0"
     - nodejs_version: 4
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
@@ -23,6 +17,12 @@ environment:
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
     - nodejs_version: 6
+      WEBPACK_SUFFIX: "@>=2.2.0-rc <3.0"
+      ETWP_SUFFIX: "@>=2.0.0-beta <3.0"
+    - nodejs_version: 7
+      WEBPACK_SUFFIX: "@1"
+      ETWP_SUFFIX: "@1"
+    - nodejs_version: 7
       WEBPACK_SUFFIX: "@>=2.2.0-rc <3.0"
       ETWP_SUFFIX: "@>=2.0.0-beta <3.0"
 
