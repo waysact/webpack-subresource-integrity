@@ -271,6 +271,40 @@ describe('webpack-subresource-integrity', function describe() {
 });
 
 describe('plugin options', function describe() {
+  it('throws an error when options is not an object', function it() {
+    expect(function block() {
+      new SriPlugin(function dummy() {}); // eslint-disable-line no-new
+    }).toThrow(/argument must be an object/);
+  });
+
+  it('warns when no hash function names are specified', function it() {
+    var plugin = new SriPlugin();
+    expect(plugin.options.hashFuncNames).toBeFalsy();
+    expect(plugin.options.deprecatedOptions).toBeFalsy();
+    var dummyCompilation = testCompilation();
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(1);
+    expect(dummyCompilation.warnings.length).toBe(0);
+    expect(dummyCompilation.errors[0]).toBeAn(Error);
+    expect(dummyCompilation.errors[0].message).toMatch(
+        /hashFuncNames must be an array of hash function names, instead got \'undefined\'/);
+  });
+
+  it('warns when no standard hash function name is specified', function it() {
+    var plugin = new SriPlugin({
+      hashFuncNames: ['md5']
+    });
+    expect(plugin.options.hashFuncNames).toEqual(['md5']);
+    expect(plugin.options.deprecatedOptions).toBeFalsy();
+    var dummyCompilation = testCompilation();
+    plugin.validateOptions(dummyCompilation);
+    expect(dummyCompilation.errors.length).toBe(0);
+    expect(dummyCompilation.warnings.length).toBe(1);
+    expect(dummyCompilation.warnings[0]).toBeAn(Error);
+    expect(dummyCompilation.warnings[0].message).toMatch(
+        /It is recommended that at least one hash function is part of the set for which support is mandated by the specification/);
+  });
+
   it('supports legacy constructor with single hash function name', function it() {
     var plugin = new SriPlugin('sha256');
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
