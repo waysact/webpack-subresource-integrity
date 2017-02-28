@@ -8,7 +8,7 @@ addons:
   firefox: latest
 env:
   - WEBPACK_SUFFIX="@1" ETWP_SUFFIX="@1"
-  - WEBPACK_SUFFIX="@>=2.2.0-rc <3.0" ETWP_SUFFIX="@>=2.0.0-beta <3.0"
+  - WEBPACK_SUFFIX="@2" ETWP_SUFFIX="@2"
 install:
   - npm install --ignore-scripts
   - npm rm webpack
