@@ -16,8 +16,8 @@ function findDepChunks(chunk, allDepChunkIds) {
   chunk.chunks.forEach(function forEachChunk(depChunk) {
     if (!allDepChunkIds[depChunk.id]) {
       allDepChunkIds[depChunk.id] = true;
+      findDepChunks(depChunk, allDepChunkIds);
     }
-    findDepChunks(depChunk, allDepChunkIds);
   });
 }
 
