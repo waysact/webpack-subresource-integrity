@@ -19,7 +19,7 @@ function createExtractTextLoader() {
     return ExtractTextPlugin.extract('style-loader', 'css-loader');
   }
   // extract-text-webpack-plugin 2.x
-  return ExtractTextPlugin.extract({ fallbackLoader: 'style-loader', loader: 'css-loader' });
+  return ExtractTextPlugin.extract({ fallback: 'style-loader', use: 'css-loader' });
 }
 
 function testCompilation() {
