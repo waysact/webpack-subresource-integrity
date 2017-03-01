@@ -5,9 +5,6 @@ var ReplaceSource = require('webpack-core/lib/ReplaceSource');
 // https://www.w3.org/TR/2016/REC-SRI-20160623/#cryptographic-hash-functions
 var standardHashFuncNames = ['sha256', 'sha384', 'sha512'];
 
-// https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
-var standardCrossoriginOptions = ['anonymous', 'use-credentials'];
-
 function makePlaceholder(id) {
   return '*-*-*-CHUNK-SRI-HASH-' + id + '-*-*-*';
 }
@@ -73,17 +70,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(mainTemplat
 
 function SubresourceIntegrityPlugin(options) {
   var useOptions;
-  if (typeof options === 'string') {
-    useOptions = {
-      hashFuncNames: [options],
-      deprecatedOptions: true
-    };
-  } else if (Array.isArray(options)) {
-    useOptions = {
-      hashFuncNames: options,
-      deprecatedOptions: true
-    };
-  } else if (options === null || typeof options === 'undefined') {
+  if (options === null || typeof options === 'undefined') {
     useOptions = {};
   } else if (typeof options === 'object') {
     useOptions = options;
@@ -124,14 +111,6 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
     return;
   }
   this.optionsValidated = true;
-  if (this.options.deprecatedOptions) {
-    this.warnOnce(
-      compilation,
-      'Passing a string or array to the plugin constructor is deprecated. ' +
-      'Support will be removed in webpack-subresource-integrity 1.0.0. ' +
-      'Please update your code. ' +
-        'See https://github.com/waysact/webpack-subresource-integrity/issues/18 for more information.');
-  }
   if (this.options.enabled && !compilation.compiler.options.output.crossOriginLoading) {
     this.warnOnce(
       compilation,
@@ -177,32 +156,6 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
           'for which support is mandated by the specification. ' +
           'These are: ' + standardHashFuncNames.join(', ') + '. ' +
           'See http://www.w3.org/TR/SRI/#cryptographic-hash-functions for more information.');
-    }
-  }
-  if (typeof this.options.crossorigin === 'undefined') {
-    this.options.crossorigin =
-      compilation.compiler.options.output.crossOriginLoading || 'anonymous';
-  } else {
-    this.warnOnce(
-      compilation,
-      'Specifying options.crossorigin is deprecated. ' +
-        'Instead, set webpack option output.crossOriginLoading. ' +
-        'Support will be removed in webpack-subresource-integrity 1.0.0. ' +
-        'See https://github.com/waysact/webpack-subresource-integrity/issues/20 for more information.');
-    if (typeof this.options.crossorigin !== 'string' &&
-        !(this.options.crossorigin instanceof String)) {
-      this.error(
-        compilation,
-        'options.crossorigin must be a string.');
-      this.options.enabled = false;
-      return;
-    }
-    if (standardCrossoriginOptions.indexOf(this.options.crossorigin) < 0) {
-      this.warnOnce(
-        compilation,
-        'You\'ve specified a value for the crossorigin option that is not part of the set of standard values. ' +
-          'These are: ' + standardCrossoriginOptions.join(', ') + '. ' +
-          'See https://www.w3.org/TR/SRI/#cross-origin-data-leakage for more information.');
     }
   }
 };
@@ -340,7 +293,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
           }
           // Add integrity check sums
           tag.attributes.integrity = checksum;
-          tag.attributes.crossorigin = self.options.crossorigin;
+          tag.attributes.crossorigin = compilation.compiler.options.output.crossOriginLoading || 'anonymous';
         }
 
         pluginArgs.head.filter(filterTag).forEach(processTag);
@@ -361,16 +314,6 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
               return compilation.assets[src].integrity;
             });
         });
-        Object.defineProperty(
-          pluginArgs.plugin.options, 'sriCrossOrigin', {
-            get: function get() {
-              self.warnOnce(
-                compilation,
-                'htmlWebpackPlugin.options.sriCrossOrigin is deprecated, use webpackConfig.output.crossOriginLoading instead.'
-              );
-              return self.options.crossorigin;
-            }
-          });
         callback(null, pluginArgs);
       }
 

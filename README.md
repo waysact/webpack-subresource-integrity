@@ -123,25 +123,6 @@ When this value is falsy, the plugin doesn't run and no integrity
 values are calculated. It is recommended to disable the plugin in
 development mode.
 
-#### crossorigin
-
-**DEPRECATED**. Use webpack option `output.crossOriginLoading`
-instead.
-
-~~Default value: `"anonymous"`~~
-
-~~When using `HtmlWebpackPlugin({ inject: true })`, this option
-specifies the value to be used for the `crossorigin` attribute for
-injected assets.~~
-
-~~The value will also be available as
-`htmlWebpackPlugin.options.sriCrossOrigin` in html-webpack-plugin
-templates.~~
-
-~~See
-[SRI: Cross-origin data leakage](https://www.w3.org/TR/SRI/#cross-origin-data-leakage) and
-[MDN: CORS settings attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes)~~
-
 ## Caveats
 
 ### Proxies
