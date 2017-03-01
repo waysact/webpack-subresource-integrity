@@ -11,6 +11,7 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var ExtractTextPluginVersion = require('extract-text-webpack-plugin/package.json').version;
 var CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
 var crypto = require('crypto');
+var glob = require('glob');
 
 function createExtractTextLoader() {
   if (ExtractTextPluginVersion.match(/^1\./)) {
@@ -64,6 +65,48 @@ describe('webpack-subresource-integrity', function describe() {
       expect(result.compilation.assets['bundle.js'].integrity).toMatch(/^sha/);
 
       callback(err);
+    });
+  });
+
+  it('handles mutually dependent chunks', function it(callback) {
+    var tmpDir = tmp.dirSync();
+
+    var mainJs = path.join(tmpDir.name, 'main.js');
+    var chunk1Js = path.join(tmpDir.name, 'chunk1.js');
+    var chunk2Js = path.join(tmpDir.name, 'chunk2.js');
+    var chunk3Js = path.join(tmpDir.name, 'chunk3.js');
+
+    fs.writeFileSync(mainJs, 'require.ensure([], function(require) { require("./chunk1.js"); });');
+    fs.writeFileSync(chunk1Js, 'require.ensure([], function(require) { require("./chunk2.js"); });');
+    fs.writeFileSync(chunk2Js, 'require.ensure([], function(require) { require("./chunk3.js"); });');
+    fs.writeFileSync(chunk3Js, 'require.ensure([], function(require) { require("./chunk1.js"); });');
+
+    function cleanup(err) {
+      fs.unlinkSync(path.join(tmpDir.name, 'main.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'chunk1.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'chunk2.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'chunk3.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      glob.sync(path.join(tmpDir.name, '*.bundle.js')).forEach(fs.unlinkSync);
+      tmpDir.removeCallback();
+      callback(err);
+    }
+
+    var webpackConfig = {
+      entry: mainJs,
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
+      },
+      plugins: [
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.errors.length).toEqual(0);
+      expect(result.compilation.warnings.length).toEqual(0);
+      cleanup(err);
     });
   });
 
