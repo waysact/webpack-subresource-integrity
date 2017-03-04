@@ -4,6 +4,8 @@ var karmaMiddleware = require('karma/lib/middleware/karma');
 var toplevelScriptIntegrity;
 var stylesheetIntegrity;
 
+var prevCreate = karmaMiddleware.create;
+
 /*
  *  Simple webpack plugin that records the top-level chunk's integrity
  *  attribute value.
@@ -27,18 +29,35 @@ GetIntegrityPlugin.prototype.apply = function apply(compiler) {
  *  Hack Karma to add the integrity attribute to the script tag
  *  loading the top-level chunk.
  */
-var prevCreate = karmaMiddleware.create;
-function nextCreate(filesPromise, serveStaticFile, serveFile, injector, basePath, urlRoot, upstreamProxy) {
-  var prevMiddleware = prevCreate(filesPromise, serveStaticFile, serveFile, injector, basePath, urlRoot, upstreamProxy);
+function nextCreate(
+  filesPromise,
+  serveStaticFile,
+  serveFile,
+  injector,
+  basePath,
+  urlRoot,
+  upstreamProxy
+) {
+  var prevMiddleware = prevCreate(
+    filesPromise,
+    serveStaticFile,
+    serveFile,
+    injector,
+    basePath,
+    urlRoot,
+    upstreamProxy
+  );
   return function nextMiddleware(request, response, next) {
     var requestUrl = request.normalizedUrl.replace(/\?.*/, '');
+    var prevWrite;
     requestUrl = requestUrl.substr(urlRoot.length - 1);
     if (requestUrl === '/context.html' &&
         toplevelScriptIntegrity &&
         toplevelScriptIntegrity.startsWith('sha') &&
         stylesheetIntegrity &&
         stylesheetIntegrity.startsWith('sha')) {
-      var prevWrite = response.write;
+      prevWrite = response.write;
+      // eslint-disable-next-line no-param-reassign
       response.write = function nextWrite(chunk, encoding) {
         var nextChunk = chunk.replace(
           'src="/base/test/test.js',

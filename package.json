@@ -37,7 +37,7 @@
     "coveralls": "^2.11.15",
     "css-loader": "^0.26.0",
     "eslint": "^3.10.0",
-    "eslint-config-airbnb-es5": "^1.0.9",
+    "eslint-config-airbnb": "^14.1.0",
     "eslint-plugin-react": "^6.6.0",
     "expect": "^1.13.4",
     "extract-text-webpack-plugin": "^1.0.1",
