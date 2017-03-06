@@ -39,11 +39,12 @@ function testCompilation() {
 describe('webpack-subresource-integrity', function describe() {
   it('should handle circular dependencies gracefully', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
     function cleanup() {
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       tmpDir.removeCallback();
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: {
         chunk1: path.join(__dirname, './chunk1.js'),
         chunk2: path.join(__dirname, './chunk2.js')
@@ -70,11 +71,11 @@ describe('webpack-subresource-integrity', function describe() {
 
   it('handles mutually dependent chunks', function it(callback) {
     var tmpDir = tmp.dirSync();
-
     var mainJs = path.join(tmpDir.name, 'main.js');
     var chunk1Js = path.join(tmpDir.name, 'chunk1.js');
     var chunk2Js = path.join(tmpDir.name, 'chunk2.js');
     var chunk3Js = path.join(tmpDir.name, 'chunk3.js');
+    var webpackConfig;
 
     fs.writeFileSync(mainJs, 'require.ensure([], function(require) { require("./chunk1.js"); });');
     fs.writeFileSync(chunk1Js, 'require.ensure([], function(require) { require("./chunk2.js"); });');
@@ -92,7 +93,7 @@ describe('webpack-subresource-integrity', function describe() {
       callback(err);
     }
 
-    var webpackConfig = {
+    webpackConfig = {
       entry: mainJs,
       output: {
         path: tmpDir.name,
@@ -112,12 +113,14 @@ describe('webpack-subresource-integrity', function describe() {
 
   it('supports multiple compilation', function it(callback) {
     var tmpDir = tmp.dirSync();
-
     var mainJs = path.join(tmpDir.name, 'main.js');
     var otherJs = path.join(tmpDir.name, 'other.js');
-
     var oldOtherJsSource = 'console.log("hello");';
     var newOtherJsSource = 'console.log("hello2");';
+    var watching;
+    var callbackCount = 0;
+    var webpackConfig;
+    var compiler;
 
     fs.writeFileSync(mainJs, 'require.ensure(["./other.js"], function(require) { require("./other.js"); });');
     fs.writeFileSync(otherJs, oldOtherJsSource);
@@ -130,7 +133,7 @@ describe('webpack-subresource-integrity', function describe() {
       tmpDir.removeCallback();
       callback(err);
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: {
         bundle: mainJs
       },
@@ -144,10 +147,13 @@ describe('webpack-subresource-integrity', function describe() {
         new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
       ]
     };
-    var compiler = webpack(webpackConfig);
-    var watching;
-    var callbackCount = 0;
+    compiler = webpack(webpackConfig);
     function handler(err) {
+      var chunkContents;
+      var bundleContents;
+      var hash;
+      var regex;
+      var match;
       if (err) {
         cleanup(err);
         return;
@@ -159,16 +165,16 @@ describe('webpack-subresource-integrity', function describe() {
         }, 1000); // FIXME -- brittle and slow
         callbackCount += 1;
       } else if (callbackCount === 1) {
-        var chunkContents = fs.readFileSync(path.join(tmpDir.name, 'chunk.js'), 'utf-8');
-        var bundleContents = fs.readFileSync(path.join(tmpDir.name, 'bundle.js'), 'utf-8');
+        chunkContents = fs.readFileSync(path.join(tmpDir.name, 'chunk.js'), 'utf-8');
+        bundleContents = fs.readFileSync(path.join(tmpDir.name, 'bundle.js'), 'utf-8');
 
         if (chunkContents.indexOf(newOtherJsSource) >= 0) {
           callbackCount += 1;
           watching.close(function afterClose() {
             expect(bundleContents).toMatch(/script\.integrity =/);
-            var hash = crypto.createHash('sha256').update(chunkContents, 'utf8').digest('base64');
-            var regex = /sha256-([^ ]+)/g;
-            var match = regex.exec(bundleContents);
+            hash = crypto.createHash('sha256').update(chunkContents, 'utf8').digest('base64');
+            regex = /sha256-([^ ]+)/g;
+            match = regex.exec(bundleContents);
             expect(match).toExist();
             expect(match[1]).toEqual(hash);
             expect(regex.exec(bundleContents)).toNotExist();
@@ -189,11 +195,12 @@ describe('webpack-subresource-integrity', function describe() {
     it('should work with plugin order ' + pluginOrder,
        function it(callback) {
          var tmpDir = tmp.dirSync();
+         var webpackConfig;
          function cleanup() {
            fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
            tmpDir.removeCallback();
          }
-         var webpackConfig = {
+         webpackConfig = {
            entry: path.join(__dirname, './dummy.js'),
            output: {
              path: tmpDir.name,
@@ -219,12 +226,13 @@ describe('webpack-subresource-integrity', function describe() {
 
   it('should warn when used with HMR', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
     function cleanup(err) {
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       tmpDir.removeCallback();
       callback(err);
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
@@ -247,13 +255,14 @@ describe('webpack-subresource-integrity', function describe() {
 
   it('can be disabled', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
     function cleanup(err) {
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       fs.unlinkSync(path.join(tmpDir.name, 'styles.css'));
       tmpDir.removeCallback();
       callback(err);
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
@@ -279,6 +288,7 @@ describe('webpack-subresource-integrity', function describe() {
 
   it('should error when code splitting is used with crossOriginLoading', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
     function cleanup(err) {
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       try {
@@ -289,7 +299,7 @@ describe('webpack-subresource-integrity', function describe() {
       tmpDir.removeCallback();
       callback(err);
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './chunk1.js'),
       output: {
         path: tmpDir.name,
@@ -322,37 +332,38 @@ describe('plugin options', function describe() {
 
   it('warns when no hash function names are specified', function it() {
     var plugin = new SriPlugin();
+    var dummyCompilation = testCompilation();
     expect(plugin.options.hashFuncNames).toBeFalsy();
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(1);
     expect(dummyCompilation.warnings.length).toBe(0);
     expect(dummyCompilation.errors[0]).toBeAn(Error);
     expect(dummyCompilation.errors[0].message).toMatch(
-        /hashFuncNames must be an array of hash function names, instead got \'undefined\'/);
+        /hashFuncNames must be an array of hash function names, instead got 'undefined'/);
   });
 
   it('warns when no standard hash function name is specified', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['md5']
     });
+    var dummyCompilation = testCompilation();
     expect(plugin.options.hashFuncNames).toEqual(['md5']);
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(1);
     expect(dummyCompilation.warnings[0]).toBeAn(Error);
-    expect(dummyCompilation.warnings[0].message).toMatch(
-        /It is recommended that at least one hash function is part of the set for which support is mandated by the specification/);
+    expect(dummyCompilation.warnings[0].message).toMatch(new RegExp(
+      'It is recommended that at least one hash function is part of ' +
+        'the set for which support is mandated by the specification'));
   });
 
   it('supports legacy constructor with single hash function name', function it() {
     var plugin = new SriPlugin('sha256');
+    var dummyCompilation = testCompilation();
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
     expect(plugin.options.deprecatedOptions).toBeTruthy();
-    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(1);
@@ -362,9 +373,9 @@ describe('plugin options', function describe() {
 
   it('supports legacy constructor with array of hash function names', function it() {
     var plugin = new SriPlugin(['sha256', 'sha384']);
+    var dummyCompilation = testCompilation();
     expect(plugin.options.hashFuncNames).toEqual(['sha256', 'sha384']);
     expect(plugin.options.deprecatedOptions).toBeTruthy();
-    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(1);
@@ -376,9 +387,9 @@ describe('plugin options', function describe() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256', 'sha384']
     });
+    var dummyCompilation = testCompilation();
     expect(plugin.options.hashFuncNames).toEqual(['sha256', 'sha384']);
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(0);
@@ -428,9 +439,9 @@ describe('plugin options', function describe() {
       hashFuncNames: ['sha256'],
       crossorigin: 1234
     });
+    var dummyCompilation = testCompilation();
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(1);
     expect(dummyCompilation.warnings.length).toBe(1);
@@ -445,17 +456,19 @@ describe('plugin options', function describe() {
       hashFuncNames: ['sha256'],
       crossorigin: 'foo'
     });
+    var dummyCompilation = testCompilation();
+
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
     expect(plugin.options.crossorigin).toBe('foo');
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(2);
     expect(dummyCompilation.warnings[0].message).toMatch(
         /set webpack option output.crossOriginLoading/);
-    expect(dummyCompilation.warnings[1].message).toMatch(
-        /specified a value for the crossorigin option that is not part of the set of standard values/);
+    expect(dummyCompilation.warnings[1].message).toMatch(new RegExp(
+      'specified a value for the crossorigin option that is not part of ' +
+        'the set of standard values'));
   });
 
   it('accepts anonymous crossorigin without warning about standard values', function it() {
@@ -488,10 +501,11 @@ describe('plugin options', function describe() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256']
     });
+    var dummyCompilation;
     expect(plugin.options.hashFuncNames).toEqual(['sha256']);
     expect(plugin.options.enabled).toBeTruthy();
     expect(plugin.options.deprecatedOptions).toBeFalsy();
-    var dummyCompilation = testCompilation();
+    dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
     expect(plugin.options.crossorigin).toBe('anonymous');
     expect(dummyCompilation.errors.length).toBe(0);
@@ -522,13 +536,14 @@ describe('plugin options', function describe() {
 describe('html-webpack-plugin', function describe() {
   it('should warn when the checksum cannot be found', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
     function cleanup() {
       fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
       fs.unlinkSync(path.join(tmpDir.name, 'test.png'));
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       tmpDir.removeCallback();
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './a.js'),
       output: {
         path: tmpDir.name,
@@ -553,13 +568,20 @@ describe('html-webpack-plugin', function describe() {
 
   it('should include integrity attributes in output', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
+    var jsIntegrity;
+    var cssIntegrity;
+    var scripts;
+    var links;
+    var handler;
+    var parser;
     function cleanup() {
       fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
       fs.unlinkSync(path.join(tmpDir.name, 'styles.css'));
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       tmpDir.removeCallback();
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
@@ -582,22 +604,22 @@ describe('html-webpack-plugin', function describe() {
         cleanup();
         callback(err);
       }
-      var jsIntegrity = result.compilation.assets['bundle.js'].integrity;
+      jsIntegrity = result.compilation.assets['bundle.js'].integrity;
       expect(jsIntegrity).toMatch(/^sha/);
-      var cssIntegrity = result.compilation.assets['styles.css'].integrity;
+      cssIntegrity = result.compilation.assets['styles.css'].integrity;
       expect(cssIntegrity).toMatch(/^sha/);
 
-      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+      handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
         if (error) {
           cleanup();
           callback(error);
         } else {
-          var scripts = select(dom, 'script');
+          scripts = select(dom, 'script');
           expect(scripts.length).toEqual(1);
           expect(scripts[0].attribs.crossorigin).toEqual('anonymous');
           expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
 
-          var links = select(dom, 'link');
+          links = select(dom, 'link');
           expect(links.length).toEqual(1);
           expect(links[0].attribs.crossorigin).toEqual('anonymous');
           expect(links[0].attribs.integrity).toEqual(cssIntegrity);
@@ -606,19 +628,23 @@ describe('html-webpack-plugin', function describe() {
           callback();
         }
       });
-      var parser = new htmlparser.Parser(handler);
+      parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
     });
   });
 
   it('should use the crossorigin configuration option', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
+    var handler;
+    var scripts;
+    var parser;
     function cleanup() {
       fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       tmpDir.removeCallback();
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
@@ -636,12 +662,12 @@ describe('html-webpack-plugin', function describe() {
         callback(err);
       }
 
-      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+      handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
         if (error) {
           cleanup();
           callback(error);
         } else {
-          var scripts = select(dom, 'script');
+          scripts = select(dom, 'script');
           expect(scripts.length).toEqual(1);
           expect(scripts[0].attribs.crossorigin).toEqual('foo');
 
@@ -649,13 +675,18 @@ describe('html-webpack-plugin', function describe() {
           callback();
         }
       });
-      var parser = new htmlparser.Parser(handler);
+      parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
     });
   });
 
   it('should work with subdirectories', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
+    var jsIntegrity;
+    var scripts;
+    var handler;
+    var parser;
     function cleanup() {
       fs.unlinkSync(path.join(tmpDir.name, 'assets/admin.html'));
       fs.unlinkSync(path.join(tmpDir.name, 'subdir/bundle.js'));
@@ -663,7 +694,7 @@ describe('html-webpack-plugin', function describe() {
       fs.rmdirSync(path.join(tmpDir.name, 'subdir'));
       tmpDir.removeCallback();
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
@@ -684,15 +715,15 @@ describe('html-webpack-plugin', function describe() {
         callback(err);
       }
       expect(result.compilation.warnings).toEqual([]);
-      var jsIntegrity = result.compilation.assets['subdir/bundle.js'].integrity;
+      jsIntegrity = result.compilation.assets['subdir/bundle.js'].integrity;
       expect(jsIntegrity).toMatch(/^sha/);
 
-      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+      handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
         if (error) {
           cleanup();
           callback(error);
         } else {
-          var scripts = select(dom, 'script');
+          scripts = select(dom, 'script');
           expect(scripts.length).toEqual(1);
           expect(scripts[0].attribs.crossorigin).toEqual('anonymous');
           expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
@@ -701,7 +732,7 @@ describe('html-webpack-plugin', function describe() {
           callback();
         }
       });
-      var parser = new htmlparser.Parser(handler);
+      parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'assets/admin.html'), 'utf-8'));
     });
   });
@@ -709,6 +740,7 @@ describe('html-webpack-plugin', function describe() {
   it('should warn when calling htmlWebpackPlugin.options.sriCrossOrigin', function it(callback) {
     var tmpDir = tmp.dirSync();
     var indexEjs = path.join(tmpDir.name, 'index.ejs');
+    var webpackConfig;
     function cleanup(err) {
       fs.unlinkSync(indexEjs);
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
@@ -717,7 +749,7 @@ describe('html-webpack-plugin', function describe() {
       callback(err);
     }
     fs.writeFileSync(indexEjs, '<% htmlWebpackPlugin.options.sriCrossOrigin  %>');
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         filename: 'bundle.js',
@@ -743,6 +775,13 @@ describe('html-webpack-plugin', function describe() {
 
   it('should work with subdirectories and a custom template', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
+    var parser;
+    var jsIntegrity;
+    var cssIntegrity;
+    var handler;
+    var scripts;
+    var links;
     function cleanup() {
       fs.unlinkSync(path.join(tmpDir.name, 'admin.html'));
       fs.unlinkSync(path.join(tmpDir.name, 'subdir/styles.css'));
@@ -750,7 +789,7 @@ describe('html-webpack-plugin', function describe() {
       fs.rmdirSync(path.join(tmpDir.name, 'subdir'));
       tmpDir.removeCallback();
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
@@ -779,22 +818,22 @@ describe('html-webpack-plugin', function describe() {
         callback(err);
       }
       expect(result.compilation.warnings).toEqual([]);
-      var jsIntegrity = result.compilation.assets['subdir/bundle.js'].integrity;
+      jsIntegrity = result.compilation.assets['subdir/bundle.js'].integrity;
       expect(jsIntegrity).toMatch(/^sha/);
-      var cssIntegrity = result.compilation.assets['subdir/styles.css'].integrity;
+      cssIntegrity = result.compilation.assets['subdir/styles.css'].integrity;
       expect(cssIntegrity).toMatch(/^sha/);
 
-      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+      handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
         if (error) {
           cleanup();
           callback(error);
         } else {
-          var scripts = select(dom, 'script');
+          scripts = select(dom, 'script');
           expect(scripts.length).toEqual(1);
           expect(scripts[0].attribs.crossorigin).toEqual('anonymous');
           expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
 
-          var links = select(dom, 'link');
+          links = select(dom, 'link');
           expect(links.length).toEqual(1);
           expect(links[0].attribs.crossorigin).toEqual('anonymous');
           expect(links[0].attribs.integrity).toEqual(cssIntegrity);
@@ -803,19 +842,24 @@ describe('html-webpack-plugin', function describe() {
           callback();
         }
       });
-      var parser = new htmlparser.Parser(handler);
+      parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'admin.html'), 'utf-8'));
     });
   });
 
   it('should work when setting publicPath', function it(callback) {
     var tmpDir = tmp.dirSync();
+    var webpackConfig;
+    var parser;
+    var jsIntegrity;
+    var handler;
+    var scripts;
     function cleanup() {
       fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       tmpDir.removeCallback();
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: path.join(__dirname, './dummy.js'),
       output: {
         path: tmpDir.name,
@@ -834,15 +878,15 @@ describe('html-webpack-plugin', function describe() {
         callback(err);
       }
       expect(result.compilation.warnings).toEqual([]);
-      var jsIntegrity = result.compilation.assets['bundle.js'].integrity;
+      jsIntegrity = result.compilation.assets['bundle.js'].integrity;
       expect(jsIntegrity).toMatch(/^sha/);
 
-      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+      handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
         if (error) {
           cleanup();
           callback(error);
         } else {
-          var scripts = select(dom, 'script');
+          scripts = select(dom, 'script');
           expect(scripts.length).toEqual(1);
           expect(scripts[0].attribs.crossorigin).toEqual('anonymous');
           expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
@@ -851,7 +895,7 @@ describe('html-webpack-plugin', function describe() {
           callback();
         }
       });
-      var parser = new htmlparser.Parser(handler);
+      parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
     });
   });
@@ -859,6 +903,11 @@ describe('html-webpack-plugin', function describe() {
   it('should work with output HTML in parent directory', function it(callback) {
     var tmpDir = tmp.dirSync();
     var subDir = path.join(tmpDir.name, 'sub');
+    var webpackConfig;
+    var parser;
+    var jsIntegrity;
+    var handler;
+    var scripts;
 
     function cleanup() {
       fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
@@ -866,7 +915,7 @@ describe('html-webpack-plugin', function describe() {
       fs.rmdirSync(subDir);
       tmpDir.removeCallback();
     }
-    var webpackConfig = {
+    webpackConfig = {
       entry: {
         main: path.join(__dirname, './dummy.js')
       },
@@ -890,15 +939,15 @@ describe('html-webpack-plugin', function describe() {
         callback(err);
       }
       expect(result.compilation.warnings).toEqual([]);
-      var jsIntegrity = result.compilation.assets['bundle.js'].integrity;
+      jsIntegrity = result.compilation.assets['bundle.js'].integrity;
       expect(jsIntegrity).toMatch(/^sha/);
 
-      var handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
+      handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
         if (error) {
           cleanup();
           callback(error);
         } else {
-          var scripts = select(dom, 'script');
+          scripts = select(dom, 'script');
           expect(scripts.length).toEqual(1);
           expect(scripts[0].attribs.crossorigin).toEqual('anonymous');
           expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
@@ -907,7 +956,7 @@ describe('html-webpack-plugin', function describe() {
           callback();
         }
       });
-      var parser = new htmlparser.Parser(handler);
+      parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
     });
   });
