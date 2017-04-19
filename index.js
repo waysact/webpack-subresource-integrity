@@ -373,6 +373,8 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
               return compilation.assets[src].integrity;
             });
         });
+        
+        if(typeof pluginArgs.plugin.options.sriCrossOrigin === 'undefined')
         Object.defineProperty(
           pluginArgs.plugin.options, 'sriCrossOrigin', {
             get: function get() {
