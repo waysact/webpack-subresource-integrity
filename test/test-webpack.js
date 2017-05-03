@@ -359,30 +359,6 @@ describe('plugin options', function describe() {
         'the set for which support is mandated by the specification'));
   });
 
-  it('supports legacy constructor with single hash function name', function it() {
-    var plugin = new SriPlugin('sha256');
-    var dummyCompilation = testCompilation();
-    expect(plugin.options.hashFuncNames).toEqual(['sha256']);
-    expect(plugin.options.deprecatedOptions).toBeTruthy();
-    plugin.validateOptions(dummyCompilation);
-    expect(dummyCompilation.errors.length).toBe(0);
-    expect(dummyCompilation.warnings.length).toBe(1);
-    expect(dummyCompilation.warnings[0].message).toMatch(
-        /Passing a string or array to the plugin constructor is deprecated/);
-  });
-
-  it('supports legacy constructor with array of hash function names', function it() {
-    var plugin = new SriPlugin(['sha256', 'sha384']);
-    var dummyCompilation = testCompilation();
-    expect(plugin.options.hashFuncNames).toEqual(['sha256', 'sha384']);
-    expect(plugin.options.deprecatedOptions).toBeTruthy();
-    plugin.validateOptions(dummyCompilation);
-    expect(dummyCompilation.errors.length).toBe(0);
-    expect(dummyCompilation.warnings.length).toBe(1);
-    expect(dummyCompilation.warnings[0].message).toMatch(
-        /Passing a string or array to the plugin constructor is deprecated/);
-  });
-
   it('supports new constructor with array of hash function names', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256', 'sha384']
@@ -434,69 +410,6 @@ describe('plugin options', function describe() {
     expect(plugin.options.enabled).toBeFalsy();
   });
 
-  it('errors if the crossorigin attribute is not a string', function it() {
-    var plugin = new SriPlugin({
-      hashFuncNames: ['sha256'],
-      crossorigin: 1234
-    });
-    var dummyCompilation = testCompilation();
-    expect(plugin.options.hashFuncNames).toEqual(['sha256']);
-    expect(plugin.options.deprecatedOptions).toBeFalsy();
-    plugin.validateOptions(dummyCompilation);
-    expect(dummyCompilation.errors.length).toBe(1);
-    expect(dummyCompilation.warnings.length).toBe(1);
-    expect(dummyCompilation.errors[0].message).toMatch(
-        /options.crossorigin must be a string./);
-    expect(dummyCompilation.warnings[0].message).toMatch(
-        /set webpack option output.crossOriginLoading/);
-  });
-
-  it('warns if the crossorigin attribute is not recognized', function it() {
-    var plugin = new SriPlugin({
-      hashFuncNames: ['sha256'],
-      crossorigin: 'foo'
-    });
-    var dummyCompilation = testCompilation();
-
-    expect(plugin.options.hashFuncNames).toEqual(['sha256']);
-    expect(plugin.options.crossorigin).toBe('foo');
-    expect(plugin.options.deprecatedOptions).toBeFalsy();
-    plugin.validateOptions(dummyCompilation);
-    expect(dummyCompilation.errors.length).toBe(0);
-    expect(dummyCompilation.warnings.length).toBe(2);
-    expect(dummyCompilation.warnings[0].message).toMatch(
-        /set webpack option output.crossOriginLoading/);
-    expect(dummyCompilation.warnings[1].message).toMatch(new RegExp(
-      'specified a value for the crossorigin option that is not part of ' +
-        'the set of standard values'));
-  });
-
-  it('accepts anonymous crossorigin without warning about standard values', function it() {
-    var plugin = new SriPlugin({
-      hashFuncNames: ['sha256'],
-      crossorigin: 'anonymous'
-    });
-    var dummyCompilation = testCompilation();
-    plugin.validateOptions(dummyCompilation);
-    expect(dummyCompilation.errors.length).toBe(0);
-    expect(dummyCompilation.warnings.length).toBe(1);
-    expect(dummyCompilation.warnings[0].message).toMatch(
-        /set webpack option output.crossOriginLoading/);
-  });
-
-  it('accepts use-credentials crossorigin without warning about standard values', function it() {
-    var plugin = new SriPlugin({
-      hashFuncNames: ['sha256'],
-      crossorigin: 'use-credentials'
-    });
-    var dummyCompilation = testCompilation();
-    plugin.validateOptions(dummyCompilation);
-    expect(dummyCompilation.errors.length).toBe(0);
-    expect(dummyCompilation.warnings.length).toBe(1);
-    expect(dummyCompilation.warnings[0].message).toMatch(
-        /set webpack option output.crossOriginLoading/);
-  });
-
   it('uses default options', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256']
@@ -507,7 +420,6 @@ describe('plugin options', function describe() {
     expect(plugin.options.deprecatedOptions).toBeFalsy();
     dummyCompilation = testCompilation();
     plugin.validateOptions(dummyCompilation);
-    expect(plugin.options.crossorigin).toBe('anonymous');
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(0);
   });
@@ -633,53 +545,6 @@ describe('html-webpack-plugin', function describe() {
     });
   });
 
-  it('should use the crossorigin configuration option', function it(callback) {
-    var tmpDir = tmp.dirSync();
-    var webpackConfig;
-    var handler;
-    var scripts;
-    var parser;
-    function cleanup() {
-      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
-      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
-      tmpDir.removeCallback();
-    }
-    webpackConfig = {
-      entry: path.join(__dirname, './dummy.js'),
-      output: {
-        path: tmpDir.name,
-        filename: 'bundle.js',
-        crossOriginLoading: 'anonymous'
-      },
-      plugins: [
-        new HtmlWebpackPlugin(),
-        new SriPlugin({ hashFuncNames: ['sha256'], crossorigin: 'foo' })
-      ]
-    };
-    webpack(webpackConfig, function webpackCallback(err) {
-      if (err) {
-        cleanup();
-        callback(err);
-      }
-
-      handler = new htmlparser.DefaultHandler(function htmlparserCallback(error, dom) {
-        if (error) {
-          cleanup();
-          callback(error);
-        } else {
-          scripts = select(dom, 'script');
-          expect(scripts.length).toEqual(1);
-          expect(scripts[0].attribs.crossorigin).toEqual('foo');
-
-          cleanup();
-          callback();
-        }
-      });
-      parser = new htmlparser.Parser(handler);
-      parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
-    });
-  });
-
   it('should work with subdirectories', function it(callback) {
     var tmpDir = tmp.dirSync();
     var webpackConfig;
@@ -734,42 +599,6 @@ describe('html-webpack-plugin', function describe() {
       });
       parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'assets/admin.html'), 'utf-8'));
-    });
-  });
-
-  it('should warn when calling htmlWebpackPlugin.options.sriCrossOrigin', function it(callback) {
-    var tmpDir = tmp.dirSync();
-    var indexEjs = path.join(tmpDir.name, 'index.ejs');
-    var webpackConfig;
-    function cleanup(err) {
-      fs.unlinkSync(indexEjs);
-      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
-      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
-      tmpDir.removeCallback();
-      callback(err);
-    }
-    fs.writeFileSync(indexEjs, '<% htmlWebpackPlugin.options.sriCrossOrigin  %>');
-    webpackConfig = {
-      entry: path.join(__dirname, './dummy.js'),
-      output: {
-        filename: 'bundle.js',
-        path: tmpDir.name,
-        crossOriginLoading: 'anonymous'
-      },
-      plugins: [
-        new HtmlWebpackPlugin({
-          template: indexEjs
-        }),
-        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
-      ]
-    };
-    webpack(webpackConfig, function webpackCallback(err, result) {
-      expect(result.compilation.warnings.length).toEqual(1);
-      expect(result.compilation.warnings[0]).toBeAn(Error);
-      expect(result.compilation.warnings[0].message).toEqual(
-        'webpack-subresource-integrity: htmlWebpackPlugin.options.sriCrossOrigin is deprecated, use webpackConfig.output.crossOriginLoading instead.'
-      );
-      cleanup(err);
     });
   });
 
