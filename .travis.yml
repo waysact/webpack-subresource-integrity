@@ -4,11 +4,13 @@ node_js:
   - 5
   - 6
   - 7
+  - 8
 addons:
   firefox: latest
 env:
   - WEBPACK_SUFFIX="@1" ETWP_SUFFIX="@1"
   - WEBPACK_SUFFIX="@2" ETWP_SUFFIX="@2"
+  - WEBPACK_SUFFIX="@3" ETWP_SUFFIX="@2"
 install:
   - npm install --ignore-scripts
   - npm rm webpack

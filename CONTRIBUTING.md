@@ -61,12 +61,14 @@ without it and at-mention a maintainer for help.
 
 ### Webpack compatibility
 
-Your new test case and all existing test cases should pass with both
-Webpack 1.x and 2.x.  You can ensure this is the case as follows:
+Your new test case and all existing test cases should pass with all
+major Webpack versions (currently 1.x, 2.x and 3.x).  You can ensure
+this is the case as follows:
 
 ```shell
 npm install webpack@1 extract-text-webpack-plugin@1 && npm test
-npm install webpack@beta extract-text-webpack-plugin@beta && npm test
+npm install webpack@2 extract-text-webpack-plugin@2 && npm test
+npm install webpack@3 extract-text-webpack-plugin@2 && npm test
 ```
 
 ### Code formatting
