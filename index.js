@@ -226,8 +226,8 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
             if (oldSource.indexOf('webpackHotUpdate') >= 0) {
               self.warnOnce(
                 compilation,
-                'Chunks loaded by HMR are unprotected. ' +
-                  'Consider disabling webpack-subresource-integrity in development mode.'
+                'webpack-subresource-integrity may interfere with hot reloading. ' +
+                  'Consider disabling this plugin in development mode.'
               );
             }
 

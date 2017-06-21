@@ -224,7 +224,7 @@ describe('webpack-subresource-integrity', function describe() {
        });
   });
 
-  it('should warn when used with HMR', function it(callback) {
+  it('should warn when used with hot reloading', function it(callback) {
     var tmpDir = tmp.dirSync();
     var webpackConfig;
     function cleanup(err) {
@@ -248,7 +248,7 @@ describe('webpack-subresource-integrity', function describe() {
       expect(result.compilation.warnings.length).toEqual(1);
       expect(result.compilation.warnings[0]).toBeAn(Error);
       expect(result.compilation.warnings[0].message).toMatch(
-          /Chunks loaded by HMR are unprotected./);
+          /may interfere with hot reloading./);
       cleanup(err);
     });
   });

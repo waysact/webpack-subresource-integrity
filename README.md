@@ -164,11 +164,15 @@ Chrome 45 still
 [holds a relatively high market share](https://www.netmarketshare.com/report.aspx?qprid=3&qpaf=&qpcustom=Chrome+45.0&qpcustomb=0)
 of around 5% at the time of this writing.)
 
-### Hot Module Replacement
+### Hot Reloading
 
-Chunks loaded via Hot Module Replacement (HMR) are not currently
-protected.  This shouldn't be a problem because HMR is usually used
-only in development mode where SRI is not normally needed.
+This plugin can interfere with hot reloading and therefore should be
+disabled when using tools such as `webpack-dev-server`. This shouldn't
+be a problem because hot reloading is usually used only in development
+mode where SRI is not normally needed.
+
+For testing SRI without setting up a full-blown web server, consider
+using a tool such as [`http-server`](https://github.com/indexzero/http-server).
 
 ## Further Reading
 
