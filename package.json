@@ -51,9 +51,9 @@
     "karma-mocha": "^1.0.1",
     "karma-webpack": "^2.0.1",
     "mocha": "^3.1.2",
-    "nyc": "^10.0.0",
+    "nyc": "^11.0.0",
     "soupselect": "^0.2.0",
-    "style-loader": "^0.17.0",
+    "style-loader": "^0.18.0",
     "tmp": "^0.0.31",
     "travis-after-all": "^1.4.4",
     "webpack": "^1.12.11"

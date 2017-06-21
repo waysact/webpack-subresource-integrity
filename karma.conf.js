@@ -25,6 +25,18 @@ GetIntegrityPlugin.prototype.apply = function apply(compiler) {
   });
 };
 
+function addIntegrityTags(chunk) {
+  return chunk
+    .replace(
+      'src="/base/test/test.js',
+      'integrity="' + toplevelScriptIntegrity + '" crossorigin="anonymous" src="/base/test/test.js'
+    )
+    .replace(
+      'rel="stylesheet"',
+      'rel="stylesheet" integrity="' + stylesheetIntegrity + '" crossorigin="anonymous"'
+    );
+}
+
 /*
  *  Hack Karma to add the integrity attribute to the script tag
  *  loading the top-level chunk.
@@ -50,6 +62,7 @@ function nextCreate(
   return function nextMiddleware(request, response, next) {
     var requestUrl = request.normalizedUrl.replace(/\?.*/, '');
     var prevWrite;
+    var prevEnd;
     requestUrl = requestUrl.substr(urlRoot.length - 1);
     if (requestUrl === '/context.html' &&
         toplevelScriptIntegrity &&
@@ -57,16 +70,13 @@ function nextCreate(
         stylesheetIntegrity &&
         stylesheetIntegrity.startsWith('sha')) {
       prevWrite = response.write;
+      prevEnd = response.end;
       // eslint-disable-next-line no-param-reassign
-      response.write = function nextWrite(chunk, encoding) {
-        var nextChunk = chunk.replace(
-          'src="/base/test/test.js',
-          'integrity="' + toplevelScriptIntegrity + '" crossorigin="anonymous" src="/base/test/test.js');
-        nextChunk = nextChunk.replace(
-          'rel="stylesheet"',
-          'rel="stylesheet" integrity="' + stylesheetIntegrity + '" crossorigin="anonymous"'
-        );
-        prevWrite.call(response, nextChunk, encoding);
+      response.write = function nextWrite(chunk, encoding, callback) {
+        prevWrite.call(response, addIntegrityTags(chunk), encoding, callback);
+      };
+      response.end = function nextEnd(chunk, encoding, callback) {
+        prevEnd.call(response, addIntegrityTags(chunk), encoding, callback);
       };
     }
     return prevMiddleware(request, response, next);
