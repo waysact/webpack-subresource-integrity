@@ -59,7 +59,7 @@
     "webpack": "^1.12.11"
   },
   "peerDependencies": {
-    "webpack": "^1.12.11 || ~2"
+    "webpack": "^1.12.11 || ~2 || ~3"
   },
   "files": [
     "LICENSE",
