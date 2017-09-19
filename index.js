@@ -323,7 +323,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
           pluginArgs.assets[fileType + 'Integrity'] =
             pluginArgs.assets[fileType].map(function assetIntegrity(filePath) {
               var src = self.hwpAssetPath(filePath);
-              return compilation.assets[src].integrity;
+              return src in compilation.assets ? compilation.assets[src].integrity : false;
             });
         });
         callback(null, pluginArgs);
