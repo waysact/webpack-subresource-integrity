@@ -12,6 +12,7 @@ var ExtractTextPluginVersion = require('extract-text-webpack-plugin/package.json
 var CommonsChunkPlugin = require('webpack/lib/optimize/CommonsChunkPlugin');
 var crypto = require('crypto');
 var glob = require('glob');
+var vm = require('vm');
 
 function createExtractTextLoader() {
   if (ExtractTextPluginVersion.match(/^1\./)) {
@@ -787,6 +788,48 @@ describe('html-webpack-plugin', function describe() {
       });
       parser = new htmlparser.Parser(handler);
       parser.parseComplete(fs.readFileSync(path.join(tmpDir.name, 'index.html'), 'utf-8'));
+    });
+  });
+
+  (webpack.NamedChunksPlugin ? it : it.skip)('supports dashes in chunk names', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    var mainJs = path.join(tmpDir.name, 'main.js');
+    var chunk1Js = path.join(tmpDir.name, 'chunk1.js');
+    var webpackConfig;
+
+    fs.writeFileSync(mainJs, 'import(/* webpackChunkName: "chunk-name-with-dashes" */ "./chunk1.js")');
+    fs.writeFileSync(chunk1Js, ';');
+
+    function cleanup(err) {
+      fs.unlinkSync(path.join(tmpDir.name, 'main.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'chunk1.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      glob.sync(path.join(tmpDir.name, '*.bundle.js')).forEach(fs.unlinkSync);
+      tmpDir.removeCallback();
+      callback(err);
+    }
+
+    webpackConfig = {
+      entry: mainJs,
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
+      },
+      plugins: [
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] }),
+        new webpack.NamedChunksPlugin()
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.errors).toEqual([]);
+      expect(result.compilation.warnings).toEqual([]);
+
+      // Ensure generated code can be parsed
+      // eslint-disable-next-line no-new
+      new vm.Script(fs.readFileSync(path.join(tmpDir.name, 'bundle.js')));
+
+      cleanup(err);
     });
   });
 });

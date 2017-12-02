@@ -55,13 +55,12 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(mainTemplat
 
       return this.asString([
         source,
-        'var sriHashes = {',
-        this.indent(
-          Object.keys(allDepChunkIds).map(function mapChunkId(chunkId) {
-            return chunkId + ':"' + makePlaceholder(chunkId) + '"';
-          }).join(',\n')
-        ),
-        '};'
+        'var sriHashes = ' + JSON.stringify(
+          Object.keys(allDepChunkIds).reduce(function chunkIdReducer(sriHashes, chunkId) {
+            sriHashes[chunkId] = makePlaceholder(chunkId); // eslint-disable-line no-param-reassign
+            return sriHashes;
+          }, {})
+        ) + ';'
       ]);
     }
     return source;
