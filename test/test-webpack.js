@@ -832,4 +832,91 @@ describe('html-webpack-plugin', function describe() {
       cleanup(err);
     });
   });
+
+  it('works with ExtractTextPlugin("styles.css?[contenthash]")', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    var webpackConfig;
+
+    function cleanup(err) {
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.css'));
+      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
+      tmpDir.removeCallback();
+      callback(err);
+    }
+
+    webpackConfig = {
+      entry: path.join(__dirname, './dummy.js'),
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
+      },
+      module: {
+        loaders: [
+          { test: /\.css$/, loader: createExtractTextLoader() }
+        ]
+      },
+      plugins: [
+        new HtmlWebpackPlugin({
+          hash: true,
+          inject: false,
+          filename: 'index.html',
+          template: path.join(__dirname, 'index.ejs')
+        }),
+        new ExtractTextPlugin('bundle.css?[contenthash]'),
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.errors).toEqual([]);
+      expect(result.compilation.warnings).toEqual([]);
+
+      cleanup(err);
+    });
+  });
+
+  it('works with ExtractTextPlugin using a subdirectory with path joined', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    var webpackConfig;
+
+    function cleanup(err) {
+      fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'output', 'bundle.css'));
+      fs.rmdirSync(path.join(tmpDir.name, 'output'));
+      fs.unlinkSync(path.join(tmpDir.name, 'index.html'));
+      tmpDir.removeCallback();
+      callback(err);
+    }
+
+    webpackConfig = {
+      entry: path.join(__dirname, './dummy.js'),
+      output: {
+        path: tmpDir.name,
+        filename: 'bundle.js',
+        crossOriginLoading: 'anonymous'
+      },
+      module: {
+        loaders: [
+          { test: /\.css$/, loader: createExtractTextLoader() }
+        ]
+      },
+      plugins: [
+        new HtmlWebpackPlugin({
+          hash: true,
+          inject: false,
+          filename: 'index.html',
+          template: path.join(__dirname, 'index.ejs')
+        }),
+        new ExtractTextPlugin(path.join('output', 'bundle.css')),
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.errors).toEqual([]);
+      expect(result.compilation.warnings).toEqual([]);
+
+      cleanup(err);
+    });
+  });
 });

@@ -164,10 +164,7 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
  *  into `compilation.assets`.
  */
 SubresourceIntegrityPlugin.prototype.hwpAssetPath = function hwpAssetPath(src) {
-  return path
-    .relative(this.hwpPublicPath, src.replace(/\?[a-zA-Z0-9]+$/, ''))
-    .split(path.sep)
-    .join('/');
+  return path.relative(this.hwpPublicPath, src);
 };
 
 SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
@@ -279,9 +276,25 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
         return (tag.tagName === 'script' || tag.tagName === 'link') && getTagSrc(tag);
       }
 
+      function normalizePath(p) {
+        return p.replace(/\?.*$/, '').split(path.sep).join('/');
+      }
+
       function getIntegrityChecksumForAsset(src) {
+        var normalizedSrc;
+        var normalizedKey;
         var asset = compilation.assets[src];
-        return asset && asset.integrity;
+        if (asset) {
+          return asset.integrity;
+        }
+        normalizedSrc = normalizePath(src);
+        normalizedKey = Object.keys(compilation.assets).find(function test(assetKey) {
+          return normalizePath(assetKey) === normalizedSrc;
+        });
+        if (normalizedKey) {
+          return compilation.assets[normalizedKey].integrity;
+        }
+        return null;
       }
 
       function alterAssetTags(pluginArgs, callback) {
@@ -321,8 +334,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
           // eslint-disable-next-line no-param-reassign
           pluginArgs.assets[fileType + 'Integrity'] =
             pluginArgs.assets[fileType].map(function assetIntegrity(filePath) {
-              var src = self.hwpAssetPath(filePath);
-              return compilation.assets[src].integrity;
+              return getIntegrityChecksumForAsset(self.hwpAssetPath(filePath));
             });
         });
         callback(null, pluginArgs);

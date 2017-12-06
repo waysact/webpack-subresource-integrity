@@ -52,6 +52,7 @@ install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version
   # install modules
+  - appveyor-retry npm install --global npm@3
   - npm install --ignore-scripts
   - npm rm webpack
   - npm rm extract-text-webpack-plugin
