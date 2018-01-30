@@ -3,3 +3,9 @@ engines:
      enabled: true
 ratings:
    paths: ["**.js"]
+exclude_paths:
+  - .git/
+  - node_modules/
+  - coverage/
+  - test/
+  - karma.conf.js
