@@ -214,7 +214,7 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
         hashByChunkId[depChunkId]);
     }
   });
-
+  console.log('Replace source !', depChunkIds, hashByChunkId);
   // eslint-disable-next-line no-param-reassign
   assets[chunkFile] = newAsset;
 
@@ -229,7 +229,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
   var depChunkIds = [];
   var newAsset;
   var hashByChunkId = {};
-
+  console.log('Process chunk : ', chunk.id);
   function recurse(childChunk) {
     if (hashByChunkId[childChunk.id]) {
       return [];
