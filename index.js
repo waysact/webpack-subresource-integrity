@@ -203,8 +203,8 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
   var magicMarkerPos;
 
   newAsset = new ReplaceSource(assets[chunkFile]);
-  depChunkIds = depChunkIds.filter((v, i, s) => self.indexOf(v) === i);
-  
+  depChunkIds = depChunkIds.filter((v, i, s) => s.indexOf(v) === i);
+
   depChunkIds.forEach(function replaceMagicMarkers(depChunkId) {
     magicMarker = makePlaceholder(depChunkId);
     magicMarkerPos = oldSource.indexOf(magicMarker);
