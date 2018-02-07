@@ -239,6 +239,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
     console.log('Recurse : ', childChunk.id, childChunk.name, childChunk.chunks.length);
     childChunk.chunks.forEach(function mapChunk(depChunk) {
       depChunkIds = depChunkIds.concat(recurse(depChunk));
+      console.log('Out of recurse for : ', depChunk.id);
     });
 
     if (childChunk.files.length > 0) {
@@ -248,7 +249,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
         depChunkIds,
         hashByChunkId,
         childChunk.files[0]);
-      console.log('Assign integrity for :', childChunk.name);
+      console.log('Assign integrity for :', childChunk.id, childChunk.name);
       hashByChunkId[childChunk.id] = newAsset.integrity;
     }
     return [childChunk.id].concat(depChunkIds);
