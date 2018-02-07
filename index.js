@@ -236,7 +236,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
       return [];
     }
     hashByChunkId[childChunk.id] = true;
-
+    console.log('Recurse : ', childChunk.name);
     childChunk.chunks.forEach(function mapChunk(depChunk) {
       depChunkIds = depChunkIds.concat(recurse(depChunk));
     });
@@ -290,7 +290,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
         var asset;
 
         compilation.chunks.forEach(function forEachChunk(chunk) {
-          console.log('For each chunk : ', chunk.id);
+          console.log('For each chunk : ', chunk.id, chunk.name);
           if (('hasRuntime' in chunk) ? chunk.hasRuntime() : chunk.entry) {
             self.processChunk(chunk, compilation, assets);
           }
