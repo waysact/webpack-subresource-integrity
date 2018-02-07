@@ -215,7 +215,7 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
         hashByChunkId[depChunkId]);
     }
   });
-  console.log('Replace source !', depChunkIds, hashByChunkId);
+  console.log('Replace source !', depChunkIds);
   // eslint-disable-next-line no-param-reassign
   assets[chunkFile] = newAsset;
 
@@ -236,7 +236,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
       return [];
     }
     hashByChunkId[childChunk.id] = true;
-    console.log('Recurse : ', childChunk.name);
+    console.log('Recurse : ', childChunk.id, childChunk.name, childChunk.chunks.length);
     childChunk.chunks.forEach(function mapChunk(depChunk) {
       depChunkIds = depChunkIds.concat(recurse(depChunk));
     });
@@ -248,6 +248,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
         depChunkIds,
         hashByChunkId,
         childChunk.files[0]);
+      console.log('Assign integrity for :', childChunk.name);
       hashByChunkId[childChunk.id] = newAsset.integrity;
     }
     return [childChunk.id].concat(depChunkIds);
@@ -295,6 +296,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
             self.processChunk(chunk, compilation, assets);
           }
         });
+        console.log('Done looping on chunks');
 
         Object.keys(assets).forEach(function loop(assetKey) {
           console.log('Set integrity');
