@@ -290,12 +290,14 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
         var asset;
 
         compilation.chunks.forEach(function forEachChunk(chunk) {
+          console.log('For each chunk : ', chunk.id);
           if (('hasRuntime' in chunk) ? chunk.hasRuntime() : chunk.entry) {
             self.processChunk(chunk, compilation, assets);
           }
         });
 
         Object.keys(assets).forEach(function loop(assetKey) {
+          console.log('Set integrity');
           asset = assets[assetKey];
           if (!asset.integrity) {
             asset.integrity = computeIntegrity(self.options.hashFuncNames, asset.source());
