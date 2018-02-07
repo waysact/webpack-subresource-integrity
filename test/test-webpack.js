@@ -919,4 +919,57 @@ describe('html-webpack-plugin', function describe() {
       cleanup(err);
     });
   });
+
+  it('works with multiple CommonsChunkPlugins', function it(callback) {
+    var tmpDir = tmp.dirSync();
+    var webpackConfig;
+
+    var pageA = path.join(tmpDir.name, './pageA.js');
+    var pageB = path.join(tmpDir.name, './pageB.js');
+
+    fs.writeFileSync(pageA, '');
+    fs.writeFileSync(pageB, '');
+
+    function cleanup(err) {
+      fs.unlinkSync(pageA);
+      fs.unlinkSync(pageB);
+      fs.unlinkSync(path.join(tmpDir.name, 'commons1.js'));
+      fs.unlinkSync(path.join(tmpDir.name, 'commons2.js'));
+      tmpDir.removeCallback();
+      callback(err);
+    }
+
+    webpackConfig = {
+      entry: {
+        pageA: pageA,
+        pageB: pageB
+      },
+      output: {
+        path: tmpDir.name,
+        filename: '[name].js',
+        crossOriginLoading: 'anonymous'
+      },
+      plugins: [
+        new webpack.optimize.CommonsChunkPlugin({
+          name: 'commons1',
+          chunks: ['pageA']
+        }),
+        new webpack.optimize.CommonsChunkPlugin({
+          name: 'commons2',
+          chunks: ['pageB']
+        }),
+        new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
+      ]
+    };
+    webpack(webpackConfig, function webpackCallback(err, result) {
+      expect(result.compilation.errors).toEqual([]);
+      expect(result.compilation.warnings).toEqual([]);
+
+      ['commons1.js', 'commons2.js'].forEach(function check(filename) {
+        expect(fs.readFileSync(path.join(tmpDir.name, filename), 'utf-8').indexOf('CHUNK-SRI-HASH')).toEqual(-1);
+      });
+
+      cleanup(err);
+    });
+  });
 });
