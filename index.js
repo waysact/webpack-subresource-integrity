@@ -203,7 +203,7 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
   var magicMarkerPos;
 
   newAsset = new ReplaceSource(assets[chunkFile]);
-  // depChunkIds = depChunkIds.filter((v, i, s) => s.indexOf(v) === i);
+  depChunkIds = depChunkIds.filter((v, i, s) => s.indexOf(v) === i);
 
   depChunkIds.forEach(function replaceMagicMarkers(depChunkId) {
     magicMarker = makePlaceholder(depChunkId);
@@ -238,6 +238,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
     hashByChunkId[childChunk.id] = true;
     console.log('Recurse : ', childChunk.id, childChunk.name, childChunk.chunks.length);
     childChunk.chunks.forEach(function mapChunk(depChunk) {
+      console.log('Begin recurse for : ', depChunk.id);
       depChunkIds = depChunkIds.concat(recurse(depChunk));
       console.log('Out of recurse for : ', depChunk.id);
     });
