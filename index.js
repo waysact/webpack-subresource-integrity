@@ -226,11 +226,12 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
   chunk, compilation, assets
 ) {
   var self = this;
-  var depChunkIds = [];
   var newAsset;
   var hashByChunkId = {};
 
   function recurse(childChunk) {
+    var depChunkIds = [];
+
     if (hashByChunkId[childChunk.id]) {
       return [];
     }
