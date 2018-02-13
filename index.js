@@ -178,7 +178,7 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
   }
 
   compiler.plugin('after-plugins', function afterPlugins() {
-    compiler.plugin('this-compilation', function thisCompilation(compilation) {
+    compiler.plugin('compilation', function thisCompilation(compilation) {
       self.validateOptions(compilation);
 
       if (!self.options.enabled) {
