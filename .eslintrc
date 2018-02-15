@@ -1,3 +1,4 @@
 {
-    "extends": "eslint-config-airbnb-base/legacy",
+  "extends": ["eslint-config-airbnb-base/legacy", "prettier"],
+  "parser": "babel-eslint",
 }

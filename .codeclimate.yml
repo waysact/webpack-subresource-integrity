@@ -8,4 +8,5 @@ exclude_paths:
   - node_modules/
   - coverage/
   - test/
+  - examples/
   - karma.conf.js

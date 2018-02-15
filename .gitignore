@@ -37,3 +37,6 @@ node_modules
 # Yarn and npm lock files
 yarn.lock
 package-lock.json
+
+# Test output
+/examples/*/dist/

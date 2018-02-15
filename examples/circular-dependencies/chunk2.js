@@ -16,14 +16,23 @@ module.exports = function chunk2(callback) {
   }
   try {
     resourcesWithIntegrity = [];
-    Array.prototype.slice.call(document.getElementsByTagName('script')).forEach(forEachElement);
-    Array.prototype.slice.call(document.getElementsByTagName('link')).forEach(forEachElement);
+    Array.prototype.slice
+      .call(document.getElementsByTagName('script'))
+      .forEach(forEachElement);
+    Array.prototype.slice
+      .call(document.getElementsByTagName('link'))
+      .forEach(forEachElement);
     expect(resourcesWithIntegrity).toInclude('stylesheet.css');
     expect(resourcesWithIntegrity).toInclude('test.js');
-    expect(resourcesWithIntegrity.filter(function filter(item) {
-      return item.match(/^\d+\.(chunk|bundle).js$/);
-    }).length).toBe(2);
-    expect(window.getComputedStyle(document.getElementsByTagName('body')[0]).backgroundColor).toEqual('rgb(200, 201, 202)');
+    expect(
+      resourcesWithIntegrity.filter(function filter(item) {
+        return item.match(/^\d+\.(chunk|bundle).js$/);
+      }).length
+    ).toBe(2);
+    expect(
+      window.getComputedStyle(document.getElementsByTagName('body')[0])
+        .backgroundColor
+    ).toEqual('rgb(200, 201, 202)');
     callback();
   } catch (e) {
     callback(e);
