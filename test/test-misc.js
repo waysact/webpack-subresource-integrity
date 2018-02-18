@@ -43,8 +43,7 @@ describe('Edge Cases', function describe() {
         },
         plugins: [
           new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
-        ],
-        mode: 'production'
+        ]
       };
       webpack(webpackConfig, function webpackCallback(err, result) {
         if (err) {
@@ -109,7 +108,6 @@ describe('Edge Cases', function describe() {
           crossOriginLoading: 'anonymous'
         },
         plugins: [new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })],
-        mode: 'development'
       };
       compiler = webpack(webpackConfig);
       function handler(error, stats) {

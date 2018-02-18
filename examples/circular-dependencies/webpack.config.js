@@ -1,5 +1,6 @@
 var SriPlugin = require('webpack-subresource-integrity');
 var webpack = require('webpack');
+var path = require('path');
 
 module.exports = {
   entry: {
@@ -7,7 +8,7 @@ module.exports = {
     chunk2: ['./chunk2.js']
   },
   output: {
-    filename: 'bundle.js',
+    filename: '[name].js',
     crossOriginLoading: 'anonymous'
   },
   plugins: [

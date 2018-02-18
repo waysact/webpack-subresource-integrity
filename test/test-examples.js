@@ -100,7 +100,7 @@ describe('Examples', function describe() {
 
       return Promise.promisify(webpack)(
         merge(
-          { output: { path: path.join(dir, 'dist') }, mode: 'production' },
+          { output: { path: path.join(dir, 'dist') } },
           require(path.join(dir, 'webpack.config.js')) // eslint-disable-line global-require
         )
       ).then(stats => {
