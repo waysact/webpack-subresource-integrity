@@ -11,7 +11,7 @@ env:
   - WEBPACK_SUFFIX="@2" ETWP_SUFFIX="@2"
   - WEBPACK_SUFFIX="@3" ETWP_SUFFIX="@2"
 install:
-  - npm install --ignore-scripts
+  - npm install
   - npm rm webpack
   - npm rm extract-text-webpack-plugin
   - npm install "webpack""$WEBPACK_SUFFIX" --ignore-scripts || true
