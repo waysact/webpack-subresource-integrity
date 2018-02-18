@@ -7,6 +7,7 @@
   },
   "main": "index",
   "scripts": {
+    "coverage": "nyc $(npm bin)/mocha --timeout 20000",
     "test": "karma start --single-run && mocha --timeout 20000",
     "mocha": "mocha --timeout 20000",
     "lint": "eslint .",
@@ -78,5 +79,13 @@
   ],
   "prettier": {
     "singleQuote": true
+  },
+  "nyc": {
+    "exclude": [
+      "coverage/**",
+      "test/**",
+      "examples/**",
+      "**/node_modules/**"
+    ]
   }
 }
