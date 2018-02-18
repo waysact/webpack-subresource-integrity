@@ -44,7 +44,7 @@ install:
   - ps: Install-Product node $env:nodejs_version
   # install modules
   - appveyor-retry npm install --global npm@3
-  - npm install
+  - npm install || true
   - npm rm webpack
   - npm rm extract-text-webpack-plugin
   - npm install "webpack%WEBPACK_SUFFIX%" --ignore-scripts || true

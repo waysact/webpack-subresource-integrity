@@ -40,7 +40,7 @@ describe('Examples', function describe() {
           }
 
           require('puppeteer') // eslint-disable-line global-require
-            .launch()
+            .launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
             .then(_browser => {
               browser = _browser;
               done();
