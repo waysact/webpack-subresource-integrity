@@ -43,21 +43,17 @@ that we can accept your pull request.
 
 ### Include a new test case
 
-Your pull request should include at least one new test case that fails
-without your code changes.  You can ensure this is the case as
-follows:
+Your pull request should include at least one new test case.
+[Creating a new test case is easy!](examples/README.md#examples/README.md)
+
+The test case should fail without your code changes.  You can ensure
+this is the case as follows:
 
 ```shell
 git checkout master
-git checkout your-branch -- test
+git checkout your-branch -- test examples
 npm test # this should fail
 ```
-
-Creating a new test case can be difficult, but this is an essential
-part of the pull request without which it cannot be accepted.
-
-If you have trouble creating the test case, open the pull request
-without it and at-mention a maintainer for help.
 
 ### Webpack compatibility
 
