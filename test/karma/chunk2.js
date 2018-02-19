@@ -9,7 +9,13 @@ module.exports = function chunk2(callback) {
     var match;
     if (src) {
       match = src.match(/[^/]+\.(js|css)/);
-      if (match && crossorigin && integrity && integrity.match(/^sha\d+-/)) {
+      if (
+        match &&
+        !['context.js', 'mocha.js', 'adapter.js'].includes(match[0])
+      ) {
+        expect(
+          crossorigin && integrity && integrity.match(/^sha\d+-/)
+        ).toBeTruthy();
         resourcesWithIntegrity.push(match[0].toString());
       }
     }
@@ -24,11 +30,7 @@ module.exports = function chunk2(callback) {
       .forEach(forEachElement);
     expect(resourcesWithIntegrity).toInclude('stylesheet.css');
     expect(resourcesWithIntegrity).toInclude('test.js');
-    expect(
-      resourcesWithIntegrity.filter(function filter(item) {
-        return item.match(/^[12]\.(chunk|bundle).js$/);
-      }).length
-    ).toBe(2);
+    expect(resourcesWithIntegrity.length).toBeGreaterThanOrEqualTo(4);
     expect(
       window.getComputedStyle(document.getElementsByTagName('body')[0])
         .backgroundColor
