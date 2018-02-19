@@ -43,6 +43,7 @@
     "css-loader": "^0.28.0",
     "eslint": "^3.19.0",
     "eslint-config-airbnb-base": "^11.1.3",
+    "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-import": "^2.2.0",
     "expect": "^1.13.4",
     "extract-text-webpack-plugin": "^1.0.1",
@@ -71,8 +72,11 @@
     "travis-after-all": "^1.4.4",
     "webpack": "^1.12.11"
   },
+  "optionalDependencies": {
+    "puppeteer": "^1.0.0"
+  },
   "peerDependencies": {
-    "webpack": "^1.12.11 || ~2 || ~3"
+    "webpack": "^1.12.11 || ~2 || ~3 || >= 4.0.0-beta.2 < 5.0"
   },
   "files": [
     "LICENSE",
@@ -80,9 +84,6 @@
     "CHANGELOG.md",
     "index.js"
   ],
-  "prettier": {
-    "singleQuote": true
-  },
   "nyc": {
     "exclude": [
       "coverage/**",
@@ -90,5 +91,8 @@
       "examples/**",
       "**/node_modules/**"
     ]
+  },
+  "prettier": {
+    "singleQuote": true
   }
 }

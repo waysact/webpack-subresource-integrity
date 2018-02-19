@@ -6,6 +6,9 @@ var expect = require('expect');
 var tmp = require('tmp');
 var crypto = require('crypto');
 var Promise = require('bluebird');
+var webpackVersion = Number(
+  require('webpack/package.json').version.split('.')[0]
+);
 
 function testCompilation() {
   return {
@@ -35,7 +38,7 @@ describe('Edge Cases', function describe() {
         'require.ensure(["./chunk.js"], function(require) { require("./chunk.js"); });'
       );
       fs.writeFileSync(chunkJs, '');
-      webpackConfig = {
+      webpackConfig = Object.assign({
         entry: mainJs,
         output: {
           path: tmpDir.name,
@@ -44,7 +47,9 @@ describe('Edge Cases', function describe() {
         plugins: [
           new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
         ]
-      };
+      }, webpackVersion >= 4 ? {
+        mode: 'production'
+      } : {});
       webpack(webpackConfig, function webpackCallback(err, result) {
         if (err) {
           reject(err);
@@ -97,7 +102,7 @@ describe('Edge Cases', function describe() {
     fs.writeFileSync(otherJs, oldOtherJsSource);
 
     return new Promise((resolve, reject) => {
-      webpackConfig = {
+      webpackConfig = Object.assign({
         entry: {
           bundle: mainJs
         },
@@ -107,8 +112,8 @@ describe('Edge Cases', function describe() {
           chunkFilename: 'chunk.js',
           crossOriginLoading: 'anonymous'
         },
-        plugins: [new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })],
-      };
+        plugins: [new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })]
+      }, webpackVersion >= 4 ? { mode: 'development' } : {});
       compiler = webpack(webpackConfig);
       function handler(error, stats) {
         var chunkContents;

@@ -1,6 +1,5 @@
 var SriPlugin = require('webpack-subresource-integrity');
 var webpack = require('webpack');
-var path = require('path');
 
 module.exports = {
   entry: {

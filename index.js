@@ -1,76 +1,11 @@
 var crypto = require('crypto');
 var path = require('path');
 var ReplaceSource = require('webpack-core/lib/ReplaceSource');
+var util = require('./util');
+var WebIntegrityJsonpMainTemplatePlugin = require('./jmtp');
 
 // https://www.w3.org/TR/2016/REC-SRI-20160623/#cryptographic-hash-functions
 var standardHashFuncNames = ['sha256', 'sha384', 'sha512'];
-
-function makePlaceholder(id) {
-  return '*-*-*-CHUNK-SRI-HASH-' + id + '-*-*-*';
-}
-
-function WebIntegrityJsonpMainTemplatePlugin(sriPlugin, compilation) {
-  this.sriPlugin = sriPlugin;
-  this.compilation = compilation;
-}
-
-function addSriHashes(plugin, chunk, source) {
-  var allDepChunkIds = {};
-  function findDepChunks(childChunk) {
-    childChunk.chunks.forEach(function forEachChunk(depChunk) {
-      if (!allDepChunkIds[depChunk.id]) {
-        allDepChunkIds[depChunk.id] = true;
-        findDepChunks(depChunk);
-      }
-    });
-  }
-
-  if (chunk.chunks.length > 0) {
-    findDepChunks(chunk);
-
-    return plugin.asString([
-      source,
-      'var sriHashes = ' + JSON.stringify(
-        Object.keys(allDepChunkIds).reduce(function chunkIdReducer(sriHashes, chunkId) {
-          sriHashes[chunkId] = makePlaceholder(chunkId); // eslint-disable-line no-param-reassign
-          return sriHashes;
-        }, {})
-      ) + ';'
-    ]);
-  }
-
-  return source;
-}
-
-WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(mainTemplate) {
-  var self = this;
-
-  /*
-   *  Patch jsonp-script code to add the integrity attribute.
-   */
-  mainTemplate.plugin('jsonp-script', function jsonpScriptPlugin(source) {
-    if (!this.outputOptions.crossOriginLoading) {
-      self.sriPlugin.error(
-        self.compilation,
-        'webpack option output.crossOriginLoading not set, code splitting will not work!'
-      );
-    }
-    return this.asString([
-      source,
-      'script.integrity = sriHashes[chunkId];'
-    ]);
-  });
-
-  /*
-   *  Patch local-vars code to add a mapping from chunk ID to SRIs.
-   *  Since SRIs haven't been computed at this point, we're using
-   *  magic placeholders for SRI values and going to replace them
-   *  later.
-   */
-  mainTemplate.plugin('local-vars', function localVarsPlugin(source, chunk) {
-    return addSriHashes(this, chunk, source);
-  });
-};
 
 function SubresourceIntegrityPlugin(options) {
   var useOptions;
@@ -107,48 +42,42 @@ SubresourceIntegrityPlugin.prototype.error = function error(compilation, message
 };
 
 SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(compilation) {
-  var foundStandardHashFunc = false;
-  var hashFuncName;
-  var i;
-
   if (this.optionsValidated) {
     return;
   }
   this.optionsValidated = true;
+
   if (this.options.enabled && !compilation.compiler.options.output.crossOriginLoading) {
     this.warnOnce(
       compilation,
       'Set webpack option output.crossOriginLoading when using this plugin.');
   }
-  if (!Array.isArray(this.options.hashFuncNames)) {
-    this.error(
-      compilation,
-      'options.hashFuncNames must be an array of hash function names, ' +
-        'instead got \'' + this.options.hashFuncNames + '\'.');
-    this.options.enabled = false;
-  } else {
+  this.validateHashFuncNames(compilation);
+};
+
+SubresourceIntegrityPlugin.prototype.validateHashFuncNames =
+  function validateHashFuncNames(compilation) {
+    if (!Array.isArray(this.options.hashFuncNames)) {
+      this.error(
+        compilation,
+        'options.hashFuncNames must be an array of hash function names, ' +
+          'instead got \'' + this.options.hashFuncNames + '\'.');
+      this.options.enabled = false;
+    } else if (
+      !this.options.hashFuncNames.every(this.validateHashFuncName.bind(this, compilation))
+    ) {
+      this.options.enabled = false;
+    } else {
+      this.warnStandardHashFunc(compilation);
+    }
+  };
+
+SubresourceIntegrityPlugin.prototype.warnStandardHashFunc =
+  function warnStandardHashFunc(compilation) {
+    var foundStandardHashFunc = false;
+    var i;
     for (i = 0; i < this.options.hashFuncNames.length; i += 1) {
-      hashFuncName = this.options.hashFuncNames[i];
-      if (typeof hashFuncName !== 'string' &&
-          !(hashFuncName instanceof String)) {
-        this.error(
-          compilation,
-          'options.hashFuncNames must be an array of hash function names, ' +
-            'but contained ' + hashFuncName + '.');
-        this.options.enabled = false;
-        return;
-      }
-      try {
-        crypto.createHash(hashFuncName);
-      } catch (error) {
-        this.error(
-          compilation,
-          'Cannot use hash function \'' + hashFuncName + '\': ' +
-            error.message);
-        this.options.enabled = false;
-        return;
-      }
-      if (standardHashFuncNames.indexOf(hashFuncName) >= 0) {
+      if (standardHashFuncNames.indexOf(this.options.hashFuncNames[i]) >= 0) {
         foundStandardHashFunc = true;
       }
     }
@@ -160,8 +89,29 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
           'These are: ' + standardHashFuncNames.join(', ') + '. ' +
           'See http://www.w3.org/TR/SRI/#cryptographic-hash-functions for more information.');
     }
-  }
-};
+  };
+
+SubresourceIntegrityPlugin.prototype.validateHashFuncName =
+  function validateHashFuncName(compilation, hashFuncName) {
+    if (typeof hashFuncName !== 'string' &&
+        !(hashFuncName instanceof String)) {
+      this.error(
+        compilation,
+        'options.hashFuncNames must be an array of hash function names, ' +
+          'but contained ' + hashFuncName + '.');
+      return false;
+    }
+    try {
+      crypto.createHash(hashFuncName);
+    } catch (error) {
+      this.error(
+        compilation,
+        'Cannot use hash function \'' + hashFuncName + '\': ' +
+          error.message);
+      return false;
+    }
+    return true;
+  };
 
 /*  Given a public URL path to an asset, as generated by
  *  HtmlWebpackPlugin for use as a `<script src>` or `<link href`> URL
@@ -171,13 +121,6 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
 SubresourceIntegrityPlugin.prototype.hwpAssetPath = function hwpAssetPath(src) {
   return path.relative(this.hwpPublicPath, src);
 };
-
-function computeIntegrity(hashFuncNames, source) {
-  return hashFuncNames.map(function mapHashFuncName(hashFuncName) {
-    var hash = crypto.createHash(hashFuncName).update(source, 'utf8').digest('base64');
-    return hashFuncName + '-' + hash;
-  }).join(' ');
-}
 
 SubresourceIntegrityPlugin.prototype.warnIfHotUpdate = function warnIfHotUpdate(
   compilation, source
@@ -193,7 +136,6 @@ SubresourceIntegrityPlugin.prototype.warnIfHotUpdate = function warnIfHotUpdate(
 
 SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
   assets,
-  depChunkIds,
   hashByChunkId,
   chunkFile
 ) {
@@ -204,21 +146,21 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
 
   newAsset = new ReplaceSource(assets[chunkFile]);
 
-  depChunkIds.forEach(function replaceMagicMarkers(depChunkId) {
-    magicMarker = makePlaceholder(depChunkId);
+  Array.from(hashByChunkId.entries()).forEach(function replaceMagicMarkers(idAndHash) {
+    magicMarker = util.makePlaceholder(idAndHash[0]);
     magicMarkerPos = oldSource.indexOf(magicMarker);
     if (magicMarkerPos >= 0) {
       newAsset.replace(
         magicMarkerPos,
         (magicMarkerPos + magicMarker.length) - 1,
-        hashByChunkId[depChunkId]);
+        idAndHash[1]);
     }
   });
 
   // eslint-disable-next-line no-param-reassign
   assets[chunkFile] = newAsset;
 
-  newAsset.integrity = computeIntegrity(this.options.hashFuncNames, newAsset.source());
+  newAsset.integrity = util.computeIntegrity(this.options.hashFuncNames, newAsset.source());
   return newAsset;
 };
 
@@ -227,150 +169,147 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
 ) {
   var self = this;
   var newAsset;
-  var hashByChunkId = {};
+  var hashByChunkId = new Map();
 
-  function recurse(childChunk) {
-    var depChunkIds = [];
-
-    if (hashByChunkId[childChunk.id]) {
-      return [];
-    }
-    hashByChunkId[childChunk.id] = true;
-
-    childChunk.chunks.forEach(function mapChunk(depChunk) {
-      depChunkIds = depChunkIds.concat(recurse(depChunk));
-    });
-
-    if (childChunk.files.length > 0) {
-      self.warnIfHotUpdate(compilation, assets[childChunk.files[0]].source());
-      newAsset = self.replaceAsset(
-        assets,
-        depChunkIds,
-        hashByChunkId,
-        childChunk.files[0]);
-      hashByChunkId[childChunk.id] = newAsset.integrity;
-    }
-    return [childChunk.id].concat(depChunkIds);
-  }
-  return recurse(chunk);
+  Array.from(util.findChunks(chunk)).reverse().forEach(childChunk => {
+    self.warnIfHotUpdate(compilation, assets[childChunk.files[0]].source());
+    newAsset = self.replaceAsset(
+      assets,
+      hashByChunkId,
+      childChunk.files[0]);
+    hashByChunkId.set(childChunk.id, newAsset.integrity);
+  });
 };
 
-function getTagSrc(tag) {
-  // Get asset path - src from scripts and href from links
-  return tag.attributes.href || tag.attributes.src;
-}
+/*
+ *  Calculate SRI values for each chunk and replace the magic
+ *  placeholders by the actual values.
+ */
+SubresourceIntegrityPlugin.prototype.afterOptimizeAssets =
+  function afterOptimizeAssets(compilation, assets) {
+    var asset;
+    var self = this;
 
-function filterTag(tag) {
-  // Process only script and link tags with a url
-  return (tag.tagName === 'script' || tag.tagName === 'link') && getTagSrc(tag);
-}
+    compilation.chunks.filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
+      self.processChunk(chunk, compilation, assets);
+    });
 
-function normalizePath(p) {
-  return p.replace(/\?.*$/, '').split(path.sep).join('/');
-}
+    Object.keys(assets).forEach(function loop(assetKey) {
+      asset = assets[assetKey];
+      if (!asset.integrity) {
+        asset.integrity = util.computeIntegrity(self.options.hashFuncNames, asset.source());
+      }
+    });
+  };
 
-SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
-  var self = this;
-
-  compiler.plugin('after-plugins', function afterPlugins() {
-    compiler.plugin('this-compilation', function thisCompilation(compilation) {
-      self.validateOptions(compilation);
-
-      if (!self.options.enabled) {
+SubresourceIntegrityPlugin.prototype.alterAssetTags =
+  function alterAssetTags(compilation, pluginArgs, callback) {
+    /* html-webpack-plugin has added an event so we can pre-process the html tags before they
+       inject them. This does the work.
+    */
+    var self = this;
+    function processTag(tag) {
+      var src = self.hwpAssetPath(util.getTagSrc(tag));
+      var checksum = util.getIntegrityChecksumForAsset(compilation.assets, src);
+      if (!checksum) {
+        self.warnOnce(
+          compilation,
+          'Cannot determine hash for asset \'' +
+            src + '\', the resource will be unprotected.');
         return;
       }
+      // Add integrity check sums
 
-      compilation.mainTemplate.apply(new WebIntegrityJsonpMainTemplatePlugin(self, compilation));
+      /* eslint-disable no-param-reassign */
+      tag.attributes.integrity = checksum;
+      tag.attributes.crossorigin = compilation.compiler.options.output.crossOriginLoading || 'anonymous';
+      /* eslint-enable no-param-reassign */
+    }
 
-      /*
-       *  Calculate SRI values for each chunk and replace the magic
-       *  placeholders by the actual values.
-       */
-      compilation.plugin('after-optimize-assets', function optimizeAssetsPlugin(assets) {
-        var asset;
+    pluginArgs.head.filter(util.filterTag).forEach(processTag);
+    pluginArgs.body.filter(util.filterTag).forEach(processTag);
+    callback(null, pluginArgs);
+  };
 
-        compilation.chunks.forEach(function forEachChunk(chunk) {
-          if (('hasRuntime' in chunk) ? chunk.hasRuntime() : chunk.entry) {
-            self.processChunk(chunk, compilation, assets);
-          }
+
+/*  Add jsIntegrity and cssIntegrity properties to pluginArgs, to
+ *  go along with js and css properties.  These are later
+ *  accessible on `htmlWebpackPlugin.files`.
+ */
+SubresourceIntegrityPlugin.prototype.beforeHtmlGeneration =
+  function beforeHtmlGeneration(compilation, pluginArgs, callback) {
+    var self = this;
+    this.hwpPublicPath = pluginArgs.assets.publicPath;
+    ['js', 'css'].forEach(function addIntegrity(fileType) {
+      // eslint-disable-next-line no-param-reassign
+      pluginArgs.assets[fileType + 'Integrity'] =
+        pluginArgs.assets[fileType].map(function assetIntegrity(filePath) {
+          return util.getIntegrityChecksumForAsset(compilation.assets, self.hwpAssetPath(filePath));
         });
+    });
+    callback(null, pluginArgs);
+  };
 
-        Object.keys(assets).forEach(function loop(assetKey) {
-          asset = assets[assetKey];
-          if (!asset.integrity) {
-            asset.integrity = computeIntegrity(self.options.hashFuncNames, asset.source());
-          }
-        });
-      });
+SubresourceIntegrityPlugin.prototype.registerJMTP = function registerJMTP(compilation) {
+  var plugin = new WebIntegrityJsonpMainTemplatePlugin(this, compilation);
+  if (plugin.apply) {
+    plugin.apply(compilation.mainTemplate);
+  } else {
+    compilation.mainTemplate.apply(plugin);
+  }
+};
 
-      function getIntegrityChecksumForAsset(src) {
-        var normalizedSrc;
-        var normalizedKey;
-        var asset = compilation.assets[src];
-        if (asset) {
-          return asset.integrity;
-        }
-        normalizedSrc = normalizePath(src);
-        normalizedKey = Object.keys(compilation.assets).find(function test(assetKey) {
-          return normalizePath(assetKey) === normalizedSrc;
-        });
-        if (normalizedKey) {
-          return compilation.assets[normalizedKey].integrity;
-        }
-        return null;
-      }
+SubresourceIntegrityPlugin.prototype.registerHwpHooks =
+  function registerHwpHooks(alterAssetTags, beforeHtmlGeneration, hwpCompilation) {
+    if (hwpCompilation.hooks.htmlWebpackPluginAlterAssetTags &&
+        hwpCompilation.hooks.htmlWebpackPluginBeforeHtmlGeneration) {
+      hwpCompilation.hooks.htmlWebpackPluginAlterAssetTags.tapAsync('SriPlugin', alterAssetTags);
+      hwpCompilation.hooks.htmlWebpackPluginBeforeHtmlGeneration.tapAsync('SriPlugin', beforeHtmlGeneration);
+    }
+  };
 
-      function alterAssetTags(pluginArgs, callback) {
-        /* html-webpack-plugin has added an event so we can pre-process the html tags before they
-           inject them. This does the work.
-        */
-        function processTag(tag) {
-          var src = self.hwpAssetPath(getTagSrc(tag));
-          var checksum = getIntegrityChecksumForAsset(src);
-          if (!checksum) {
-            self.warnOnce(
-              compilation,
-              'Cannot determine hash for asset \'' +
-                src + '\', the resource will be unprotected.');
-            return;
-          }
-          // Add integrity check sums
+SubresourceIntegrityPlugin.prototype.thisCompilation =
+  function thisCompilation(compiler, compilation) {
+    var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
+    var alterAssetTags = this.alterAssetTags.bind(this, compilation);
+    var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
 
-          /* eslint-disable no-param-reassign */
-          tag.attributes.integrity = checksum;
-          tag.attributes.crossorigin = compilation.compiler.options.output.crossOriginLoading || 'anonymous';
-          /* eslint-enable no-param-reassign */
-        }
+    this.validateOptions(compilation);
 
-        pluginArgs.head.filter(filterTag).forEach(processTag);
-        pluginArgs.body.filter(filterTag).forEach(processTag);
-        callback(null, pluginArgs);
-      }
+    if (!this.options.enabled) {
+      return;
+    }
 
-      /*  Add jsIntegrity and cssIntegrity properties to pluginArgs, to
-       *  go along with js and css properties.  These are later
-       *  accessible on `htmlWebpackPlugin.files`.
-       */
-      function beforeHtmlGeneration(pluginArgs, callback) {
-        self.hwpPublicPath = pluginArgs.assets.publicPath;
-        ['js', 'css'].forEach(function addIntegrity(fileType) {
-          // eslint-disable-next-line no-param-reassign
-          pluginArgs.assets[fileType + 'Integrity'] =
-            pluginArgs.assets[fileType].map(function assetIntegrity(filePath) {
-              return getIntegrityChecksumForAsset(self.hwpAssetPath(filePath));
-            });
-        });
-        callback(null, pluginArgs);
-      }
+    this.registerJMTP(compilation);
 
-      /*
-       *  html-webpack support:
-       *    Modify the asset tags before webpack injects them for anything with an integrity value.
-       */
+    /*
+     *  html-webpack support:
+     *    Modify the asset tags before webpack injects them for anything with an integrity value.
+     */
+    if (compiler.hooks) {
+      compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
+      compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration));
+    } else {
+      compilation.plugin('after-optimize-assets', afterOptimizeAssets);
       compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
       compilation.plugin('html-webpack-plugin-before-html-generation', beforeHtmlGeneration);
-    });
-  });
+    }
+  };
+
+SubresourceIntegrityPlugin.prototype.afterPlugins = function afterPlugins(compiler) {
+  if (compiler.hooks) {
+    compiler.hooks.thisCompilation.tap('SriPlugin', this.thisCompilation.bind(this, compiler));
+  } else {
+    compiler.plugin('this-compilation', this.thisCompilation.bind(this, compiler));
+  }
+};
+
+SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
+  if (compiler.hooks) {
+    compiler.hooks.afterPlugins.tap('SriPlugin', this.afterPlugins.bind(this));
+  } else {
+    compiler.plugin('after-plugins', this.afterPlugins.bind(this));
+  }
 };
 
 module.exports = SubresourceIntegrityPlugin;
