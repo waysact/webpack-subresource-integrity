@@ -14,7 +14,7 @@ function GetIntegrityPlugin() {}
 GetIntegrityPlugin.prototype.apply = function apply(compiler) {
   compiler.plugin('done', function donePlugin(stats) {
     var asset;
-    asset = stats.compilation.assets['test/test.js'];
+    asset = stats.compilation.assets['test/karma/test.js'];
     if (asset) {
       toplevelScriptIntegrity = asset.integrity;
     }
@@ -28,8 +28,8 @@ GetIntegrityPlugin.prototype.apply = function apply(compiler) {
 function addIntegrityTags(chunk) {
   return chunk
     .replace(
-      'src="/base/test/test.js',
-      'integrity="' + toplevelScriptIntegrity + '" crossorigin="anonymous" src="/base/test/test.js'
+      'src="/base/test/karma/test.js',
+      'integrity="' + toplevelScriptIntegrity + '" crossorigin="anonymous" src="/base/test/karma/test.js'
     )
     .replace(
       'rel="stylesheet"',
@@ -98,11 +98,11 @@ module.exports = function karmaConfig(config) {
       'mocha'
     ],
     files: [
-      'test/test.js',
-      'test/stylesheet.css'
+      'test/karma/test.js',
+      'test/karma/stylesheet.css'
     ],
     preprocessors: {
-      'test/test.js': ['webpack']
+      'test/karma/test.js': ['webpack']
     },
     plugins: [
       'karma-webpack',

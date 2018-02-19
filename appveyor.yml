@@ -10,15 +10,6 @@ environment:
     - nodejs_version: 4
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@2"
-    - nodejs_version: 5
-      WEBPACK_SUFFIX: "@1"
-      ETWP_SUFFIX: "@1"
-    - nodejs_version: 5
-      WEBPACK_SUFFIX: "@2"
-      ETWP_SUFFIX: "@2"
-    - nodejs_version: 5
-      WEBPACK_SUFFIX: "@3"
-      ETWP_SUFFIX: "@2"
     - nodejs_version: 6
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
@@ -28,22 +19,22 @@ environment:
     - nodejs_version: 6
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@2"
-    - nodejs_version: 7
+    - nodejs_version: 8
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
-    - nodejs_version: 7
+    - nodejs_version: 8
       WEBPACK_SUFFIX: "@2"
       ETWP_SUFFIX: "@2"
-    - nodejs_version: 7
+    - nodejs_version: 8
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@2"
-    - nodejs_version: 8
+    - nodejs_version: 9
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
-    - nodejs_version: 8
+    - nodejs_version: 9
       WEBPACK_SUFFIX: "@2"
       ETWP_SUFFIX: "@2"
-    - nodejs_version: 8
+    - nodejs_version: 9
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@2"
 
@@ -53,7 +44,7 @@ install:
   - ps: Install-Product node $env:nodejs_version
   # install modules
   - appveyor-retry npm install --global npm@3
-  - npm install --ignore-scripts
+  - npm install || true
   - npm rm webpack
   - npm rm extract-text-webpack-plugin
   - npm install "webpack%WEBPACK_SUFFIX%" --ignore-scripts || true

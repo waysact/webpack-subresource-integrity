@@ -1,6 +1,11 @@
 {
-    "globals": {
-        "it": false,
-        "describe": false,
-    }
+  "env": {
+    "es6": true,
+  },
+  "globals": {
+    "it": false,
+    "describe": false,
+    "before": false,
+    "after": false,
+  }
 }

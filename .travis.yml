@@ -1,10 +1,9 @@
 language: node_js
 node_js:
   - 4
-  - 5
   - 6
-  - 7
   - 8
+  - 9
 addons:
   firefox: latest
 env:
@@ -12,7 +11,7 @@ env:
   - WEBPACK_SUFFIX="@2" ETWP_SUFFIX="@2"
   - WEBPACK_SUFFIX="@3" ETWP_SUFFIX="@2"
 install:
-  - npm install --ignore-scripts
+  - npm install || true
   - npm rm webpack
   - npm rm extract-text-webpack-plugin
   - npm install "webpack""$WEBPACK_SUFFIX" --ignore-scripts || true
@@ -22,6 +21,6 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - ./node_modules/karma/bin/karma start --single-run --browsers Firefox
-  - $(npm bin)/nyc --reporter=lcovonly $(npm bin)/mocha --timeout 20000 test/test-webpack.js
+  - $(npm bin)/nyc --reporter=lcovonly $(npm bin)/mocha --timeout 20000
 after_script:
   - $(npm bin)/travis-after-all && $(npm bin)/coveralls < ./coverage/lcov.info
