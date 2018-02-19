@@ -29,8 +29,7 @@ function findChunksLegacy(chunk) {
   var allChunks = new Set();
   (function recurseChunk(childChunk) {
     if (addIfNotExist(allChunks, childChunk)) return;
-    allChunks.add(childChunk);
-    chunk.chunks.forEach(recurseChunk);
+    childChunk.chunks.forEach(recurseChunk);
   })(chunk);
   return allChunks;
 }

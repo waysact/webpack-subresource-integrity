@@ -26,7 +26,7 @@ module.exports = function chunk2(callback) {
     expect(resourcesWithIntegrity).toInclude('test.js');
     expect(
       resourcesWithIntegrity.filter(function filter(item) {
-        return item.match(/^\d+\.(chunk|bundle).js$/);
+        return item.match(/^[12]\.(chunk|bundle).js$/);
       }).length
     ).toBe(2);
     expect(
