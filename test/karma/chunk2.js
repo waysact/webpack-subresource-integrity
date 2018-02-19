@@ -28,9 +28,9 @@ module.exports = function chunk2(callback) {
     Array.prototype.slice
       .call(document.getElementsByTagName('link'))
       .forEach(forEachElement);
-    expect(resourcesWithIntegrity).toInclude('stylesheet.css');
-    expect(resourcesWithIntegrity).toInclude('test.js');
-    expect(resourcesWithIntegrity.length).toBeGreaterThanOrEqualTo(4);
+    expect(resourcesWithIntegrity).toContain('stylesheet.css');
+    expect(resourcesWithIntegrity).toContain('test.js');
+    expect(resourcesWithIntegrity.length).toBeGreaterThanOrEqual(4);
     expect(
       window.getComputedStyle(document.getElementsByTagName('body')[0])
         .backgroundColor
