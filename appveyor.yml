@@ -13,10 +13,6 @@ environment:
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@3"
       HWP_OVERRIDE: ""
-    - nodejs_version: 4
-      WEBPACK_SUFFIX: "@4.0.0-beta.1"
-      ETWP_SUFFIX: "@4.0.0-alpha.0"
-      HWP_OVERRIDE: "webpack-contrib/html-webpack-plugin#ebfc2771d41a6ab043595d3c621528aee020e2f9"
     - nodejs_version: 6
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
