@@ -87,7 +87,7 @@ install:
   - npm rm webpack
   - npm rm extract-text-webpack-plugin
   - npm rm file-loader
-  - bash -lc 'if [ ! -z "$HWP_OVERRIDE" ]; then npm remove html-webpack-plugin && (npm install "$HWP_OVERRIDE" || true); fi'
+  - 'bash -lc "if [ ! -z \"$HWP_OVERRIDE\" ]; then npm remove html-webpack-plugin && (npm install \"$HWP_OVERRIDE\" || true); fi"'
   - npm install "webpack%WEBPACK_SUFFIX%" --ignore-scripts --loglevel=error || true
   - npm install "extract-text-webpack-plugin%ETWP_SUFFIX%" --ignore-scripts --loglevel=error || true
   - npm install "file-loader%FL_SUFFIX%" --ignore-scripts --loglevel=error || true
