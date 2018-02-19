@@ -44,7 +44,7 @@ that we can accept your pull request.
 ### Include a new test case
 
 Your pull request should include at least one new test case.
-[Creating a new test case is easy!](examples/README.md#examples/README.md)
+[Creating a new test case is easy!](examples/README.md#adding-a-test-case)
 
 The test case should fail without your code changes.  You can ensure
 this is the case as follows:
