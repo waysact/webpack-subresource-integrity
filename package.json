@@ -7,9 +7,9 @@
   },
   "main": "index",
   "scripts": {
-    "coverage": "nyc $(npm bin)/mocha --timeout 20000",
-    "test": "karma start --single-run && mocha --timeout 20000",
-    "mocha": "mocha --timeout 20000",
+    "coverage": "nyc $(npm bin)/mocha --exit --timeout 20000",
+    "test": "karma start --single-run && mocha --exit --timeout 20000",
+    "mocha": "mocha --exit --timeout 20000",
     "lint": "eslint .",
     "prettier": "prettier --write '**/*.js'"
   },
@@ -59,7 +59,7 @@
     "karma-mocha": "^1.0.1",
     "karma-webpack": "2.0.7",
     "lodash": "^4.17.5",
-    "mocha": "^3.1.2",
+    "mocha": "^5.0.1",
     "module-alias": "^2.0.6",
     "nyc": "^11.0.0",
     "prettier": "^1.10.2",

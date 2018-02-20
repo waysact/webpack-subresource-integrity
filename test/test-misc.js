@@ -174,6 +174,7 @@ describe('Edge Cases', function describe() {
       }
       watching = compiler.watch({ aggregateTimeout: 0 }, handler);
     }).finally(() => {
+      compiler.purgeInputFileSystem();
       fs.unlinkSync(path.join(tmpDir.name, 'chunk.js'));
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       fs.unlinkSync(path.join(tmpDir.name, 'main.js'));

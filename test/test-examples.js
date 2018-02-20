@@ -56,6 +56,9 @@ describe("Examples", function describe() {
 
   after(function after() {
     process.chdir(__dirname);
+    if (browser) {
+      browser.close();
+    }
   });
 
   glob.sync("examples/*").forEach(relativeDir => {
