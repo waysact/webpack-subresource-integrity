@@ -32,7 +32,7 @@ environment:
       FL_SUFFIX: "@1"
       HWP_OVERRIDE: ""
     - nodejs_version: 6
-      WEBPACK_SUFFIX: "@4.0.0-beta.1"
+      WEBPACK_SUFFIX: "@4"
       ETWP_SUFFIX: "@4.0.0-alpha.0"
       FL_SUFFIX: "@1"
       HWP_OVERRIDE: "webpack-contrib/html-webpack-plugin#ebfc2771d41a6ab043595d3c621528aee020e2f9"
@@ -52,7 +52,7 @@ environment:
       FL_SUFFIX: "@1"
       HWP_OVERRIDE: ""
     - nodejs_version: 8
-      WEBPACK_SUFFIX: "@4.0.0-beta.1"
+      WEBPACK_SUFFIX: "@4"
       ETWP_SUFFIX: "@4.0.0-alpha.0"
       FL_SUFFIX: "@1"
       HWP_OVERRIDE: "webpack-contrib/html-webpack-plugin#ebfc2771d41a6ab043595d3c621528aee020e2f9"
@@ -72,7 +72,7 @@ environment:
       FL_SUFFIX: "@1"
       HWP_OVERRIDE: ""
     - nodejs_version: 9
-      WEBPACK_SUFFIX: "@4.0.0-beta.1"
+      WEBPACK_SUFFIX: "@4"
       ETWP_SUFFIX: "@4.0.0-alpha.0"
       FL_SUFFIX: "@1"
       HWP_OVERRIDE: "webpack-contrib/html-webpack-plugin#ebfc2771d41a6ab043595d3c621528aee020e2f9"
