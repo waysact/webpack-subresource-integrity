@@ -153,17 +153,6 @@ protected from tampering.
 
 See [Can I use Subresource Integrity?](http://caniuse.com/#feat=subresource-integrity)
 
-### Broken browser versions
-
-There is a
-[known bug relating to SRI in Chrome 45 and 46](https://code.google.com/p/chromium/issues/detail?id=527286)
-which will break loading of scripts containing certain UTF-8
-characters. You might want to hold off using SRI if you need to
-support these Chrome versions. (Unfortunately, by some measures
-Chrome 45 still
-[holds a relatively high market share](https://www.netmarketshare.com/report.aspx?qprid=3&qpaf=&qpcustom=Chrome+45.0&qpcustomb=0)
-of around 5% at the time of this writing.)
-
 ### Hot Reloading
 
 This plugin can interfere with hot reloading and therefore should be
