@@ -81,7 +81,9 @@
     "LICENSE",
     "README.md",
     "CHANGELOG.md",
-    "index.js"
+    "index.js",
+    "util.js",
+    "jmtp.js"
   ],
   "nyc": {
     "exclude": [
