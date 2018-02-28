@@ -6,6 +6,9 @@ var expect = require('expect');
 var tmp = require('tmp');
 var crypto = require('crypto');
 var Promise = require('bluebird');
+var webpackVersion = Number(
+  require('webpack/package.json').version.split('.')[0]
+);
 
 function testCompilation() {
   return {
@@ -35,7 +38,7 @@ describe('Edge Cases', function describe() {
         'require.ensure(["./chunk.js"], function(require) { require("./chunk.js"); });'
       );
       fs.writeFileSync(chunkJs, '');
-      webpackConfig = {
+      webpackConfig = Object.assign({
         entry: mainJs,
         output: {
           path: tmpDir.name,
@@ -44,7 +47,9 @@ describe('Edge Cases', function describe() {
         plugins: [
           new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })
         ]
-      };
+      }, webpackVersion >= 4 ? {
+        mode: 'production'
+      } : {});
       webpack(webpackConfig, function webpackCallback(err, result) {
         if (err) {
           reject(err);
@@ -52,11 +57,11 @@ describe('Edge Cases', function describe() {
         }
         try {
           expect(result.compilation.warnings.length).toEqual(1);
-          expect(result.compilation.warnings[0]).toBeAn(Error);
+          expect(result.compilation.warnings[0]).toBeInstanceOf(Error);
           expect(result.compilation.warnings[0].message).toMatch(
               /Set webpack option output.crossOriginLoading when using this plugin/);
           expect(result.compilation.errors.length).toEqual(1);
-          expect(result.compilation.errors[0]).toBeAn(Error);
+          expect(result.compilation.errors[0]).toBeInstanceOf(Error);
           expect(result.compilation.errors[0].message).toMatch(
               /webpack option output.crossOriginLoading not set, code splitting will not work!/);
           resolve();
@@ -97,7 +102,7 @@ describe('Edge Cases', function describe() {
     fs.writeFileSync(otherJs, oldOtherJsSource);
 
     return new Promise((resolve, reject) => {
-      webpackConfig = {
+      webpackConfig = Object.assign({
         entry: {
           bundle: mainJs
         },
@@ -107,8 +112,8 @@ describe('Edge Cases', function describe() {
           chunkFilename: 'chunk.js',
           crossOriginLoading: 'anonymous'
         },
-        plugins: [new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })],
-      };
+        plugins: [new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })]
+      }, webpackVersion >= 4 ? { mode: 'development' } : {});
       compiler = webpack(webpackConfig);
       function handler(error, stats) {
         var chunkContents;
@@ -153,9 +158,9 @@ describe('Edge Cases', function describe() {
                     .digest('base64');
                   regex = /sha256-([^ ]+)/g;
                   match = regex.exec(bundleContents);
-                  expect(match).toExist();
+                  expect(match).not.toBeNull();
                   expect(match[1]).toEqual(hash);
-                  expect(regex.exec(bundleContents)).toNotExist();
+                  expect(regex.exec(bundleContents)).toBeFalsy();
                   resolve();
                 } catch (err) {
                   reject(err);
@@ -169,6 +174,7 @@ describe('Edge Cases', function describe() {
       }
       watching = compiler.watch({ aggregateTimeout: 0 }, handler);
     }).finally(() => {
+      compiler.purgeInputFileSystem();
       fs.unlinkSync(path.join(tmpDir.name, 'chunk.js'));
       fs.unlinkSync(path.join(tmpDir.name, 'bundle.js'));
       fs.unlinkSync(path.join(tmpDir.name, 'main.js'));
@@ -193,7 +199,7 @@ describe('Plugin Options', function describe() {
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(1);
     expect(dummyCompilation.warnings.length).toBe(0);
-    expect(dummyCompilation.errors[0]).toBeAn(Error);
+    expect(dummyCompilation.errors[0]).toBeInstanceOf(Error);
     expect(dummyCompilation.errors[0].message).toMatch(
         /hashFuncNames must be an array of hash function names, instead got 'undefined'/);
   });
@@ -208,7 +214,7 @@ describe('Plugin Options', function describe() {
     plugin.validateOptions(dummyCompilation);
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(1);
-    expect(dummyCompilation.warnings[0]).toBeAn(Error);
+    expect(dummyCompilation.warnings[0]).toBeInstanceOf(Error);
     expect(dummyCompilation.warnings[0].message).toMatch(new RegExp(
       'It is recommended that at least one hash function is part of ' +
         'the set for which support is mandated by the specification'));

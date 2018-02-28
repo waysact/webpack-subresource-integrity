@@ -1,6 +1,15 @@
 var fs = require('fs');
 var crypto = require('crypto');
 var expect = require('expect');
+var webpackVersion = Number(
+  require('webpack/package.json').version.split('.')[0]
+);
+
+module.exports.skip = function skip() {
+  // Doesn't work on Webpack 4
+  // Consider removing this test altogether.
+  return webpackVersion >= 4;
+};
 
 module.exports.check = function check(stats) {
   var algo =

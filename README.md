@@ -13,7 +13,7 @@ manipulation.
 
 - Optional integration with [html-webpack-plugin](https://github.com/ampedandwired/html-webpack-plugin)
 - Support for code splitting (integrity for lazy-loaded chunks)
-- Compatible with Webpack 1.x, 2.x and 3.x
+- Compatible with Webpack 1.x, 2.x, 3.x and 4.x
 
 ## Installation
 

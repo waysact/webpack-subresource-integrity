@@ -1,5 +1,8 @@
 var SriPlugin = require('./index');
 var karmaMiddleware = require('karma/lib/middleware/karma');
+var webpackVersion = Number(
+  require('webpack/package.json').version.split('.')[0]
+);
 
 var toplevelScriptIntegrity;
 var stylesheetIntegrity;
@@ -110,7 +113,7 @@ module.exports = function karmaConfig(config) {
       'karma-firefox-launcher',
       'karma-mocha'
     ],
-    webpack: {
+    webpack: Object.assign({
       output: {
         crossOriginLoading: 'anonymous'
       },
@@ -120,14 +123,11 @@ module.exports = function karmaConfig(config) {
         }),
         new GetIntegrityPlugin()
       ],
-      module: {
-        loaders: [{
-          test: /\.css$/,
-          loader: 'file-loader?name=stylesheet.css'
-        }]
-      },
-
+      module:
+      webpackVersion > 1
+        ? { rules: [{ test: /\.css$/, use: 'file-loader?name=stylesheet.css' }] }
+        : { loaders: [{ test: /\.css$/, loader: 'file-loader?name=stylesheet.css' }] },
       devtool: 'source-map' // to force multiple files per chunk
-    }
+    }, webpackVersion >= 4 ? { mode: 'production' } : {})
   });
 };
