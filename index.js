@@ -50,7 +50,11 @@ SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(
   if (this.options.enabled && !compilation.compiler.options.output.crossOriginLoading) {
     this.warnOnce(
       compilation,
-      'Set webpack option output.crossOriginLoading when using this plugin.');
+      'SRI requires a cross-origin policy, defaulting to "anonymous". ' +
+        'Set webpack option output.crossOriginLoading to a value other than false ' +
+        'to make this warning go away. ' +
+        'See https://w3c.github.io/webappsec-subresource-integrity/#cross-origin-data-leakage'
+    );
   }
   this.validateHashFuncNames(compilation);
 };
