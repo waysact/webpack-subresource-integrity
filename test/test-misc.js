@@ -59,7 +59,7 @@ describe('Edge Cases', function describe() {
           expect(result.compilation.warnings.length).toEqual(1);
           expect(result.compilation.warnings[0]).toBeInstanceOf(Error);
           expect(result.compilation.warnings[0].message).toMatch(
-              /Set webpack option output.crossOriginLoading when using this plugin/);
+              /Set webpack option output.crossOriginLoading/);
           expect(result.compilation.errors.length).toEqual(1);
           expect(result.compilation.errors[0]).toBeInstanceOf(Error);
           expect(result.compilation.errors[0].message).toMatch(
@@ -302,6 +302,6 @@ describe('Plugin Options', function describe() {
     expect(dummyCompilation.errors.length).toBe(0);
     expect(dummyCompilation.warnings.length).toBe(1);
     expect(dummyCompilation.warnings[0].message).toMatch(
-        /Set webpack option output.crossOriginLoading when using this plugin/);
+        /Set webpack option output.crossOriginLoading/);
   });
 });
