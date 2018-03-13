@@ -63,6 +63,7 @@
     "module-alias": "^2.0.6",
     "nyc": "^11.0.0",
     "prettier": "^1.10.2",
+    "puppeteer": "^1.1.0",
     "rimraf": "^2.6.2",
     "serve-static": "^1.13.2",
     "soupselect": "^0.2.0",
@@ -70,9 +71,6 @@
     "tmp": "^0.0.31",
     "travis-after-all": "^1.4.4",
     "webpack": "^1.12.11"
-  },
-  "optionalDependencies": {
-    "puppeteer": "^1.1.0"
   },
   "peerDependencies": {
     "webpack": "^1.12.11 || ~2 || ~3 || ~4"
