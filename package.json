@@ -7,6 +7,7 @@
   },
   "main": "index",
   "scripts": {
+    "codeclimate": "docker run --interactive --tty --rm --env CODECLIMATE_CODE=\"$PWD\" --volume \"$PWD\":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate",
     "coverage": "nyc $(npm bin)/mocha --exit --timeout 20000",
     "test": "karma start --single-run && mocha --exit --timeout 20000",
     "mocha": "mocha --exit --timeout 20000",
