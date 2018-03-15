@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2015-present, Waysact Pty Ltd
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 module.exports = function defaultTest(stats, url, browser) {
   return browser.newPage().then(page => {
     var resultPromise = new Promise((resolve, reject) => {
