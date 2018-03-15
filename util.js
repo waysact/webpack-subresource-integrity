@@ -102,6 +102,37 @@ function makePlaceholder(id) {
   return "*-*-*-CHUNK-SRI-HASH-" + id + "-*-*-*";
 }
 
+function isInitialChunk(chunk) {
+  if (chunk.isOnlyInitial) {
+    return chunk.isOnlyInitial();
+  }
+  if (chunk.isInitial) {
+    return chunk.isInitial();
+  }
+  return chunk.initial;
+}
+
+function getChunkFilename(compilation, chunk) {
+  var filename = compilation.mainTemplate.outputOptions.filename || "bundle.js";
+  var chunkFilename = compilation.mainTemplate.outputOptions.chunkFilename || ("[id]." + filename);
+  var args = [isInitialChunk(chunk) ? filename : chunkFilename, {
+    hash: compilation.hash.substr(0, compilation.mainTemplate.outputOptions.hashDigestLength),
+    hashWithLength: length => compilation.hash.substr(0, length),
+    chunk: {
+      id: chunk.id,
+      hash: chunk.hash.substr(0, compilation.mainTemplate.outputOptions.hashDigestLength),
+      hashWithLength: length => chunk.hash.substr(0, length),
+      name: chunk.name
+    }
+  }];
+
+  if (compilation.mainTemplate.getAssetPath) {
+    return compilation.mainTemplate.getAssetPath.apply(compilation.mainTemplate, args);
+  }
+  args.unshift("asset-path");
+  return compilation.mainTemplate.applyPluginsWaterfall.apply(compilation.mainTemplate, args);
+}
+
 module.exports.computeIntegrity = computeIntegrity;
 module.exports.findChunks = findChunks;
 module.exports.filterTag = filterTag;
@@ -110,3 +141,4 @@ module.exports.normalizePath = normalizePath;
 module.exports.getIntegrityChecksumForAsset = getIntegrityChecksumForAsset;
 module.exports.isRuntimeChunk = isRuntimeChunk;
 module.exports.makePlaceholder = makePlaceholder;
+module.exports.getChunkFilename = getChunkFilename;

@@ -119,7 +119,9 @@ describe("Examples", function describe() {
         )
       ).then(stats => {
         if (stats.hasErrors()) {
-          throw new Error(stats.toString({ reason: true }));
+          if (!test.ignoreErrors) {
+            throw new Error(stats.toString({ reason: true }));
+          }
         }
 
         if (testFunc.length < 2) {
