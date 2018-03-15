@@ -190,7 +190,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
 
     sourcePath = util.getChunkFilename(compilation, childChunk);
 
-    if (!childChunk.files.includes(sourcePath)) {
+    if (childChunk.files.indexOf(sourcePath) < 0) {
       self.warnOnce(
         compilation,
         'Cannot determine asset for chunk ' + childChunk.id + ', computed="' + sourcePath +
