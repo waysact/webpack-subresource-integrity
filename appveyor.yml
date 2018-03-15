@@ -5,77 +5,77 @@ environment:
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
       FL_SUFFIX: "@0"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 4
       WEBPACK_SUFFIX: "@2"
       ETWP_SUFFIX: "@2"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 4
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@3"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 6
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
       FL_SUFFIX: "@0"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 6
       WEBPACK_SUFFIX: "@2"
       ETWP_SUFFIX: "@2"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 6
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@3"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 6
       WEBPACK_SUFFIX: "@4"
       ETWP_SUFFIX: "@4.0.0-alpha.0"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: "webpack-contrib/html-webpack-plugin#ebfc2771d41a6ab043595d3c621528aee020e2f9"
+      HWP_SUFFIX: "@3"
     - nodejs_version: 8
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
       FL_SUFFIX: "@0"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 8
       WEBPACK_SUFFIX: "@2"
       ETWP_SUFFIX: "@2"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 8
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@3"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 8
       WEBPACK_SUFFIX: "@4"
       ETWP_SUFFIX: "@4.0.0-alpha.0"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: "webpack-contrib/html-webpack-plugin#ebfc2771d41a6ab043595d3c621528aee020e2f9"
+      HWP_SUFFIX: "@3"
     - nodejs_version: 9
       WEBPACK_SUFFIX: "@1"
       ETWP_SUFFIX: "@1"
       FL_SUFFIX: "@0"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 9
       WEBPACK_SUFFIX: "@2"
       ETWP_SUFFIX: "@2"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 9
       WEBPACK_SUFFIX: "@3"
       ETWP_SUFFIX: "@3"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: ""
+      HWP_SUFFIX: "@2"
     - nodejs_version: 9
       WEBPACK_SUFFIX: "@4"
       ETWP_SUFFIX: "@4.0.0-alpha.0"
       FL_SUFFIX: "@1"
-      HWP_OVERRIDE: "webpack-contrib/html-webpack-plugin#ebfc2771d41a6ab043595d3c621528aee020e2f9"
+      HWP_SUFFIX: "@3"
 
 # Install scripts. (runs after repo cloning)
 install:
@@ -87,9 +87,9 @@ install:
   - npm rm webpack
   - npm rm extract-text-webpack-plugin
   - npm rm file-loader
-  - 'bash -lc "if [ ! -z \"$HWP_OVERRIDE\" ]; then npm remove html-webpack-plugin && (npm install \"$HWP_OVERRIDE\" || true); fi"'
   - npm install "webpack%WEBPACK_SUFFIX%" --ignore-scripts --loglevel=error || true
   - npm install "extract-text-webpack-plugin%ETWP_SUFFIX%" --ignore-scripts --loglevel=error || true
+  - npm install "html-webpack-plugin%HWP_SUFFIX%" --ignore-scripts --loglevel=error || true
   - npm install "file-loader%FL_SUFFIX%" --ignore-scripts --loglevel=error || true
 
 # Post-install test scripts.
