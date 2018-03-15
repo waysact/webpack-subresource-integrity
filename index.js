@@ -183,11 +183,29 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
   var hashByChunkId = new Map();
 
   Array.from(util.findChunks(chunk)).reverse().forEach(childChunk => {
-    self.warnIfHotUpdate(compilation, assets[childChunk.files[0]].source());
+    var sourcePath;
+
+    // This can happen with invalid Webpack configurations
+    if (childChunk.files.length === 0) return;
+
+    sourcePath = util.getChunkFilename(compilation, childChunk);
+
+    if (!childChunk.files.includes(sourcePath)) {
+      self.warnOnce(
+        compilation,
+        'Cannot determine asset for chunk ' + childChunk.id + ', computed="' + sourcePath +
+          '", available=' + childChunk.files[0] + '. Please report this full error message ' +
+          'along with your Webpack configuration at ' +
+          'https://github.com/waysact/webpack-subresource-integrity/issues/new'
+      );
+      sourcePath = childChunk.files[0];
+    }
+
+    self.warnIfHotUpdate(compilation, assets[sourcePath].source());
     newAsset = self.replaceAsset(
       assets,
       hashByChunkId,
-      childChunk.files[0]);
+      sourcePath);
     hashByChunkId.set(childChunk.id, newAsset.integrity);
   });
 };
