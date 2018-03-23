@@ -211,6 +211,31 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
 };
 
 /*
+ *  Calculate SRI values for asset if non exists yet
+ */
+SubresourceIntegrityPlugin.prototype.processAsset = function processAsset(
+	asset
+) {
+	var self = this;
+
+	if (!asset.integrity) {
+		asset.integrity = util.computeIntegrity(
+			self.options.hashFuncNames,
+			asset.source()
+		);
+	}
+};
+
+SubresourceIntegrityPlugin.prototype.afterEmit = function afterEmit(
+	compilation
+) {
+	var self = this;
+	Object.keys(compilation.assets).forEach(function forEachAssetKey(assetKey) {
+		return self.processAsset(compilation.assets[assetKey]);
+	});
+};
+
+/*
  *  Calculate SRI values for each chunk and replace the magic
  *  placeholders by the actual values.
  */
@@ -223,11 +248,8 @@ SubresourceIntegrityPlugin.prototype.afterOptimizeAssets =
       self.processChunk(chunk, compilation, assets);
     });
 
-    Object.keys(assets).forEach(function loop(assetKey) {
-      asset = assets[assetKey];
-      if (!asset.integrity) {
-        asset.integrity = util.computeIntegrity(self.options.hashFuncNames, asset.source());
-      }
+    Object.keys(assets).forEach(function forEachAssetKey(assetKey) {
+      return self.processAsset(assets[assetKey]);
     });
   };
 
@@ -302,6 +324,7 @@ SubresourceIntegrityPlugin.prototype.thisCompilation =
     var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
     var alterAssetTags = this.alterAssetTags.bind(this, compilation);
     var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
+    var afterEmit = this.afterEmit.bind(this, compilation);
 
     this.validateOptions(compilation);
 
@@ -318,6 +341,7 @@ SubresourceIntegrityPlugin.prototype.thisCompilation =
     if (compiler.hooks) {
       compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
       compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration));
+      compiler.hooks.afterEmit.tap('CopyWebpackPluginHook', this.afterEmit.bind(this));
     } else {
       compilation.plugin('after-optimize-assets', afterOptimizeAssets);
       compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
