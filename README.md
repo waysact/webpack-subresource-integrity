@@ -12,6 +12,7 @@ manipulation.
 ## Features
 
 - Optional integration with [html-webpack-plugin](https://github.com/ampedandwired/html-webpack-plugin)
+- Optional JSON manifest mapping filenames to integrity hashes
 - Automatic support for code splitting (integrity for lazy-loaded chunks)
 - Compatible with Webpack 1.x, 2.x, 3.x and 4.x
 
@@ -122,6 +123,15 @@ Default value: `true`
 When this value is falsy, the plugin doesn't run and no integrity
 values are calculated. It is recommended to disable the plugin in
 development mode.
+
+#### jsonFile
+
+Default value: `null`
+
+When assigned a JSON filename (ex: `integrity.json`), a JSON file
+of the given name will be added to the Webpack build with a mapping
+of asset filenames to their integrity hashes. Load this file into
+other applications to generate tags with integrity attributes.
 
 ## Caveats
 

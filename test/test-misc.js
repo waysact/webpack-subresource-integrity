@@ -227,6 +227,12 @@ describe('Plugin Options', function describe() {
         'the set for which support is mandated by the specification'));
   });
 
+  it('warns when jsonFile is not a valid filename', function it() {
+    expect(function block() {
+      new SriPlugin({ jsonFile: 'integrity.js' }); // eslint-disable-line no-new
+    }).toThrow(/jsonFile must specify a \.json filename/);
+  });
+
   it('supports new constructor with array of hash function names', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256', 'sha384']
