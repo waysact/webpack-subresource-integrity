@@ -280,6 +280,7 @@ SubresourceIntegrityPlugin.prototype.jsonFile = function jsonFile(compilation, c
 
   json = JSON.stringify(json, null, 2);
 
+  // eslint-disable-next-line no-param-reassign
   compilation.assets[this.options.jsonFile] = {
     source: function source() { return json; },
     size:   function size() { return json.length; }

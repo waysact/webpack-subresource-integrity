@@ -10,3 +10,7 @@ exclude_paths:
   - test/
   - examples/
   - karma.conf.js
+checks:
+  method-complexity:
+    config:
+      threshold: 6
