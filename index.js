@@ -24,8 +24,13 @@ function SubresourceIntegrityPlugin(options) {
     throw new Error('webpack-subresource-integrity: argument must be an object');
   }
 
+  if (useOptions.jsonFile && !/\w+\.json/.test(String(useOptions.jsonFile))) {
+    throw new Error('webpack-subresource-integrity: jsonFile must specify a .json filename');
+  }
+
   this.options = {
-    enabled: true
+    enabled: true,
+    jsonFile: null
   };
 
   Object.assign(this.options, useOptions);
@@ -260,6 +265,27 @@ SubresourceIntegrityPlugin.prototype.alterAssetTags =
     callback(null, pluginArgs);
   };
 
+/* Write integrity hashes to a JSON file asset.
+*  Asset filenames are mapped to their integrity hash.
+*/
+SubresourceIntegrityPlugin.prototype.jsonFile = function jsonFile(compilation, callback) {
+  var json = Object.keys(compilation.assets).reduce(function(memo, assetName) {
+    var asset = compilation.assets[assetName];
+    if (asset.integrity) {
+      memo[assetName] = asset.integrity
+    }
+    return memo;
+  }, {});
+
+  json = JSON.stringify(json, null, 2);
+
+  compilation.assets[this.options.jsonFile] = {
+    source: function() { return json; },
+    size:   function() { return json.length; }
+  };
+
+  callback();
+};
 
 /*  Add jsIntegrity and cssIntegrity properties to pluginArgs, to
  *  go along with js and css properties.  These are later
@@ -338,6 +364,10 @@ SubresourceIntegrityPlugin.prototype.apply = function apply(compiler) {
     compiler.hooks.afterPlugins.tap('SriPlugin', this.afterPlugins.bind(this));
   } else {
     compiler.plugin('after-plugins', this.afterPlugins.bind(this));
+  }
+
+  if (this.options.jsonFile) {
+    compiler.plugin('emit', this.jsonFile.bind(this));
   }
 };
 
