@@ -283,6 +283,7 @@ describe('Plugin Options', function describe() {
         /Cannot use hash function 'frobnicate': Digest method not supported/);
     expect(plugin.options.enabled).toBeFalsy();
   });
+
   it('uses default options', function it() {
     var plugin = new SriPlugin({
       hashFuncNames: ['sha256']
