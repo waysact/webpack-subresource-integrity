@@ -269,19 +269,20 @@ SubresourceIntegrityPlugin.prototype.alterAssetTags =
 *  Asset filenames are mapped to their integrity hash.
 */
 SubresourceIntegrityPlugin.prototype.jsonFile = function jsonFile(compilation, callback) {
-  var json = Object.keys(compilation.assets).reduce(function(memo, assetName) {
+  var json = {};
+
+  Object.keys(compilation.assets).forEach(function addJsonAsset(assetName) {
     var asset = compilation.assets[assetName];
     if (asset.integrity) {
-      memo[assetName] = asset.integrity
+      json[assetName] = asset.integrity;
     }
-    return memo;
-  }, {});
+  });
 
   json = JSON.stringify(json, null, 2);
 
   compilation.assets[this.options.jsonFile] = {
-    source: function() { return json; },
-    size:   function() { return json.length; }
+    source: function source() { return json; },
+    size:   function size() { return json.length; }
   };
 
   callback();
