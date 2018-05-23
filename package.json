@@ -46,7 +46,7 @@
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-import": "^2.2.0",
-    "expect": "^22.3.0",
+    "expect": "^21.0.0",
     "extract-text-webpack-plugin": "^1.0.1",
     "file-loader": "^1.1.0",
     "get-port": "^3.2.0",
