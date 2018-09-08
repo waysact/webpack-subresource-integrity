@@ -163,6 +163,15 @@ mode where SRI is not normally needed.
 For testing SRI without setting up a full-blown web server, consider
 using a tool such as [`http-server`](https://github.com/indexzero/http-server).
 
+### Safari and Assets that Require Cookies
+
+As detailed in [Webpack Issue
+#6972](https://github.com/webpack/webpack/issues/6972), the
+`crossOrigin` attribute can break loading of assets in certain edge
+cases due to a bug in Safari. Since SRI requires the `crossOrigin`
+attribute to be set, you may run into this case even when source URL
+is same-origin with respect to the asset.
+
 ## Further Reading
 
 - [MDN: Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)
