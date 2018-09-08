@@ -118,11 +118,13 @@ function getChunkFilename(compilation, chunk) {
   var args = [isInitialChunk(chunk) ? filename : chunkFilename, {
     hash: compilation.hash.substr(0, compilation.mainTemplate.outputOptions.hashDigestLength),
     hashWithLength: length => compilation.hash.substr(0, length),
+    contentHashType: "javascript",
     chunk: {
       id: chunk.id,
       hash: chunk.hash.substr(0, compilation.mainTemplate.outputOptions.hashDigestLength),
       hashWithLength: length => chunk.hash.substr(0, length),
-      name: chunk.name
+      name: chunk.name,
+      contentHash: chunk.contentHash
     }
   }];
 
