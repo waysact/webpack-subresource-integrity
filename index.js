@@ -10,9 +10,19 @@ var path = require('path');
 var ReplaceSource = require('webpack-core/lib/ReplaceSource');
 var util = require('./util');
 var WebIntegrityJsonpMainTemplatePlugin = require('./jmtp');
+var HtmlWebpackPlugin;
 
 // https://www.w3.org/TR/2016/REC-SRI-20160623/#cryptographic-hash-functions
 var standardHashFuncNames = ['sha256', 'sha384', 'sha512'];
+
+try {
+  // eslint-disable-next-line global-require
+  HtmlWebpackPlugin = require('html-webpack-plugin');
+} catch (e) {
+  if (!(e instanceof Error) || e.code !== 'MODULE_NOT_FOUND') {
+    throw e;
+  }
+}
 
 function SubresourceIntegrityPlugin(options) {
   var useOptions;
@@ -231,30 +241,31 @@ SubresourceIntegrityPlugin.prototype.afterOptimizeAssets =
     });
   };
 
+SubresourceIntegrityPlugin.prototype.processTag =
+  function processTag(compilation, tag) {
+    var src = this.hwpAssetPath(util.getTagSrc(tag));
+    var checksum = util.getIntegrityChecksumForAsset(compilation.assets, src);
+    if (!checksum) {
+      this.warnOnce(
+        compilation,
+        'Cannot determine hash for asset \'' +
+          src + '\', the resource will be unprotected.');
+      return;
+    }
+    // Add integrity check sums
+
+    /* eslint-disable no-param-reassign */
+    tag.attributes.integrity = checksum;
+    tag.attributes.crossorigin = compilation.compiler.options.output.crossOriginLoading || 'anonymous';
+    /* eslint-enable no-param-reassign */
+  };
+
 SubresourceIntegrityPlugin.prototype.alterAssetTags =
   function alterAssetTags(compilation, pluginArgs, callback) {
     /* html-webpack-plugin has added an event so we can pre-process the html tags before they
        inject them. This does the work.
     */
-    var self = this;
-    function processTag(tag) {
-      var src = self.hwpAssetPath(util.getTagSrc(tag));
-      var checksum = util.getIntegrityChecksumForAsset(compilation.assets, src);
-      if (!checksum) {
-        self.warnOnce(
-          compilation,
-          'Cannot determine hash for asset \'' +
-            src + '\', the resource will be unprotected.');
-        return;
-      }
-      // Add integrity check sums
-
-      /* eslint-disable no-param-reassign */
-      tag.attributes.integrity = checksum;
-      tag.attributes.crossorigin = compilation.compiler.options.output.crossOriginLoading || 'anonymous';
-      /* eslint-enable no-param-reassign */
-    }
-
+    var processTag = this.processTag.bind(this, compilation);
     pluginArgs.head.filter(util.filterTag).forEach(processTag);
     pluginArgs.body.filter(util.filterTag).forEach(processTag);
     callback(null, pluginArgs);
@@ -290,8 +301,26 @@ SubresourceIntegrityPlugin.prototype.registerJMTP = function registerJMTP(compil
 
 SubresourceIntegrityPlugin.prototype.registerHwpHooks =
   function registerHwpHooks(alterAssetTags, beforeHtmlGeneration, hwpCompilation) {
-    if (hwpCompilation.hooks.htmlWebpackPluginAlterAssetTags &&
-        hwpCompilation.hooks.htmlWebpackPluginBeforeHtmlGeneration) {
+    var self = this;
+    if (HtmlWebpackPlugin && HtmlWebpackPlugin.getHooks) {
+      // HtmlWebpackPlugin >= 4
+      HtmlWebpackPlugin.getHooks(hwpCompilation).beforeAssetTagGeneration.tapAsync(
+        'sri',
+        this.beforeHtmlGeneration.bind(this, hwpCompilation)
+      );
+
+      HtmlWebpackPlugin.getHooks(hwpCompilation).alterAssetTags.tapAsync(
+        'sri',
+        function cb(data, callback) {
+          var processTag = self.processTag.bind(self, hwpCompilation);
+          data.assetTags.scripts.filter(util.filterTag).forEach(processTag);
+          data.assetTags.styles.filter(util.filterTag).forEach(processTag);
+          callback(null, data);
+        }
+      );
+    } else if (hwpCompilation.hooks.htmlWebpackPluginAlterAssetTags &&
+               hwpCompilation.hooks.htmlWebpackPluginBeforeHtmlGeneration) {
+      // HtmlWebpackPlugin 3
       hwpCompilation.hooks.htmlWebpackPluginAlterAssetTags.tapAsync('SriPlugin', alterAssetTags);
       hwpCompilation.hooks.htmlWebpackPluginBeforeHtmlGeneration.tapAsync('SriPlugin', beforeHtmlGeneration);
     }
