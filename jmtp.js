@@ -57,7 +57,8 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
     }
     return (Template.asString || this.asString)([
       source,
-      'script.integrity = sriHashes[chunkId];'
+      'script.integrity = sriHashes[chunkId];',
+      'script.crossOrigin = ' + JSON.stringify(mainTemplate.outputOptions.crossOriginLoading) + ';',
     ]);
   }
 

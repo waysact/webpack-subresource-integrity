@@ -11,10 +11,13 @@ env:
   - WEBPACK_SUFFIX="@2" ETWP_SUFFIX="@2" HWP_SUFFIX="@2"
   - WEBPACK_SUFFIX="@3" ETWP_SUFFIX="@3" HWP_SUFFIX="@2"
   - WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@3"
+  - WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-alpha.2"
 matrix:
   exclude:
   - node_js: 4
     env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@3"
+  - node_js: 4
+    env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-alpha.2"
 install:
   - npm install || true
   - npm rm webpack
@@ -27,6 +30,8 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - ./node_modules/karma/bin/karma start --single-run --browsers Firefox
-  - $(npm bin)/nyc --reporter=lcovonly $(npm bin)/mocha --exit --timeout 20000
-after_script:
-  - $(npm bin)/travis-after-all && $(npm bin)/coveralls < ./coverage/lcov.info
+  - $(npm bin)/nyc $(npm bin)/mocha --exit --timeout 20000 && $(npm bin)/nyc report --reporter=text-lcov | $(npm bin)/coveralls
+notifications:
+  webhooks:
+    # https://coveralls.io/webhook?repo_token=$(COVERALLS_REPO_TOKEN)
+    - secure: "pgSdpewaCRSR/R2MKf7PL8r/OmONltX2XA9NqMPM7sYiTdACL3ilFst1zpTDAQ015cjAp+g1dfhTuQbtEmT+yF3PikQ7TOTO7T65wHrMy5JV9E41tHm2IMgk4C92nOdljMTRcAW1Ra9R7SCL5yu9Fz42yfxo/YmJav6BXNi7sY9eXX/nqaPBXjfU8m5Oz7U7NwXMULm6C3Zs/UaMtGkZYwHxRDuwyz3f4LEZApC90uNb33gQukyX8NIqZbo25/ynGyTnQYHGQ8RaHBdvy1yRfC8lzRBkKxSuLtgfQVqbKOcqdu77rIwtInAmLxBEd/5RdTFSibz2iFd9MgauKB2tyQjSseOtoEVfCo17cRkCZHgLorXpqFP6cv0uRvsaedo9SlZE9h3HVDBPJBwgRILWbXMml3vhhZ4uQO+q1NTiGQ7dpqWRDHn9Ot+GB5wHZGmmNkvRmaxSzuhHQgaYOd+lSl1j2TZ56mRv+3JEcuCTgQXMz/pJ3oHlvAGP0iVVsMGjiH8xL9JIoBpjboPKIrHNE9k5zScubEgtnEGbjggNKGA8+kuovY1TcCAOoMnDeV8gTuDxFZtuKfHa6w1m96tFlGf+SEvLTEQ0iwDKix21jXFPw5fKgA9/Nk7MXyNVSo7zf8XhDLm8lzzTKXpkqqeSONuJaRz9haJ0RdtpOEmaD4c="
