@@ -198,7 +198,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
     // This can happen with invalid Webpack configurations
     if (childChunk.files.length === 0) return;
 
-    sourcePath = util.getChunkFilename(compilation, childChunk);
+    sourcePath = compilation.sriChunkAssets[childChunk.id];
 
     if (childChunk.files.indexOf(sourcePath) < 0) {
       self.warnOnce(
@@ -219,6 +219,12 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
     hashByChunkId.set(childChunk.id, newAsset.integrity);
   });
 };
+
+SubresourceIntegrityPlugin.prototype.chunkAsset =
+  function chunkAsset(compilation, chunk, asset) {
+    // eslint-disable-next-line no-param-reassign
+    compilation.sriChunkAssets[chunk.id] = asset;
+  };
 
 /*
  *  Calculate SRI values for each chunk and replace the magic
@@ -329,6 +335,7 @@ SubresourceIntegrityPlugin.prototype.registerHwpHooks =
 SubresourceIntegrityPlugin.prototype.thisCompilation =
   function thisCompilation(compiler, compilation) {
     var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
+    var chunkAsset = this.chunkAsset.bind(this, compilation);
     var alterAssetTags = this.alterAssetTags.bind(this, compilation);
     var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
 
@@ -340,15 +347,21 @@ SubresourceIntegrityPlugin.prototype.thisCompilation =
 
     this.registerJMTP(compilation);
 
+    // FIXME: refactor into separate per-compilation state
+    // eslint-disable-next-line no-param-reassign
+    compilation.sriChunkAssets = {};
+
     /*
      *  html-webpack support:
      *    Modify the asset tags before webpack injects them for anything with an integrity value.
      */
     if (compiler.hooks) {
       compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
+      compilation.hooks.chunkAsset.tap('SriPlugin', chunkAsset);
       compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration));
     } else {
       compilation.plugin('after-optimize-assets', afterOptimizeAssets);
+      compilation.plugin('chunk-asset', chunkAsset);
       compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
       compilation.plugin('html-webpack-plugin-before-html-generation', beforeHtmlGeneration);
     }
