@@ -10,19 +10,11 @@ var path = require('path');
 var ReplaceSource = require('webpack-core/lib/ReplaceSource');
 var util = require('./util');
 var WebIntegrityJsonpMainTemplatePlugin = require('./jmtp');
-var HtmlWebpackPlugin;
+var safeRequire = require('safe-require');
+var HtmlWebpackPlugin = safeRequire('html-webpack-plugin');
 
 // https://www.w3.org/TR/2016/REC-SRI-20160623/#cryptographic-hash-functions
 var standardHashFuncNames = ['sha256', 'sha384', 'sha512'];
-
-try {
-  // eslint-disable-next-line global-require
-  HtmlWebpackPlugin = require('html-webpack-plugin');
-} catch (e) {
-  if (!(e instanceof Error) || e.code !== 'MODULE_NOT_FOUND') {
-    throw e;
-  }
-}
 
 function SubresourceIntegrityPlugin(options) {
   var useOptions;
