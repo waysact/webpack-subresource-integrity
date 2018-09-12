@@ -33,7 +33,6 @@
   },
   "homepage": "https://github.com/waysact/webpack-subresource-integrity#readme",
   "dependencies": {
-    "safe-require": "^1.0.3",
     "webpack-core": "^0.6.8"
   },
   "devDependencies": {
