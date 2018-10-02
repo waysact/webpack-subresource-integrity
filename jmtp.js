@@ -13,71 +13,69 @@ function WebIntegrityJsonpMainTemplatePlugin(sriPlugin, compilation) {
   this.compilation = compilation;
 }
 
-function addSriHashes(plugin, chunk, source) {
-  var allChunks = util.findChunks(chunk);
+WebIntegrityJsonpMainTemplatePlugin.prototype.addSriHashes =
+  function addSriHashes(mainTemplate, source, chunk) {
+    var allChunks = util.findChunks(chunk);
 
-  if (allChunks.size > 0) {
-    return (Template.asString || plugin.asString)([
-      source,
-      'var sriHashes = ' +
-        JSON.stringify(
-          Array.from(allChunks).reduce(function chunkIdReducer(
-            sriHashes,
-            depChunk
-          ) {
-            if (chunk !== depChunk) {
-              // eslint-disable-next-line no-param-reassign
-              sriHashes[depChunk.id] = util.makePlaceholder(depChunk.id);
-            }
-            return sriHashes;
-          },
-          {})
-        ) +
-        ';'
-    ]);
-  }
+    if (allChunks.size > 0) {
+      return (Template.asString || mainTemplate.asString)([
+        source,
+        'var sriHashes = ' +
+          JSON.stringify(
+            Array.from(allChunks).reduce(function chunkIdReducer(
+              sriHashes,
+              depChunk
+            ) {
+              if (chunk !== depChunk) {
+                // eslint-disable-next-line no-param-reassign
+                sriHashes[depChunk.id] = util.makePlaceholder(depChunk.id);
+              }
+              return sriHashes;
+            },
+                                         {})
+          ) +
+          ';'
+      ]);
+    }
 
-  return source;
-}
+    return source;
+  };
 
-WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
-  mainTemplate
-) {
-  var self = this;
-
-  /*
-   *  Patch jsonp-script code to add the integrity attribute.
-   */
-  function jsonpScriptPlugin(source) {
+/*
+ *  Patch jsonp-script code to add the integrity attribute.
+ */
+WebIntegrityJsonpMainTemplatePlugin.prototype.jsonpScriptPlugin =
+  function jsonpScriptPlugin(mainTemplate, source) {
     if (!mainTemplate.outputOptions.crossOriginLoading) {
-      self.sriPlugin.errorOnce(
-        self.compilation,
+      this.sriPlugin.errorOnce(
+        this.compilation,
         'webpack option output.crossOriginLoading not set, code splitting will not work!'
       );
     }
-    return (Template.asString || this.asString)([
+    return (Template.asString || mainTemplate.asString)([
       source,
       'script.integrity = sriHashes[chunkId];',
       'script.crossOrigin = ' + JSON.stringify(mainTemplate.outputOptions.crossOriginLoading) + ';',
     ]);
-  }
+  };
 
-  /*
-   *  Patch local-vars code to add a mapping from chunk ID to SRIs.
-   *  Since SRIs haven't been computed at this point, we're using
-   *  magic placeholders for SRI values and going to replace them
-   *  later.
-   */
-  function localVarsPlugin(source, chunk) {
-    return addSriHashes(this, chunk, source);
-  }
+WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
+  mainTemplate
+) {
+  var jsonpScriptPlugin = this.jsonpScriptPlugin.bind(this, mainTemplate);
+  var addSriHashes = this.addSriHashes.bind(this, mainTemplate);
 
-  if (mainTemplate.hooks) {
-    mainTemplate.hooks.jsonpScript.tap('SriPlugin', jsonpScriptPlugin);
-    mainTemplate.hooks.localVars.tap('SriPlugin', localVarsPlugin);
-  } else {
+  if (!mainTemplate.hooks) {
     mainTemplate.plugin('jsonp-script', jsonpScriptPlugin);
-    mainTemplate.plugin('local-vars', localVarsPlugin);
+    mainTemplate.plugin('local-vars', addSriHashes);
+  } else if (mainTemplate.hooks.jsonpScript && mainTemplate.hooks.localVars) {
+    mainTemplate.hooks.jsonpScript.tap('SriPlugin', jsonpScriptPlugin);
+    mainTemplate.hooks.localVars.tap('SriPlugin', addSriHashes);
+  } else {
+    this.sriPlugin.warnOnce(
+      this.compilation,
+      'This plugin is not useful for non-web targets.'
+    );
   }
 };
 
