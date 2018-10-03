@@ -40,22 +40,30 @@ function SubresourceIntegrityPlugin(options) {
 
   Object.assign(this.options, useOptions);
 
-  this.emittedWarnings = {};
+  this.emittedMessages = {};
 }
 
 SubresourceIntegrityPlugin.prototype.emitMessage = function emitMessage(messages, message) {
   messages.push(new Error('webpack-subresource-integrity: ' + message));
 };
 
-SubresourceIntegrityPlugin.prototype.warnOnce = function warn(compilation, message) {
-  if (!this.emittedWarnings[message]) {
-    this.emittedWarnings[message] = true;
-    this.emitMessage(compilation.warnings, message);
+SubresourceIntegrityPlugin.prototype.emitMessageOnce = function emitMessageOnce(messages, message) {
+  if (!this.emittedMessages[message]) {
+    this.emittedMessages[message] = true;
+    this.emitMessage(messages, message);
   }
+};
+
+SubresourceIntegrityPlugin.prototype.warnOnce = function warn(compilation, message) {
+  this.emitMessageOnce(compilation.warnings, message);
 };
 
 SubresourceIntegrityPlugin.prototype.error = function error(compilation, message) {
   this.emitMessage(compilation.errors, message);
+};
+
+SubresourceIntegrityPlugin.prototype.errorOnce = function error(compilation, message) {
+  this.emitMessageOnce(compilation.errors, message);
 };
 
 SubresourceIntegrityPlugin.prototype.validateOptions = function validateOptions(compilation) {

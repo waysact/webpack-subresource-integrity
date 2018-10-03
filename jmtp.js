@@ -50,7 +50,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
    */
   function jsonpScriptPlugin(source) {
     if (!mainTemplate.outputOptions.crossOriginLoading) {
-      self.sriPlugin.error(
+      self.sriPlugin.errorOnce(
         self.compilation,
         'webpack option output.crossOriginLoading not set, code splitting will not work!'
       );
