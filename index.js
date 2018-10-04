@@ -234,42 +234,37 @@ SubresourceIntegrityPlugin.prototype.chunkAsset =
     compilation.sriChunkAssets[chunk.id] = asset;
   };
 
-/*
- *  Calculate SRI values for each chunk and replace the magic
- *  placeholders by the actual values.
- */
-SubresourceIntegrityPlugin.prototype.afterOptimizeAssets =
-  function afterOptimizeAssets(compilation, assets) {
-    var asset;
+SubresourceIntegrityPlugin.prototype.addMissingIntegrityHashes =
+  function addMissingIntegrityHashes(assets) {
     var self = this;
-
-    compilation.chunks.filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
-      self.processChunk(chunk, compilation, assets);
-    });
-
     Object.keys(assets).forEach(function loop(assetKey) {
-      asset = assets[assetKey];
+      var asset = assets[assetKey];
       if (!asset.integrity) {
         asset.integrity = util.computeIntegrity(self.options.hashFuncNames, asset.source());
       }
     });
   };
 
+/*
+ *  Calculate SRI values for each chunk and replace the magic
+ *  placeholders by the actual values.
+ */
+SubresourceIntegrityPlugin.prototype.afterOptimizeAssets =
+  function afterOptimizeAssets(compilation, assets) {
+    var self = this;
+
+    compilation.chunks.filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
+      self.processChunk(chunk, compilation, assets);
+    });
+
+    this.addMissingIntegrityHashes(assets);
+  };
+
 SubresourceIntegrityPlugin.prototype.processTag =
   function processTag(compilation, tag) {
     var src = this.hwpAssetPath(util.getTagSrc(tag));
-    var checksum = util.getIntegrityChecksumForAsset(compilation.assets, src);
-    if (!checksum) {
-      this.warnOnce(
-        compilation,
-        'Cannot determine hash for asset \'' +
-          src + '\', the resource will be unprotected.');
-      return;
-    }
-    // Add integrity check sums
-
     /* eslint-disable no-param-reassign */
-    tag.attributes.integrity = checksum;
+    tag.attributes.integrity = util.getIntegrityChecksumForAsset(compilation.assets, src);
     tag.attributes.crossorigin = compilation.compiler.options.output.crossOriginLoading || 'anonymous';
     /* eslint-enable no-param-reassign */
   };
@@ -294,6 +289,8 @@ SubresourceIntegrityPlugin.prototype.beforeHtmlGeneration =
   function beforeHtmlGeneration(compilation, pluginArgs, callback) {
     var self = this;
     this.hwpPublicPath = pluginArgs.assets.publicPath;
+    this.addMissingIntegrityHashes(compilation.assets);
+
     ['js', 'css'].forEach(function addIntegrity(fileType) {
       // eslint-disable-next-line no-param-reassign
       pluginArgs.assets[fileType + 'Integrity'] =
