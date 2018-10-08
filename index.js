@@ -7,7 +7,7 @@
 
 var crypto = require('crypto');
 var path = require('path');
-var ReplaceSource = require('webpack-core/lib/ReplaceSource');
+var ReplaceSource = require('webpack-sources/lib/ReplaceSource');
 var util = require('./util');
 var WebIntegrityJsonpMainTemplatePlugin = require('./jmtp');
 var HtmlWebpackPlugin;
