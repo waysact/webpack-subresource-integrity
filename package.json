@@ -77,6 +77,11 @@
     "html-webpack-plugin": "^2.21.0 || ~3 || >=4.0.0-alpha.2 <5",
     "webpack": "^1.12.11 || ~2 || ~3 || ~4"
   },
+  "peerDependenciesMeta": {
+    "html-webpack-plugin": {
+      "optional": true
+    }
+  },
   "files": [
     "LICENSE",
     "README.md",
