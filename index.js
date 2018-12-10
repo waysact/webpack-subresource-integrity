@@ -265,7 +265,7 @@ SubresourceIntegrityPlugin.prototype.processTag =
     var src = this.hwpAssetPath(util.getTagSrc(tag));
     /* eslint-disable no-param-reassign */
     var integrity = util.getIntegrityChecksumForAsset(compilation.assets, src);
-    if (integrity !== null) {
+    if (!Object.prototype.hasOwnProperty.call(tag.attributes, "integrity")) {
       tag.attributes.integrity = integrity;
       tag.attributes.crossorigin = compilation.compiler.options.output.crossOriginLoading || 'anonymous';
     }
