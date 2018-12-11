@@ -103,6 +103,16 @@ you must set the `Cache-Control: no-transform` response header or your
 page will break when assets are loaded through a transforming
 proxy.  [See below](#proxies) for more information.
 
+### Content Security Policy
+
+Consider adding the following rule to your CSP file:
+
+```Content-Security-Policy: require-sri-for script style;```
+
+It ensures that if, for some reason, this plugin fails to add
+integrity attributes to all your assets, your page will fail to load
+rather than load with unverified assets.
+
 ### Options
 
 #### hashFuncNames
