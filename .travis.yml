@@ -20,8 +20,7 @@ matrix:
     env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-alpha.2"
 install:
   - npm install || true
-  - npm rm webpack
-  - npm rm extract-text-webpack-plugin
+  - npm rm webpack extract-text-webpack-plugin eslint
   - npm install "webpack""$WEBPACK_SUFFIX" --ignore-scripts || true
   - npm install "extract-text-webpack-plugin""$ETWP_SUFFIX" --ignore-scripts || true
   - npm install "html-webpack-plugin""$HWP_SUFFIX" --ignore-scripts || true
