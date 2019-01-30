@@ -16,6 +16,7 @@ function WebIntegrityJsonpMainTemplatePlugin(sriPlugin, compilation) {
 WebIntegrityJsonpMainTemplatePlugin.prototype.addSriHashes =
   function addSriHashes(mainTemplate, source, chunk) {
     var allChunks = util.findChunks(chunk);
+    var includedChunks = chunk.getChunkMaps().hash;
 
     if (allChunks.size > 0) {
       return (Template.asString || mainTemplate.asString)([
@@ -26,7 +27,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addSriHashes =
               sriHashes,
               depChunk
             ) {
-              if (chunk !== depChunk) {
+              if (includedChunks[depChunk.id.toString()]) {
                 // eslint-disable-next-line no-param-reassign
                 sriHashes[depChunk.id] = util.makePlaceholder(depChunk.id);
               }
