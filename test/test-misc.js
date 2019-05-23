@@ -292,6 +292,24 @@ describe('Plugin Options', function describe() {
     expect(dummyCompilation.warnings.length).toBe(0);
   });
 
+  it('filters byignored option', function it() {
+    var pluginIgnored = new SriPlugin({
+      hashFuncNames: ['sha256'],
+      ignored: /monique.css$/
+    });
+    var plugin = new SriPlugin({
+      hashFuncNames: ['sha256']
+    });
+
+    expect(pluginIgnored.isIgnoredAsset('monique.css')).toBeTruthy();
+    expect(pluginIgnored.isIgnoredAsset('jeanne.css')).toBeFalsy();
+    expect(pluginIgnored.isIgnoredAsset('monique.js')).toBeFalsy();
+
+    expect(plugin.isIgnoredAsset('monique.css')).toBeFalsy();
+    expect(plugin.isIgnoredAsset('jeanne.css')).toBeFalsy();
+    expect(plugin.isIgnoredAsset('monique.js')).toBeFalsy();
+  });
+
   it('should warn when output.crossOriginLoading is not set', function it() {
     var plugin = new SriPlugin({ hashFuncNames: ['sha256'] });
     var dummyCompilation = {
