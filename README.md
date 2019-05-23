@@ -133,6 +133,39 @@ When this value is falsy, the plugin doesn't run and no integrity
 values are calculated. It is recommended to disable the plugin in
 development mode.
 
+#### ignored
+
+Default value: undefined
+
+A **RegExp** to ignore an asset when we compute and add the integrity.
+Ex: for an entry index:
+```js
+{
+    entry: {
+        index: ['./src/app/index.js']
+    },
+    output: {
+        filename: '[name].[chunkhash:10].js',
+        crossOriginLoading: 'anonymous'
+    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: 'src/app.ejs',
+            inject: 'body'
+        }),
+        new SriPlugin({
+            hashFuncNames: ['sha384'],
+            ignored: /index.+\.css$/
+        })
+    ]
+}
+```
+
+Inside the output HTML we won't have the SRI set for the file `index.<hash>.css`.
+```html
+<link href=index.2b218c82e3.css rel=stylesheet>
+```
+
 ## Exporting `integrity` values
 
 You might want to export generated integrity hashes, perhaps for use
