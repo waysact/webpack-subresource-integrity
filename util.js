@@ -98,8 +98,9 @@ function isRuntimeChunk(chunk) {
   return "hasRuntime" in chunk ? chunk.hasRuntime() : chunk.entry;
 }
 
-function makePlaceholder(id) {
-  return "*-*-*-CHUNK-SRI-HASH-" + id + "-*-*-*";
+function makePlaceholder(hashFuncNames, id) {
+  var placeholder = "*-*-*-CHUNK-SRI-HASH-" + id + "-*-*-*";
+  return computeIntegrity(hashFuncNames, placeholder);
 }
 
 module.exports.computeIntegrity = computeIntegrity;

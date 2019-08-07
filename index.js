@@ -172,11 +172,12 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
   var newAsset;
   var magicMarker;
   var magicMarkerPos;
+  var hashFuncNames = this.options.hashFuncNames;
 
   newAsset = new ReplaceSource(assets[chunkFile]);
 
   Array.from(hashByChunkId.entries()).forEach(function replaceMagicMarkers(idAndHash) {
-    magicMarker = util.makePlaceholder(idAndHash[0]);
+    magicMarker = util.makePlaceholder(hashFuncNames, idAndHash[0]);
     magicMarkerPos = oldSource.indexOf(magicMarker);
     if (magicMarkerPos >= 0) {
       newAsset.replace(
@@ -189,7 +190,7 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
   // eslint-disable-next-line no-param-reassign
   assets[chunkFile] = newAsset;
 
-  newAsset.integrity = util.computeIntegrity(this.options.hashFuncNames, newAsset.source());
+  newAsset.integrity = util.computeIntegrity(hashFuncNames, newAsset.source());
   return newAsset;
 };
 
@@ -249,15 +250,15 @@ SubresourceIntegrityPlugin.prototype.addMissingIntegrityHashes =
  *  Calculate SRI values for each chunk and replace the magic
  *  placeholders by the actual values.
  */
-SubresourceIntegrityPlugin.prototype.afterOptimizeChunkAssets =
-  function afterOptimizeChunkAssets(compilation, chunks) {
+SubresourceIntegrityPlugin.prototype.afterOptimizeAssets =
+  function afterOptimizeAssets(compilation, assets) {
     var self = this;
 
-    chunks.filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
-      self.processChunk(chunk, compilation, compilation.assets);
+    compilation.chunks.filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
+      self.processChunk(chunk, compilation, assets);
     });
 
-    this.addMissingIntegrityHashes(compilation.assets);
+    this.addMissingIntegrityHashes(assets);
   };
 
 SubresourceIntegrityPlugin.prototype.processTag =
@@ -342,7 +343,7 @@ SubresourceIntegrityPlugin.prototype.registerHwpHooks =
 
 SubresourceIntegrityPlugin.prototype.thisCompilation =
   function thisCompilation(compiler, compilation) {
-    var afterOptimizeChunkAssets = this.afterOptimizeChunkAssets.bind(this, compilation);
+    var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
     var chunkAsset = this.chunkAsset.bind(this, compilation);
     var alterAssetTags = this.alterAssetTags.bind(this, compilation);
     var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
@@ -364,11 +365,11 @@ SubresourceIntegrityPlugin.prototype.thisCompilation =
      *    Modify the asset tags before webpack injects them for anything with an integrity value.
      */
     if (compiler.hooks) {
-      compilation.hooks.afterOptimizeChunkAssets.tap('SriPlugin', afterOptimizeChunkAssets);
+      compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
       compilation.hooks.chunkAsset.tap('SriPlugin', chunkAsset);
       compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration));
     } else {
-      compilation.plugin('after-optimize-chunk-assets', afterOptimizeChunkAssets);
+      compilation.plugin('after-optimize-assets', afterOptimizeAssets);
       compilation.plugin('chunk-asset', chunkAsset);
       compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
       compilation.plugin('html-webpack-plugin-before-html-generation', beforeHtmlGeneration);
