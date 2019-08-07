@@ -249,15 +249,15 @@ SubresourceIntegrityPlugin.prototype.addMissingIntegrityHashes =
  *  Calculate SRI values for each chunk and replace the magic
  *  placeholders by the actual values.
  */
-SubresourceIntegrityPlugin.prototype.afterOptimizeAssets =
-  function afterOptimizeAssets(compilation, assets) {
+SubresourceIntegrityPlugin.prototype.afterOptimizeChunkAssets =
+  function afterOptimizeChunkAssets(compilation, chunks) {
     var self = this;
 
-    compilation.chunks.filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
-      self.processChunk(chunk, compilation, assets);
+    chunks.filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
+      self.processChunk(chunk, compilation, compilation.assets);
     });
 
-    this.addMissingIntegrityHashes(assets);
+    this.addMissingIntegrityHashes(compilation.assets);
   };
 
 SubresourceIntegrityPlugin.prototype.processTag =
@@ -342,7 +342,7 @@ SubresourceIntegrityPlugin.prototype.registerHwpHooks =
 
 SubresourceIntegrityPlugin.prototype.thisCompilation =
   function thisCompilation(compiler, compilation) {
-    var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
+    var afterOptimizeChunkAssets = this.afterOptimizeChunkAssets.bind(this, compilation);
     var chunkAsset = this.chunkAsset.bind(this, compilation);
     var alterAssetTags = this.alterAssetTags.bind(this, compilation);
     var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
@@ -364,11 +364,11 @@ SubresourceIntegrityPlugin.prototype.thisCompilation =
      *    Modify the asset tags before webpack injects them for anything with an integrity value.
      */
     if (compiler.hooks) {
-      compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
+      compilation.hooks.afterOptimizeChunkAssets.tap('SriPlugin', afterOptimizeChunkAssets);
       compilation.hooks.chunkAsset.tap('SriPlugin', chunkAsset);
       compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration));
     } else {
-      compilation.plugin('after-optimize-assets', afterOptimizeAssets);
+      compilation.plugin('after-optimize-chunk-assets', afterOptimizeChunkAssets);
       compilation.plugin('chunk-asset', chunkAsset);
       compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
       compilation.plugin('html-webpack-plugin-before-html-generation', beforeHtmlGeneration);
