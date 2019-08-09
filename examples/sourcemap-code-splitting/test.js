@@ -9,9 +9,9 @@ module.exports.skip = function skip() {
 };
 
 module.exports.check = function check() {
-  var findAndStripSriHashString = function(filePath, pattern, offset = 0) {
+  var findAndStripSriHashString = function(filePath, pattern, offset) {
     var fileContent = fs.readFileSync(path.join(__dirname, filePath), 'utf-8');
-    var string = fileContent.substring(fileContent.indexOf(pattern) + offset)
+    var string = fileContent.substring(fileContent.indexOf(pattern) + (offset || 0))
         .match(/\{(.*?)\}/)[0].replace(/\\/g, '').replace(/\"/g, '');
     return string;
   }
