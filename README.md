@@ -105,13 +105,19 @@ proxy.  [See below](#proxies) for more information.
 
 ### Content Security Policy
 
-Consider adding the following rule to your CSP file:
+~~Consider adding the following rule to your CSP file:~~
 
-```Content-Security-Policy: require-sri-for script style;```
+~~```Content-Security-Policy: require-sri-for script style;```~~
 
-It ensures that if, for some reason, this plugin fails to add
+~~It ensures that if, for some reason, this plugin fails to add
 integrity attributes to all your assets, your page will fail to load
-rather than load with unverified assets.
+rather than load with unverified assets.~~
+
+`require-sri-for` has never officially shipped in
+[Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=618924)
+or
+[Firefox](https://groups.google.com/d/msg/mozilla.dev.platform/TKFsYlh9pr8/o_Vq_1s7BwAJ),
+and both appear to be leaning towards removing their implementations.
 
 ### Options
 
