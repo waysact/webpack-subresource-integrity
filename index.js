@@ -172,11 +172,12 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
   var newAsset;
   var magicMarker;
   var magicMarkerPos;
+  var hashFuncNames = this.options.hashFuncNames;
 
   newAsset = new ReplaceSource(assets[chunkFile]);
 
   Array.from(hashByChunkId.entries()).forEach(function replaceMagicMarkers(idAndHash) {
-    magicMarker = util.makePlaceholder(idAndHash[0]);
+    magicMarker = util.makePlaceholder(hashFuncNames, idAndHash[0]);
     magicMarkerPos = oldSource.indexOf(magicMarker);
     if (magicMarkerPos >= 0) {
       newAsset.replace(
@@ -189,7 +190,7 @@ SubresourceIntegrityPlugin.prototype.replaceAsset = function replaceAsset(
   // eslint-disable-next-line no-param-reassign
   assets[chunkFile] = newAsset;
 
-  newAsset.integrity = util.computeIntegrity(this.options.hashFuncNames, newAsset.source());
+  newAsset.integrity = util.computeIntegrity(hashFuncNames, newAsset.source());
   return newAsset;
 };
 
