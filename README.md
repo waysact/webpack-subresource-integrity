@@ -155,11 +155,13 @@ Webpack >= 4).
 
 ### Preloading
 
-`<link rel="preload">` doesn't work as expected in current Chrome versions, even
-if the integrity attribute is added to the `link tag (which the current version
-of webpack-subresource-integrity does _not_ do.) The resource will be loaded
-twice, defeating the purpose of preloading.  This issue doesn't appear to exist
-in Firefox or Safari.  See issue #111 for more information.
+This plugin adds the integrity attribute to `<link rel="preload">`
+tags, but preloading with SRI doesn't work as expected in current
+Chrome versions.  The resource will be loaded twice, defeating the
+purpose of preloading.  This problem doesn't appear to exist in
+Firefox or Safari.  See [issue
+#111](https://github.com/waysact/webpack-subresource-integrity/issues/111)
+for more information.
 
 ### Proxies
 
