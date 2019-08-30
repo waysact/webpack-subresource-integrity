@@ -153,6 +153,14 @@ Webpack >= 4).
 
 ## Caveats
 
+### Preloading
+
+`<link rel="preload">` doesn't work as expected in current Chrome versions, even
+if the integrity attribute is added to the `link tag (which the current version
+of webpack-subresource-integrity does _not_ do.) The resource will be loaded
+twice, defeating the purpose of preloading.  This issue doesn't appear to exist
+in Firefox or Safari.  See issue #111 for more information.
+
 ### Proxies
 
 By its very nature, SRI can cause your page to break when assets are
