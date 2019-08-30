@@ -56,7 +56,7 @@
     "http-shutdown": "^1.2.0",
     "karma": "^1.3.0",
     "karma-chrome-launcher": "^2.0.0",
-    "karma-firefox-launcher": "^1.0.0",
+    "karma-firefox-launcher": "1.1.0",
     "karma-mocha": "^1.0.1",
     "karma-webpack": "2.0.7",
     "lodash": "^4.17.5",

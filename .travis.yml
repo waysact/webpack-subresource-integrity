@@ -26,7 +26,8 @@ install:
   - npm install "html-webpack-plugin""$HWP_SUFFIX" --ignore-scripts || true
 before_script:
   - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
+services:
+  - xvfb
 script:
   - ./node_modules/karma/bin/karma start --single-run --browsers Firefox
   - $(npm bin)/nyc $(npm bin)/mocha --exit --timeout 20000 && $(npm bin)/nyc report --reporter=text-lcov | $(npm bin)/coveralls
