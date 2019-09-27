@@ -72,7 +72,8 @@
     "style-loader": "^0.18.0",
     "tmp": "^0.0.31",
     "webpack": "^1.12.11",
-    "webpack-assets-manifest": "^3.0.0"
+    "webpack-assets-manifest": "^3.0.0",
+    "webpack-fix-style-only-entries": "^0.4.0"
   },
   "peerDependencies": {
     "html-webpack-plugin": "^2.21.0 || ~3 || >=4.0.0-alpha.2 <5",
