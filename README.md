@@ -183,7 +183,7 @@ refrain from modifying the assets.
 
 ### Browser support
 
-Browser support for SRI is currently patchy.  Your page will still
+Browser support for SRI is widely implemented.  Your page will still
 work on browsers without support for SRI, but subresources won't be
 protected from tampering.
 
