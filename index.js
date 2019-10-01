@@ -231,8 +231,10 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
 
 SubresourceIntegrityPlugin.prototype.chunkAsset =
   function chunkAsset(compilation, chunk, asset) {
-    // eslint-disable-next-line no-param-reassign
-    compilation.sriChunkAssets[chunk.id] = asset;
+    if (compilation.assets[asset]) {
+      // eslint-disable-next-line no-param-reassign
+      compilation.sriChunkAssets[chunk.id] = asset;
+    }
   };
 
 SubresourceIntegrityPlugin.prototype.addMissingIntegrityHashes =
@@ -344,7 +346,7 @@ SubresourceIntegrityPlugin.prototype.registerHwpHooks =
 SubresourceIntegrityPlugin.prototype.thisCompilation =
   function thisCompilation(compiler, compilation) {
     var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
-    var chunkAsset = this.chunkAsset.bind(this, compilation);
+    var beforeChunkAssets = this.beforeChunkAssets.bind(this, compilation);
     var alterAssetTags = this.alterAssetTags.bind(this, compilation);
     var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
 
@@ -366,15 +368,24 @@ SubresourceIntegrityPlugin.prototype.thisCompilation =
      */
     if (compiler.hooks) {
       compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
-      compilation.hooks.chunkAsset.tap('SriPlugin', chunkAsset);
+      compilation.hooks.beforeChunkAssets.tap('SriPlugin', beforeChunkAssets);
       compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration));
     } else {
       compilation.plugin('after-optimize-assets', afterOptimizeAssets);
-      compilation.plugin('chunk-asset', chunkAsset);
+      compilation.plugin('before-chunk-assets', beforeChunkAssets);
       compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
       compilation.plugin('html-webpack-plugin-before-html-generation', beforeHtmlGeneration);
     }
   };
+
+SubresourceIntegrityPlugin.prototype.beforeChunkAssets = function afterPlugins(compilation) {
+  var chunkAsset = this.chunkAsset.bind(this, compilation);
+  if (compilation.hooks) {
+    compilation.hooks.chunkAsset.tap('SriPlugin', chunkAsset);
+  } else {
+    compilation.plugin('chunk-asset', chunkAsset);
+  }
+};
 
 SubresourceIntegrityPlugin.prototype.afterPlugins = function afterPlugins(compiler) {
   if (compiler.hooks) {
