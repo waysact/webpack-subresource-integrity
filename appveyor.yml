@@ -40,7 +40,7 @@ environment:
       WEBPACK_SUFFIX: '@4'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
-      HWP_SUFFIX: '@4.0.0-alpha.2'
+      HWP_SUFFIX: '@4.0.0-beta.11'
     - nodejs_version: 8
       WEBPACK_SUFFIX: '@1'
       ETWP_SUFFIX: '@1'
@@ -65,12 +65,12 @@ environment:
       WEBPACK_SUFFIX: '@4'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
-      HWP_SUFFIX: '@4.0.0-alpha.2'
+      HWP_SUFFIX: '@4.0.0-beta.11'
     - nodejs_version: 8
       WEBPACK_SUFFIX: '@5.0.0-beta.7'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
-      HWP_SUFFIX: '@4.0.0-alpha.2'
+      HWP_SUFFIX: '@4.0.0-beta.11'
     - nodejs_version: 10
       WEBPACK_SUFFIX: '@1'
       ETWP_SUFFIX: '@1'
@@ -95,12 +95,12 @@ environment:
       WEBPACK_SUFFIX: '@4'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
-      HWP_SUFFIX: '@4.0.0-alpha.2'
+      HWP_SUFFIX: '@4.0.0-beta.11'
     - nodejs_version: 10
       WEBPACK_SUFFIX: '@5.0.0-beta.7'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
-      HWP_SUFFIX: '@4.0.0-alpha.2'
+      HWP_SUFFIX: '@3'
     - nodejs_version: 12
       WEBPACK_SUFFIX: '@1'
       ETWP_SUFFIX: '@1'
@@ -125,12 +125,12 @@ environment:
       WEBPACK_SUFFIX: '@4'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
-      HWP_SUFFIX: '@4.0.0-alpha.2'
+      HWP_SUFFIX: '@4.0.0-beta.11'
     - nodejs_version: 12
       WEBPACK_SUFFIX: '@5.0.0-beta.7'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
-      HWP_SUFFIX: '@4.0.0-alpha.2'
+      HWP_SUFFIX: '@3'
 
 # Install scripts. (runs after repo cloning)
 install:
