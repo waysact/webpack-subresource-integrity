@@ -66,6 +66,11 @@ environment:
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
       HWP_SUFFIX: '@4.0.0-alpha.2'
+    - nodejs_version: 8
+      WEBPACK_SUFFIX: '@5.0.0-beta.7'
+      ETWP_SUFFIX: '@4.0.0-alpha.0'
+      FL_SUFFIX: '@1'
+      HWP_SUFFIX: '@4.0.0-alpha.2'
     - nodejs_version: 10
       WEBPACK_SUFFIX: '@1'
       ETWP_SUFFIX: '@1'
@@ -88,6 +93,41 @@ environment:
       HWP_SUFFIX: '@3'
     - nodejs_version: 10
       WEBPACK_SUFFIX: '@4'
+      ETWP_SUFFIX: '@4.0.0-alpha.0'
+      FL_SUFFIX: '@1'
+      HWP_SUFFIX: '@4.0.0-alpha.2'
+    - nodejs_version: 10
+      WEBPACK_SUFFIX: '@5.0.0-beta.7'
+      ETWP_SUFFIX: '@4.0.0-alpha.0'
+      FL_SUFFIX: '@1'
+      HWP_SUFFIX: '@4.0.0-alpha.2'
+    - nodejs_version: 12
+      WEBPACK_SUFFIX: '@1'
+      ETWP_SUFFIX: '@1'
+      FL_SUFFIX: '@0'
+      HWP_SUFFIX: '@2'
+    - nodejs_version: 12
+      WEBPACK_SUFFIX: '@2'
+      ETWP_SUFFIX: '@2'
+      FL_SUFFIX: '@1'
+      HWP_SUFFIX: '@2'
+    - nodejs_version: 12
+      WEBPACK_SUFFIX: '@3'
+      ETWP_SUFFIX: '@3'
+      FL_SUFFIX: '@1'
+      HWP_SUFFIX: '@2'
+    - nodejs_version: 12
+      WEBPACK_SUFFIX: '@4'
+      ETWP_SUFFIX: '@4.0.0-alpha.0'
+      FL_SUFFIX: '@1'
+      HWP_SUFFIX: '@3'
+    - nodejs_version: 12
+      WEBPACK_SUFFIX: '@4'
+      ETWP_SUFFIX: '@4.0.0-alpha.0'
+      FL_SUFFIX: '@1'
+      HWP_SUFFIX: '@4.0.0-alpha.2'
+    - nodejs_version: 12
+      WEBPACK_SUFFIX: '@5.0.0-beta.7'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
       HWP_SUFFIX: '@4.0.0-alpha.2'

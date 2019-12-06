@@ -4,6 +4,7 @@ node_js:
   - 6
   - 8
   - 10
+  - 12
 addons:
   firefox: latest
 env:
@@ -19,6 +20,10 @@ matrix:
     env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@3"
   - node_js: 4
     env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-alpha.2"
+  - node_js: 4
+    env: WEBPACK_SUFFIX="@5.0.0-beta.7" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-alpha.2"
+  - node_js: 6
+    env: WEBPACK_SUFFIX="@5.0.0-beta.7" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-alpha.2"
 install:
   - npm install || true
   - npm rm webpack extract-text-webpack-plugin eslint
