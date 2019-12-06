@@ -7,7 +7,10 @@ module.exports.check = function check(stats) {
   var jsIntegrity;
 
   expect(stats.compilation.warnings).toEqual([]);
-  jsIntegrity = stats.compilation.assets['bundle.js'].integrity;
+
+  jsIntegrity =
+    stats.toJson().assets.find(asset => asset.name === 'bundle.js').integrity ||
+    stats.compilation.assets['bundle.js'].integrity;
   expect(jsIntegrity).toMatch(/^sha/);
 
   return new Promise((resolve, reject) => {

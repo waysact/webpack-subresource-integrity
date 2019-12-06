@@ -41,6 +41,8 @@ function SubresourceIntegrityPlugin(options) {
   Object.assign(this.options, useOptions);
 
   this.emittedMessages = {};
+
+  this.assetIntegrity = new Map();
 }
 
 SubresourceIntegrityPlugin.prototype.emitMessage = function emitMessage(messages, message) {
@@ -203,13 +205,14 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
 
   Array.from(util.findChunks(chunk)).reverse().forEach(childChunk => {
     var sourcePath;
+    var files = Array.isArray(childChunk.files) ? new Set(childChunk.files) : childChunk.files;
 
     // This can happen with invalid Webpack configurations
-    if (childChunk.files.length === 0) return;
+    if (files.size === 0) return;
 
     sourcePath = compilation.sriChunkAssets[childChunk.id];
 
-    if (childChunk.files.indexOf(sourcePath) < 0) {
+    if (!files.has(sourcePath)) {
       self.warnOnce(
         compilation,
         'Cannot determine asset for chunk ' + childChunk.id + ', computed="' + sourcePath +
@@ -217,15 +220,13 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
           'along with your Webpack configuration at ' +
           'https://github.com/waysact/webpack-subresource-integrity/issues/new'
       );
-      sourcePath = childChunk.files[0];
+      sourcePath = Array.from(files)[0];
     }
 
     self.warnIfHotUpdate(compilation, assets[sourcePath].source());
-    newAsset = self.replaceAsset(
-      assets,
-      hashByChunkId,
-      sourcePath);
+    newAsset = self.replaceAsset(assets, hashByChunkId, sourcePath);
     hashByChunkId.set(childChunk.id, newAsset.integrity);
+    this.assetIntegrity.set(sourcePath, newAsset.integrity);
   });
 };
 
@@ -235,6 +236,16 @@ SubresourceIntegrityPlugin.prototype.chunkAsset =
       // eslint-disable-next-line no-param-reassign
       compilation.sriChunkAssets[chunk.id] = asset;
     }
+  };
+
+SubresourceIntegrityPlugin.prototype.statsFactory =
+  function stats(compilation, statsFactory) {
+    statsFactory.hooks.extract.for("asset").tap('SriPlugin', (object, asset) => {
+      if (this.assetIntegrity.has(asset.name)) {
+        // eslint-disable-next-line no-param-reassign
+        object.integrity = String(this.assetIntegrity.get(asset.name));
+      }
+    });
   };
 
 SubresourceIntegrityPlugin.prototype.addMissingIntegrityHashes =
@@ -256,7 +267,7 @@ SubresourceIntegrityPlugin.prototype.afterOptimizeAssets =
   function afterOptimizeAssets(compilation, assets) {
     var self = this;
 
-    compilation.chunks.filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
+    Array.from(compilation.chunks).filter(util.isRuntimeChunk).forEach(function forEachChunk(chunk) {
       self.processChunk(chunk, compilation, assets);
     });
 
@@ -390,6 +401,13 @@ SubresourceIntegrityPlugin.prototype.beforeChunkAssets = function afterPlugins(c
 SubresourceIntegrityPlugin.prototype.afterPlugins = function afterPlugins(compiler) {
   if (compiler.hooks) {
     compiler.hooks.thisCompilation.tap('SriPlugin', this.thisCompilation.bind(this, compiler));
+
+    compiler.hooks.compilation.tap("DefaultStatsFactoryPlugin", compilation => {
+      if (compilation.hooks.statsFactory) {
+        compilation.hooks.statsFactory.tap('SriPlugin', this.statsFactory.bind(this, compilation));
+      }
+    });
+
   } else {
     compiler.plugin('this-compilation', this.thisCompilation.bind(this, compiler));
   }

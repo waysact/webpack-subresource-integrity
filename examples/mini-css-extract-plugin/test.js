@@ -4,5 +4,5 @@ var webpackVersion = Number(
 
 module.exports.skip = function skip() {
   // mini-css-extract-plugin needs Webpack 4
-  return webpackVersion < 4;
+  return webpackVersion !== 4;
 };

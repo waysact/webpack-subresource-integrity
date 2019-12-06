@@ -4,7 +4,9 @@ var htmlparser = require('htmlparser');
 var fs = require('fs');
 
 module.exports.check = function check(stats) {
-  var jsIntegrity = stats.compilation.assets['subdir/bundle.js'].integrity;
+  var jsIntegrity =
+    stats.toJson().assets.find(asset => asset.name === 'subdir/bundle.js')
+      .integrity || stats.compilation.assets['subdir/bundle.js'].integrity;
   expect(jsIntegrity).toMatch(/^sha/);
 
   return new Promise((resolve, reject) => {
