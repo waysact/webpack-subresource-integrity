@@ -35,7 +35,6 @@ before_script:
 services:
   - xvfb
 script:
-  - ./node_modules/karma/bin/karma start --single-run --browsers Firefox
   - $(npm bin)/nyc $(npm bin)/mocha --exit --timeout 20000 && $(npm bin)/nyc report --reporter=text-lcov | $(npm bin)/coveralls
 notifications:
   webhooks:

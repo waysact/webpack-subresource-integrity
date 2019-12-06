@@ -151,7 +151,7 @@ test_script:
   - node --version
   - npm --version
   # run tests
-  - npm run mocha
+  - npm run test
 
 # Don't actually build.
 build: off
