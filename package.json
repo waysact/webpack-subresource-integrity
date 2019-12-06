@@ -71,7 +71,7 @@
     "soupselect": "^0.2.0",
     "style-loader": "^0.18.0",
     "tmp": "^0.0.31",
-    "webpack": "^1.12.11",
+    "webpack": "^1.12.11 || >= 5.0.0-beta.7 < 6.0",
     "webpack-assets-manifest": "^3.0.0",
     "webpack-fix-style-only-entries": "^0.4.0"
   },
