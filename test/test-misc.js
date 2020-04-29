@@ -17,6 +17,8 @@ var webpackVersion = Number(
   require('webpack/package.json').version.split('.')[0]
 );
 
+var util = require('../util');
+
 function testCompilation() {
   return {
     warnings: [],
@@ -310,5 +312,9 @@ describe('Plugin Options', function describe() {
     expect(dummyCompilation.warnings.length).toBe(1);
     expect(dummyCompilation.warnings[0].message).toMatch(
         /Set webpack option output.crossOriginLoading/);
+  });
+
+  it('ignores tags without attributes', function it() {
+    expect(util.filterTag({ tagName: "script" })).toBeFalsy();
   });
 });

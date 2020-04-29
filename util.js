@@ -67,7 +67,11 @@ function getTagSrc(tag) {
 
 function filterTag(tag) {
   // Process only script and link tags with a url
-  return (tag.tagName === "script" || tag.tagName === "link") && getTagSrc(tag);
+  return (
+    (tag.tagName === "script" || tag.tagName === "link") &&
+    tag.attributes &&
+    getTagSrc(tag)
+  );
 }
 
 function normalizePath(p) {
