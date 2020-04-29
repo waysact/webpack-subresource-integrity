@@ -62,7 +62,7 @@ function computeIntegrity(hashFuncNames, source) {
 
 function getTagSrc(tag) {
   // Get asset path - src from scripts and href from links
-  return tag.attributes.href || tag.attributes.src;
+  return tag.attributes && (tag.attributes.href || tag.attributes.src);
 }
 
 function filterTag(tag) {
