@@ -1,6 +1,6 @@
 {
   "name": "webpack-subresource-integrity",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Webpack plugin for enabling Subresource Integrity",
   "engines": {
     "node": ">=4"
