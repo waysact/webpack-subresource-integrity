@@ -17,6 +17,6 @@ module.exports.check = function check() {
   }
 
   var sriHashesInSource = findAndStripSriHashString('dist/index.js', 'sha256-', -10);
-  var sriHashesInMap = findAndStripSriHashString('dist/index.js.map', 'var sriHashes = ');
+  var sriHashesInMap = findAndStripSriHashString('dist/index.js.map', '__webpack_require__.sriHashes = ');
   expect(sriHashesInSource.length).toEqual(sriHashesInMap.length);
 };
