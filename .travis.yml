@@ -12,18 +12,18 @@ env:
   - WEBPACK_SUFFIX="@2" ETWP_SUFFIX="@2" HWP_SUFFIX="@2"
   - WEBPACK_SUFFIX="@3" ETWP_SUFFIX="@3" HWP_SUFFIX="@2"
   - WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@3"
-  - WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-beta.11"
-  - WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-beta.11"
+  - WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
+  - WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
 matrix:
   exclude:
   - node_js: 4
     env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@3"
   - node_js: 4
-    env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-beta.11"
+    env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
   - node_js: 4
-    env: WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-beta.11"
+    env: WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
   - node_js: 6
-    env: WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-beta.11"
+    env: WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
 install:
   - npm install || true
   - npm rm webpack extract-text-webpack-plugin eslint
