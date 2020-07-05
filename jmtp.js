@@ -8,6 +8,17 @@
 var webpack = require('webpack');
 var Template = require('webpack/lib/Template');
 var util = require('./util');
+var LoadScriptRuntimeModule;
+
+try {
+  // eslint-disable-next-line global-require
+  LoadScriptRuntimeModule = require('webpack/lib/runtime/LoadScriptRuntimeModule');
+} catch (e) {
+  // File doesn't exist in Webpack <5
+  if (e.code !== 'MODULE_NOT_FOUND') {
+    throw e;
+  }
+}
 
 function WebIntegrityJsonpMainTemplatePlugin(sriPlugin, compilation) {
   this.sriPlugin = sriPlugin;
@@ -48,7 +59,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addSriHashes =
  *  Patch jsonp-script code to add the integrity attribute.
  */
 WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
-  function addAttribute(mainTemplate, elName, source) {
+  function addAttribute(mainTemplate, elName, source, chunk) {
     if (!mainTemplate.outputOptions.crossOriginLoading) {
       this.sriPlugin.errorOnce(
         this.compilation,
@@ -57,7 +68,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
     }
     return (Template.asString || mainTemplate.asString)([
       source,
-      elName + '.integrity = __webpack_require__.sriHashes[chunkId];',
+      elName + '.integrity = __webpack_require__.sriHashes[' + (chunk ? `'${chunk.id}'` : 'chunkId') + '];',
       elName + '.crossOrigin = ' + JSON.stringify(mainTemplate.outputOptions.crossOriginLoading) + ';',
     ]);
   };
@@ -77,6 +88,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
   mainTemplate
 ) {
   var jsonpScriptPlugin = this.addAttribute.bind(this, mainTemplate, "script");
+  var createScriptPlugin = this.addAttribute.bind(this, mainTemplate, "script");
   var linkPreloadPlugin = this.addAttribute.bind(this, mainTemplate, "link");
   var addSriHashes = this.addSriHashes.bind(this, mainTemplate);
   var compilationHooks = getCompilationHooks(this.compilation, mainTemplate);
@@ -96,6 +108,13 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
   } else {
     mainTemplate.plugin('jsonp-script', jsonpScriptPlugin);
     mainTemplate.plugin('local-vars', addSriHashes);
+  }
+
+  if (LoadScriptRuntimeModule) {
+    LoadScriptRuntimeModule
+      .getCompilationHooks(this.compilation)
+      .createScript
+      .tap('SriPlugin', createScriptPlugin);
   }
 };
 
