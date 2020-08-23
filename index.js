@@ -7,7 +7,8 @@
 
 var crypto = require('crypto');
 var path = require('path');
-var ReplaceSource = require('webpack-sources/lib/ReplaceSource');
+var webpack = require('webpack');
+var ReplaceSource = (webpack.sources || require('webpack-sources')).ReplaceSource;
 var util = require('./util');
 var WebIntegrityJsonpMainTemplatePlugin = require('./jmtp');
 var HtmlWebpackPlugin;
@@ -216,7 +217,7 @@ SubresourceIntegrityPlugin.prototype.processChunk = function processChunk(
       self.warnOnce(
         compilation,
         'Cannot determine asset for chunk ' + childChunk.id + ', computed="' + sourcePath +
-          '", available=' + childChunk.files[0] + '. Please report this full error message ' +
+          '", available=' + Array.from(childChunk.files)[0] + '. Please report this full error message ' +
           'along with your Webpack configuration at ' +
           'https://github.com/waysact/webpack-subresource-integrity/issues/new'
       );
@@ -378,7 +379,14 @@ SubresourceIntegrityPlugin.prototype.thisCompilation =
      *    Modify the asset tags before webpack injects them for anything with an integrity value.
      */
     if (compiler.hooks) {
-      compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
+      if (compilation.hooks.processAssets) {
+        compilation.hooks.processAssets.tap({
+          name: 'SriPlugin',
+          stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH
+        }, afterOptimizeAssets);
+      } else {
+        compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
+      }
       compilation.hooks.beforeChunkAssets.tap('SriPlugin', beforeChunkAssets);
       compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration));
     } else {

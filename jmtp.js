@@ -5,20 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-var webpack = require('webpack');
 var Template = require('webpack/lib/Template');
 var util = require('./util');
-var LoadScriptRuntimeModule;
-
-try {
-  // eslint-disable-next-line global-require
-  LoadScriptRuntimeModule = require('webpack/lib/runtime/LoadScriptRuntimeModule');
-} catch (e) {
-  // File doesn't exist in Webpack <5
-  if (e.code !== 'MODULE_NOT_FOUND') {
-    throw e;
-  }
-}
 
 function WebIntegrityJsonpMainTemplatePlugin(sriPlugin, compilation) {
   this.sriPlugin = sriPlugin;
@@ -73,25 +61,12 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
     ]);
   };
 
-function getCompilationHooks(compilation, mainTemplate) {
-  if (webpack.web &&
-      webpack.web.JsonpTemplatePlugin &&
-      webpack.web.JsonpTemplatePlugin.getCompilationHooks) {
-    return webpack.web.JsonpTemplatePlugin.getCompilationHooks(
-      compilation
-    );
-  }
-  return mainTemplate.hooks;
-}
-
 WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
   mainTemplate
 ) {
   var jsonpScriptPlugin = this.addAttribute.bind(this, mainTemplate, "script");
-  var createScriptPlugin = this.addAttribute.bind(this, mainTemplate, "script");
   var linkPreloadPlugin = this.addAttribute.bind(this, mainTemplate, "link");
   var addSriHashes = this.addSriHashes.bind(this, mainTemplate);
-  var compilationHooks = getCompilationHooks(this.compilation, mainTemplate);
 
   if (this.compilation.compiler.options.target !== 'web') {
     this.sriPlugin.warnOnce(
@@ -101,20 +76,13 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
     return;
   }
 
-  if (compilationHooks) {
-    compilationHooks.jsonpScript.tap('SriPlugin', jsonpScriptPlugin);
-    compilationHooks.linkPreload.tap('SriPlugin', linkPreloadPlugin);
+  if (mainTemplate.hooks) {
+    mainTemplate.hooks.jsonpScript.tap('SriPlugin', jsonpScriptPlugin);
+    mainTemplate.hooks.linkPreload.tap('SriPlugin', linkPreloadPlugin);
     mainTemplate.hooks.localVars.tap('SriPlugin', addSriHashes);
   } else {
     mainTemplate.plugin('jsonp-script', jsonpScriptPlugin);
     mainTemplate.plugin('local-vars', addSriHashes);
-  }
-
-  if (LoadScriptRuntimeModule) {
-    LoadScriptRuntimeModule
-      .getCompilationHooks(this.compilation)
-      .createScript
-      .tap('SriPlugin', createScriptPlugin);
   }
 };
 
