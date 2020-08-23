@@ -77,7 +77,7 @@
   },
   "peerDependencies": {
     "html-webpack-plugin": "^2.21.0 || ~3 || >=4.0.0-alpha.2 <5",
-    "webpack": "^1.12.11 || ~2 || ~3 || ~4 || >= 5.0.0-beta.7 <6"
+    "webpack": "^1.12.11 || ~2 || ~3 || ~4 || 5.0.0-beta.28 <6"
   },
   "peerDependenciesMeta": {
     "html-webpack-plugin": {
