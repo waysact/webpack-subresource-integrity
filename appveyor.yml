@@ -67,7 +67,7 @@ environment:
       FL_SUFFIX: '@1'
       HWP_SUFFIX: '@4.0.0-beta.11'
     - nodejs_version: 8
-      WEBPACK_SUFFIX: '@5.0.0-beta.7'
+      WEBPACK_SUFFIX: '@next'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
       HWP_SUFFIX: '@4.0.0-beta.11'
@@ -97,7 +97,7 @@ environment:
       FL_SUFFIX: '@1'
       HWP_SUFFIX: '@4.0.0-beta.11'
     - nodejs_version: 10
-      WEBPACK_SUFFIX: '@5.0.0-beta.7'
+      WEBPACK_SUFFIX: '@next'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
       HWP_SUFFIX: '@4.0.0-beta.11'
@@ -127,7 +127,7 @@ environment:
       FL_SUFFIX: '@1'
       HWP_SUFFIX: '@4.0.0-beta.11'
     - nodejs_version: 12
-      WEBPACK_SUFFIX: '@5.0.0-beta.7'
+      WEBPACK_SUFFIX: '@next'
       ETWP_SUFFIX: '@4.0.0-alpha.0'
       FL_SUFFIX: '@1'
       HWP_SUFFIX: '@4.0.0-beta.11'
