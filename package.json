@@ -100,5 +100,8 @@
   },
   "dependencies": {
     "webpack-sources": "^1.3.0"
+  },
+  "resolutions": {
+    "graceful-fs": "^4.2.4"
   }
 }
