@@ -21,11 +21,11 @@ matrix:
   - node_js: 4
     env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
   - node_js: 4
-    env: WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
+    env: WEBPACK_SUFFIX="@5" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
   - node_js: 6
-    env: WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
+    env: WEBPACK_SUFFIX="@5" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
   - node_js: 8
-    env: WEBPACK_SUFFIX="@next" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
+    env: WEBPACK_SUFFIX="@5" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
 install:
   - npm install || true
   - npm rm webpack extract-text-webpack-plugin eslint
