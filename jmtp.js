@@ -48,7 +48,8 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addSriHashes =
  */
 WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
   function addAttribute(mainTemplate, elName, source, chunk) {
-    if (!mainTemplate.outputOptions.crossOriginLoading) {
+    const outputOptions = this.compilation.outputOptions || mainTemplate.outputOptions;
+    if (!outputOptions.crossOriginLoading) {
       this.sriPlugin.errorOnce(
         this.compilation,
         'webpack option output.crossOriginLoading not set, code splitting will not work!'
@@ -57,7 +58,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
     return (Template.asString || mainTemplate.asString)([
       source,
       elName + '.integrity = __webpack_require__.sriHashes[' + (chunk ? `'${chunk.id}'` : 'chunkId') + '];',
-      elName + '.crossOrigin = ' + JSON.stringify(mainTemplate.outputOptions.crossOriginLoading) + ';',
+      elName + '.crossOrigin = ' + JSON.stringify(outputOptions.crossOriginLoading) + ';',
     ]);
   };
 
