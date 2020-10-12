@@ -8,6 +8,7 @@
 var crypto = require('crypto');
 var path = require('path');
 var webpack = require('webpack');
+// eslint-disable-next-line global-require
 var ReplaceSource = (webpack.sources || require('webpack-sources')).ReplaceSource;
 var util = require('./util');
 var WebIntegrityJsonpMainTemplatePlugin = require('./jmtp');
@@ -355,47 +356,77 @@ SubresourceIntegrityPlugin.prototype.registerHwpHooks =
     }
   };
 
-SubresourceIntegrityPlugin.prototype.thisCompilation =
-  function thisCompilation(compiler, compilation) {
-    var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
-    var beforeChunkAssets = this.beforeChunkAssets.bind(this, compilation);
-    var alterAssetTags = this.alterAssetTags.bind(this, compilation);
-    var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
+SubresourceIntegrityPlugin.prototype.thisCompilation = function thisCompilation(
+  compiler,
+  compilation
+) {
+  this.validateOptions(compilation);
 
-    this.validateOptions(compilation);
+  if (!this.options.enabled) {
+    return;
+  }
 
-    if (!this.options.enabled) {
-      return;
-    }
+  this.registerJMTP(compilation);
 
-    this.registerJMTP(compilation);
+  // FIXME: refactor into separate per-compilation state
+  // eslint-disable-next-line no-param-reassign
+  compilation.sriChunkAssets = {};
 
-    // FIXME: refactor into separate per-compilation state
-    // eslint-disable-next-line no-param-reassign
-    compilation.sriChunkAssets = {};
+  /*
+   *  html-webpack support:
+   *    Modify the asset tags before webpack injects them for anything with an integrity value.
+   */
+  if (compiler.hooks) {
+    this.setupHooks(compiler, compilation);
+  } else {
+    this.setupLegacyHooks(compiler, compilation);
+  }
+};
 
-    /*
-     *  html-webpack support:
-     *    Modify the asset tags before webpack injects them for anything with an integrity value.
-     */
-    if (compiler.hooks) {
-      if (compilation.hooks.processAssets) {
-        compilation.hooks.processAssets.tap({
-          name: 'SriPlugin',
-          stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH
-        }, afterOptimizeAssets);
-      } else {
-        compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
-      }
-      compilation.hooks.beforeChunkAssets.tap('SriPlugin', beforeChunkAssets);
-      compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration));
-    } else {
-      compilation.plugin('after-optimize-assets', afterOptimizeAssets);
-      compilation.plugin('before-chunk-assets', beforeChunkAssets);
-      compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
-      compilation.plugin('html-webpack-plugin-before-html-generation', beforeHtmlGeneration);
-    }
-  };
+SubresourceIntegrityPlugin.prototype.setupHooks = function setupHooks(
+  compiler,
+  compilation
+) {
+  var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
+  var beforeChunkAssets = this.beforeChunkAssets.bind(this, compilation);
+  var alterAssetTags = this.alterAssetTags.bind(this, compilation);
+  var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
+
+  if (compilation.hooks.processAssets) {
+    compilation.hooks.processAssets.tap(
+      {
+        name: 'SriPlugin',
+        stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH
+      },
+      afterOptimizeAssets
+    );
+  } else {
+    compilation.hooks.afterOptimizeAssets.tap('SriPlugin', afterOptimizeAssets);
+  }
+  compilation.hooks.beforeChunkAssets.tap('SriPlugin', beforeChunkAssets);
+  compiler.hooks.compilation.tap(
+    'HtmlWebpackPluginHooks',
+    this.registerHwpHooks.bind(this, alterAssetTags, beforeHtmlGeneration)
+  );
+};
+
+SubresourceIntegrityPlugin.prototype.setupLegacyHooks = function setupLegacyHooks(
+  compiler,
+  compilation
+) {
+  var afterOptimizeAssets = this.afterOptimizeAssets.bind(this, compilation);
+  var beforeChunkAssets = this.beforeChunkAssets.bind(this, compilation);
+  var alterAssetTags = this.alterAssetTags.bind(this, compilation);
+  var beforeHtmlGeneration = this.beforeHtmlGeneration.bind(this, compilation);
+
+  compilation.plugin('after-optimize-assets', afterOptimizeAssets);
+  compilation.plugin('before-chunk-assets', beforeChunkAssets);
+  compilation.plugin('html-webpack-plugin-alter-asset-tags', alterAssetTags);
+  compilation.plugin(
+    'html-webpack-plugin-before-html-generation',
+    beforeHtmlGeneration
+  );
+};
 
 SubresourceIntegrityPlugin.prototype.beforeChunkAssets = function afterPlugins(compilation) {
   var chunkAsset = this.chunkAsset.bind(this, compilation);
