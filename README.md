@@ -11,14 +11,18 @@ manipulation.
 
 ## Features
 
-- Optional integration with [html-webpack-plugin](https://github.com/ampedandwired/html-webpack-plugin)
-- Automatic support for code splitting (integrity for lazy-loaded chunks)
-- Compatible with Webpack 1.x, 2.x, 3.x and 4.x
+- Optional integration with [html-webpack-plugin](https://github.com/ampedandwired/html-webpack-plugin).
+- Automatic support for dynamic imports (also known as code splitting.)
+- Compatible with all major Webpack versions, up to and including Webpack 5.
 
 ## Installation
 
 ```shell
 npm install webpack-subresource-integrity --save-dev
+```
+
+```shell
+yarn add --dev webpack-subresource-integrity
 ```
 
 ### Webpack Configuration Example
@@ -81,9 +85,11 @@ template as follows:
 #### Without HtmlWebpackPlugin
 
 The correct value for the `integrity` attribute can be retrieved from
-the `integrity` property of Webpack assets.  However, that property is
-not copied over by Webpack's `stats` module so you'll have to access
-the "original" asset on the `compilation` object.  For example:
+the `integrity` property of Webpack assets.
+
+Note that with Webpack versions before 5, that property is not copied over by
+Webpack's `stats` module so you'll have to access the "original" asset on the
+`compilation` object.  For example:
 
 ```javascript
 compiler.plugin("done", stats => {

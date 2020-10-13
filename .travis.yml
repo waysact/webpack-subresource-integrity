@@ -4,6 +4,7 @@ node_js:
   - 6
   - 8
   - 10
+  - 12
 addons:
   firefox: latest
 env:
@@ -11,13 +12,20 @@ env:
   - WEBPACK_SUFFIX="@2" ETWP_SUFFIX="@2" HWP_SUFFIX="@2"
   - WEBPACK_SUFFIX="@3" ETWP_SUFFIX="@3" HWP_SUFFIX="@2"
   - WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@3"
-  - WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-alpha.2"
+  - WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
+  - WEBPACK_SUFFIX="@5" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
 matrix:
   exclude:
   - node_js: 4
     env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@3"
   - node_js: 4
-    env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4.0.0-alpha.2"
+    env: WEBPACK_SUFFIX="@4" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
+  - node_js: 4
+    env: WEBPACK_SUFFIX="@5" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
+  - node_js: 6
+    env: WEBPACK_SUFFIX="@5" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
+  - node_js: 8
+    env: WEBPACK_SUFFIX="@5" ETWP_SUFFIX="@4.0.0-alpha.0" HWP_SUFFIX="@4"
 install:
   - npm install || true
   - npm rm webpack extract-text-webpack-plugin eslint
@@ -29,7 +37,6 @@ before_script:
 services:
   - xvfb
 script:
-  - ./node_modules/karma/bin/karma start --single-run --browsers Firefox
   - $(npm bin)/nyc $(npm bin)/mocha --exit --timeout 20000 && $(npm bin)/nyc report --reporter=text-lcov | $(npm bin)/coveralls
 notifications:
   webhooks:

@@ -1,6 +1,6 @@
 {
   "name": "webpack-subresource-integrity",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Webpack plugin for enabling Subresource Integrity",
   "engines": {
     "node": ">=4"
@@ -9,8 +9,8 @@
   "scripts": {
     "codeclimate": "docker run --interactive --tty --rm --env CODECLIMATE_CODE=\"$PWD\" --volume \"$PWD\":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate",
     "coverage": "nyc $(npm bin)/mocha --exit --timeout 20000",
-    "test": "karma start --single-run && mocha --exit --timeout 20000",
-    "mocha": "mocha --exit --timeout 20000",
+    "karma": "karma start --single-run",
+    "test": "mocha --exit --timeout 20000",
     "lint": "eslint .",
     "prettier": "prettier --write '**/*.js'"
   },
@@ -76,8 +76,8 @@
     "webpack-fix-style-only-entries": "^0.4.0"
   },
   "peerDependencies": {
-    "html-webpack-plugin": "^2.21.0 || ~3 || >=4.0.0-alpha.2 <5",
-    "webpack": "^1.12.11 || ~2 || ~3 || ~4"
+    "html-webpack-plugin": ">= 2.21.0 < 5",
+    "webpack": ">= 1.12.11 < 6"
   },
   "peerDependenciesMeta": {
     "html-webpack-plugin": {
@@ -93,7 +93,12 @@
     "jmtp.js"
   ],
   "nyc": {
-    "exclude": ["coverage/**", "test/**", "examples/**", "**/node_modules/**"]
+    "exclude": [
+      "coverage/**",
+      "test/**",
+      "examples/**",
+      "**/node_modules/**"
+    ]
   },
   "prettier": {
     "singleQuote": true

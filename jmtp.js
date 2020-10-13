@@ -19,10 +19,10 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addSriHashes =
     var includedChunks = chunk.getChunkMaps().hash;
     var hashFuncNames = this.sriPlugin.options.hashFuncNames;
 
-    if (allChunks.size > 0) {
+    if (Object.keys(includedChunks).length > 0) {
       return (Template.asString || mainTemplate.asString)([
         source,
-        'var sriHashes = ' +
+        '__webpack_require__.sriHashes = ' +
           JSON.stringify(
             Array.from(allChunks).reduce(function chunkIdReducer(
               sriHashes,
@@ -47,8 +47,9 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addSriHashes =
  *  Patch jsonp-script code to add the integrity attribute.
  */
 WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
-  function addAttribute(mainTemplate, elName, source) {
-    if (!mainTemplate.outputOptions.crossOriginLoading) {
+  function addAttribute(mainTemplate, elName, source, chunk) {
+    const outputOptions = this.compilation.outputOptions || mainTemplate.outputOptions;
+    if (!outputOptions.crossOriginLoading) {
       this.sriPlugin.errorOnce(
         this.compilation,
         'webpack option output.crossOriginLoading not set, code splitting will not work!'
@@ -56,8 +57,8 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
     }
     return (Template.asString || mainTemplate.asString)([
       source,
-      elName + '.integrity = sriHashes[chunkId];',
-      elName + '.crossOrigin = ' + JSON.stringify(mainTemplate.outputOptions.crossOriginLoading) + ';',
+      elName + '.integrity = __webpack_require__.sriHashes[' + (chunk ? `'${chunk.id}'` : 'chunkId') + '];',
+      elName + '.crossOrigin = ' + JSON.stringify(outputOptions.crossOriginLoading) + ';',
     ]);
   };
 
@@ -68,18 +69,21 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
   var linkPreloadPlugin = this.addAttribute.bind(this, mainTemplate, "link");
   var addSriHashes = this.addSriHashes.bind(this, mainTemplate);
 
-  if (!mainTemplate.hooks) {
-    mainTemplate.plugin('jsonp-script', jsonpScriptPlugin);
-    mainTemplate.plugin('local-vars', addSriHashes);
-  } else if (mainTemplate.hooks.jsonpScript && mainTemplate.hooks.localVars) {
-    mainTemplate.hooks.jsonpScript.tap('SriPlugin', jsonpScriptPlugin);
-    mainTemplate.hooks.linkPreload.tap('SriPlugin', linkPreloadPlugin);
-    mainTemplate.hooks.localVars.tap('SriPlugin', addSriHashes);
-  } else {
+  if (this.compilation.compiler.options.target !== 'web') {
     this.sriPlugin.warnOnce(
       this.compilation,
       'This plugin is not useful for non-web targets.'
     );
+    return;
+  }
+
+  if (mainTemplate.hooks) {
+    mainTemplate.hooks.jsonpScript.tap('SriPlugin', jsonpScriptPlugin);
+    mainTemplate.hooks.linkPreload.tap('SriPlugin', linkPreloadPlugin);
+    mainTemplate.hooks.localVars.tap('SriPlugin', addSriHashes);
+  } else {
+    mainTemplate.plugin('jsonp-script', jsonpScriptPlugin);
+    mainTemplate.plugin('local-vars', addSriHashes);
   }
 };
 
