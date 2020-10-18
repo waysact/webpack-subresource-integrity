@@ -7,6 +7,10 @@
 
 var Template = require('webpack/lib/Template');
 var util = require('./util');
+var webpackVersionComponents = require('webpack/package.json').version.split(
+  '.'
+);
+var webpackVersionMajor = Number(webpackVersionComponents[0]);
 
 function WebIntegrityJsonpMainTemplatePlugin(sriPlugin, compilation) {
   this.sriPlugin = sriPlugin;
@@ -47,7 +51,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addSriHashes =
  *  Patch jsonp-script code to add the integrity attribute.
  */
 WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
-  function addAttribute(mainTemplate, elName, source, chunk) {
+  function addAttribute(mainTemplate, elName, source) {
     const outputOptions = this.compilation.outputOptions || mainTemplate.outputOptions;
     if (!outputOptions.crossOriginLoading) {
       this.sriPlugin.errorOnce(
@@ -55,9 +59,12 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
         'webpack option output.crossOriginLoading not set, code splitting will not work!'
       );
     }
+
     return (Template.asString || mainTemplate.asString)([
       source,
-      elName + '.integrity = __webpack_require__.sriHashes[' + (chunk ? `'${chunk.id}'` : 'chunkId') + '];',
+      elName + '.integrity = __webpack_require__.sriHashes[' +
+        ((webpackVersionMajor >= 5 && elName === 'script') ? 'key.match(/^chunk-([0-9]+)$/)[1]' : 'chunkId') +
+        '];',
       elName + '.crossOrigin = ' + JSON.stringify(outputOptions.crossOriginLoading) + ';',
     ]);
   };
