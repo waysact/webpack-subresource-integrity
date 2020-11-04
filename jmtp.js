@@ -63,7 +63,7 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.addAttribute =
     return (Template.asString || mainTemplate.asString)([
       source,
       elName + '.integrity = __webpack_require__.sriHashes[' +
-        ((webpackVersionMajor >= 5 && elName === 'script') ? 'key.match(/^chunk-([0-9]+)$/)[1]' : 'chunkId') +
+        ((webpackVersionMajor >= 5 && elName === 'script') ? 'key.match(/^chunk-(.+)$/)[1]' : 'chunkId') +
         '];',
       elName + '.crossOrigin = ' + JSON.stringify(outputOptions.crossOriginLoading) + ';',
     ]);

@@ -12,7 +12,7 @@ module.exports.skip = function skip() {
 
 module.exports.check = function check(stats, url, browser) {
   const otherAsset = Object.keys(stats.compilation.assets).find(key => key !== 'index.js' && key.endsWith(".js"));
-  fs.writeFileSync('dist/' + otherAsset, 'xxx');
+  fs.writeFileSync('dist/' + otherAsset, 'console.log("corrupted");');
 
   return defaultCheck(stats, url, browser);
 };
