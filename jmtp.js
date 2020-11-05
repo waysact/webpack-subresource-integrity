@@ -76,7 +76,13 @@ WebIntegrityJsonpMainTemplatePlugin.prototype.apply = function apply(
   var linkPreloadPlugin = this.addAttribute.bind(this, mainTemplate, "link");
   var addSriHashes = this.addSriHashes.bind(this, mainTemplate);
 
-  if (this.compilation.compiler.options.target !== 'web') {
+  if (
+    this.compilation.outputOptions.chunkLoading
+      ? ['require', 'async-node'].includes(
+          this.compilation.outputOptions.chunkLoading
+        )
+      : this.compilation.compiler.options.target !== 'web'
+  ) {
     this.sriPlugin.warnOnce(
       this.compilation,
       'This plugin is not useful for non-web targets.'
