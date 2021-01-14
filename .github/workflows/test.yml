@@ -66,8 +66,8 @@ jobs:
         run: yarn
       - name: Run test coverage
         run: yarn cover:run && yarn cover:lcov
-      # - name: Coveralls
-      #   uses: coverallsapp/github-action@master
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     path-to-lcov: webpack-subresource-integrity/coverage/lcov.info
+      - name: Upload test coverage
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: webpack-subresource-integrity/coverage/lcov.info
