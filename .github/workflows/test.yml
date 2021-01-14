@@ -17,7 +17,7 @@ jobs:
         run: jq ".version += "'"'"+${GITHUB_SHA}"'"' package.json | sponge package.json
         working-directory: webpack-subresource-integrity
       - name: Remember version
-        run: (echo -n "PACKAGE_VERSION=" && jq .version package.json) >> $GITHUB_ENV
+        run: (echo -n "PACKAGE_VERSION=" && jq --raw-output .version package.json) >> $GITHUB_ENV
         working-directory: webpack-subresource-integrity
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
