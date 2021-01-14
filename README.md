@@ -2,9 +2,9 @@
 
 [![npm version](https://badge.fury.io/js/webpack-subresource-integrity.svg)](https://badge.fury.io/js/webpack-subresource-integrity)
 
-If you're looking for **installation and usage instructions**, visit the [main package](https://github.com/waysact/webpack-subresource-integrity/blob/master/webpack-subresource-integrity/).
+If you're looking for **installation and usage instructions**, visit the [main package](https://github.com/waysact/webpack-subresource-integrity/blob/next/webpack-subresource-integrity/#readme).
 
-Or you might be looking for the 1.x version with **support for Webpack 1-4 and older versions of html-webpack-plugin**? Visit the [1.x branch](https://github.com/waysact/webpack-subresource-integrity/tree/1.x/).
+Or you might be looking for the 1.x version with **support for Webpack 1-4 and older versions of html-webpack-plugin**? Visit the [1.x branch](https://github.com/waysact/webpack-subresource-integrity/tree/1.x/#readme).
 
 If you want to hack on the package, read on -- you're in the right place.
 
