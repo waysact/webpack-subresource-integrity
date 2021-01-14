@@ -1,0 +1,15 @@
+{
+  "name": "nyc-apply-source-map",
+  "version": "1.0.0",
+  "description": "Utility for applying a source map to a set of coverage reports",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "glob": "^7.1.6",
+    "glob-promise": "^3.4.0",
+    "istanbul-lib-coverage": "^3.0.0",
+    "istanbul-lib-source-maps": "^4.0.0",
+    "source-map": "^0.7.3"
+  }
+}

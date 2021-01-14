@@ -1,0 +1,17 @@
+{
+  "name": "webpack-assets-manifest-integration",
+  "description": "Integration with webpack-assets-manifest",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "expect": "^26.6.2",
+    "html-webpack-plugin": ">= 5.0.0-beta.1",
+    "nyc": "*",
+    "webpack": "^5.12.0",
+    "webpack-assets-manifest": "3",
+    "webpack-cli": "4",
+    "webpack-subresource-integrity": "*",
+    "wsi-test-helper": "*"
+  }
+}

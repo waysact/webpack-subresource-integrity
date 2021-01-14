@@ -1,0 +1,16 @@
+{
+  "name": "disabled",
+  "description": "Simple example showing that webpack-subresource-integrity doesn't add an integrity checksum when `enabled` is set to `false`.",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "expect": "^26.6.2",
+    "html-webpack-plugin": ">= 5.0.0-beta.1",
+    "nyc": "*",
+    "webpack": "^5.12.0",
+    "webpack-cli": "4",
+    "webpack-subresource-integrity": "*",
+    "wsi-test-helper": "*"
+  }
+}

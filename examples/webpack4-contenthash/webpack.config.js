@@ -1,5 +1,6 @@
-var SriPlugin = require("webpack-subresource-integrity");
-var HtmlWebpackPlugin = require("html-webpack-plugin");
+const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { RunInPuppeteerPlugin } = require("wsi-test-helper");
 
 module.exports = {
   entry: "./index.js",
@@ -7,12 +8,13 @@ module.exports = {
   output: {
     filename: "[name].[contenthash].js",
     chunkFilename: "[name].[contenthash].js",
-    crossOriginLoading: "anonymous"
+    crossOriginLoading: "anonymous",
   },
   plugins: [
     new HtmlWebpackPlugin(),
-    new SriPlugin({
-      hashFuncNames: ["sha256", "sha384"]
-    })
-  ]
+    new SubresourceIntegrityPlugin({
+      hashFuncNames: ["sha256", "sha384"],
+    }),
+    new RunInPuppeteerPlugin(),
+  ],
 };

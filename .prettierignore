@@ -1,4 +1,4 @@
-/index.js
-/karma.conf.js
-/package.json
-/test/test-misc.js
+.pnp.js
+*.d.ts
+coverage/
+dist/

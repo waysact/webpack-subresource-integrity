@@ -1,3 +1,3 @@
-require.ensure([], require => {
-  require('./chunk.js');
+require.ensure([], (require) => {
+  require("./chunk.js");
 });

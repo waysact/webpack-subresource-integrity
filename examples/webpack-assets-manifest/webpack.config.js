@@ -1,18 +1,31 @@
-var SriPlugin = require('webpack-subresource-integrity');
-var WebpackAssetsManifest = require('webpack-assets-manifest');
+const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
+const WebpackAssetsManifest = require("webpack-assets-manifest");
+const expect = require("expect");
+const { readFileSync } = require("fs");
+const { join } = require("path");
 
 module.exports = {
   entry: {
-    index: './index.js'
+    index: "./index.js",
   },
   output: {
-    crossOriginLoading: 'anonymous'
+    crossOriginLoading: "anonymous",
   },
   plugins: [
-    new SriPlugin({
-      hashFuncNames: ['sha384', 'sha512'],
-      enabled: true
+    new SubresourceIntegrityPlugin({
+      hashFuncNames: ["sha384", "sha512"],
+      enabled: true,
     }),
-    new WebpackAssetsManifest({ integrity: true })
-  ]
+    new WebpackAssetsManifest({ integrity: true }),
+    {
+      apply: (compiler) => {
+        compiler.hooks.done.tap("wsi-test", (stats) => {
+          const manifest = JSON.parse(
+            readFileSync(join(__dirname, "dist/manifest.json"), "utf-8")
+          );
+          expect(manifest["index.js"].integrity).toMatch(/sha384-.* sha512-.*/);
+        });
+      },
+    },
+  ],
 };

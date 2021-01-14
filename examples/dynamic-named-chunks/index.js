@@ -1,13 +1,13 @@
 let scriptsWithIntegrity = [];
 
-const observer = new MutationObserver(mutationsList => {
-  Array.from(mutationsList).forEach(mutation => {
-    Array.from(mutation.addedNodes || []).forEach(node => {
-      if (node.nodeName === 'SCRIPT') {
+const observer = new MutationObserver((mutationsList) => {
+  Array.from(mutationsList).forEach((mutation) => {
+    Array.from(mutation.addedNodes || []).forEach((node) => {
+      if (node.nodeName === "SCRIPT") {
         if (
-          node.getAttribute('crossOrigin') === 'anonymous' &&
+          node.getAttribute("crossOrigin") === "anonymous" &&
           node
-            .getAttribute('integrity')
+            .getAttribute("integrity")
             .match(/^sha256-[-A-Za-z0-9+/=]{44} sha384-[-A-Za-z0-9+/=]{64}$/)
         ) {
           scriptsWithIntegrity.push(node);
@@ -17,22 +17,22 @@ const observer = new MutationObserver(mutationsList => {
   });
 });
 
-observer.observe(document.querySelector('head'), { childList: true });
+observer.observe(document.querySelector("head"), { childList: true });
 
-import('./chunk')
+import("./chunk")
   .then(() => {
     if (
       scriptsWithIntegrity.some(
-        script =>
-          new URL(script.getAttribute('src')).pathname === '/chunk_js.js'
+        (script) =>
+          new URL(script.getAttribute("src")).pathname === "/chunk_js.js"
       )
     ) {
-      console.log('ok');
+      console.log("ok");
     } else {
-      console.log('error');
+      console.log("error");
     }
   })
-  .catch(e => {
+  .catch((e) => {
     console.error(e);
-    console.log('error');
+    console.log("error");
   });

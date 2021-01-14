@@ -1,1 +1,1 @@
-import(/* webpackChunkName: "lazyB" */ './lazy.js');
+import(/* webpackChunkName: "lazyB" */ "./lazy.js");

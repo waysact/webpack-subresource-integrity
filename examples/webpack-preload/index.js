@@ -1,1 +1,1 @@
-import('./lazy-chunk-1.js');
+import("./lazy-chunk-1.js");

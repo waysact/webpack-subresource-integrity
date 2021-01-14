@@ -1,3 +1,3 @@
-import('./style.css').then(module => {
-  console.log(module['default'] ? 'ok' : 'error');
+import("./style.module.css").then((module) => {
+  console.log(module["default"] ? "ok" : "error");
 });

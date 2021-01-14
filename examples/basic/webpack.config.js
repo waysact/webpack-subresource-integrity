@@ -1,18 +1,27 @@
-var SriPlugin = require('webpack-subresource-integrity');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
+const expect = require("expect");
 
 module.exports = {
   entry: {
-    index: './index.js'
+    index: "./index.js",
   },
   output: {
-    crossOriginLoading: 'anonymous'
+    crossOriginLoading: "anonymous",
   },
   plugins: [
-    new SriPlugin({
-      hashFuncNames: ['sha256', 'sha384'],
-      enabled: true
+    new SubresourceIntegrityPlugin({
+      hashFuncNames: ["sha256"],
+      enabled: true,
     }),
-    new HtmlWebpackPlugin()
-  ]
+    {
+      apply: (compiler) => {
+        compiler.hooks.done.tap("wsi-test", (stats) => {
+          expect(
+            !stats.toJson().assets.find((asset) => asset.name == "index.js")
+              .integrity
+          ).not.toBeNull();
+        });
+      },
+    },
+  ],
 };

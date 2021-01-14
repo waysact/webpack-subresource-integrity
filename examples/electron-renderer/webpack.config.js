@@ -1,19 +1,28 @@
-var SriPlugin = require('webpack-subresource-integrity');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const expect = require("expect");
 
 module.exports = {
   entry: {
-    index: './index.js'
+    index: "./index.js",
   },
-  target: 'electron-renderer',
+  target: "electron-renderer",
   output: {
-    crossOriginLoading: 'anonymous'
+    crossOriginLoading: "anonymous",
   },
   plugins: [
-    new SriPlugin({
-      hashFuncNames: ['sha256', 'sha384'],
-      enabled: true
+    new SubresourceIntegrityPlugin({
+      hashFuncNames: ["sha256", "sha384"],
+      enabled: true,
     }),
-    new HtmlWebpackPlugin()
-  ]
+    new HtmlWebpackPlugin(),
+    {
+      apply: (compiler) => {
+        compiler.hooks.done.tapPromise("wsi-test", async (stats) => {
+          expect(stats.compilation.warnings).toEqual([]);
+          expect(stats.compilation.errors).toEqual([]);
+        });
+      },
+    },
+  ],
 };

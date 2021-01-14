@@ -1,8 +1,0 @@
-{
-  "extends": ["eslint-config-airbnb-base/legacy", "prettier"],
-  "parser": "babel-eslint",
-  "globals": {
-    "Map": true,
-    "Set": true,
-  }
-}

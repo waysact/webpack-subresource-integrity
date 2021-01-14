@@ -1,12 +1,14 @@
+version: "2"
 engines:
    eslint:
      enabled: true
 ratings:
-   paths: ["**.js"]
-exclude_paths:
-  - .git/
-  - node_modules/
-  - coverage/
-  - test/
-  - examples/
-  - karma.conf.js
+   paths: ["webpack-subresource-integrity/index.ts"]
+exclude_patterns:
+  - "webpack-subresource-integrity/*.js"
+  - "wsi-test-helper/*.js"
+  - ".git/"
+  - ".yarn/"
+  - "node_modules/"
+  - "**/coverage/"
+  - "examples/"

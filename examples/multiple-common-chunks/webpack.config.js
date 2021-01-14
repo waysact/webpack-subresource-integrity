@@ -1,53 +1,49 @@
-var SriPlugin = require('webpack-subresource-integrity');
-var webpack = require('webpack');
-var webpackVersion = Number(
-  require('webpack/package.json').version.split('.')[0]
-);
+const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
+const webpack = require("webpack");
+const { readFileSync } = require("fs");
+const { join } = require("path");
+const expect = require("expect");
 
-module.exports = Object.assign(
-  {
-    entry: {
-      pageA: './pageA.js',
-      pageB: './pageB.js'
-    },
-    output: {
-      filename: '[name].js',
-      crossOriginLoading: 'anonymous'
-    },
-    plugins: (webpackVersion < 4
-      ? [
-          new webpack.optimize.CommonsChunkPlugin({
-            name: 'commons1',
-            chunks: ['pageA']
-          }),
-          new webpack.optimize.CommonsChunkPlugin({
-            name: 'commons2',
-            chunks: ['pageB']
-          })
-        ]
-      : []
-    ).concat([new SriPlugin({ hashFuncNames: ['sha256', 'sha384'] })])
+module.exports = {
+  entry: {
+    pageA: "./pageA.js",
+    pageB: "./pageB.js",
   },
-  webpackVersion < 4
-    ? {}
-    : {
-        optimization: {
-          splitChunks: {
-            cacheGroups: {
-              commons1: {
-                test: /pageA/,
-                chunks: 'initial',
-                name: 'commons1',
-                enforce: true
-              },
-              commons2: {
-                test: /pageB/,
-                chunks: 'initial',
-                name: 'commons2',
-                enforce: true
-              }
-            }
-          }
-        }
-      }
-);
+  output: {
+    filename: "[name].js",
+    crossOriginLoading: "anonymous",
+  },
+  plugins: [
+    new SubresourceIntegrityPlugin({ hashFuncNames: ["sha256", "sha384"] }),
+    {
+      apply: (compiler) => {
+        compiler.hooks.done.tap("wsi-test", (stats) => {
+          expect(stats.hasWarnings()).toBeFalsy();
+          ["commons1.js", "commons2.js"].forEach((filename) => {
+            expect(readFileSync(join("dist", filename), "utf-8")).not.toContain(
+              "CHUNK-SRI-HASH"
+            );
+          });
+        });
+      },
+    },
+  ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons1: {
+          test: /pageA/,
+          chunks: "initial",
+          name: "commons1",
+          enforce: true,
+        },
+        commons2: {
+          test: /pageB/,
+          chunks: "initial",
+          name: "commons2",
+          enforce: true,
+        },
+      },
+    },
+  },
+};

@@ -1,3 +1,3 @@
 require.ensure([], function requireEnsure(require) {
-  require('./b.js');
+  require("./b.js");
 });

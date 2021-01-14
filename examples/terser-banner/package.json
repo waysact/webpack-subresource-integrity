@@ -1,0 +1,16 @@
+{
+  "name": "terser-banner",
+  "description": "Ensure integrity works with terser-webpack-plugin banners",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "html-webpack-plugin": ">= 5.0.0-beta.1",
+    "nyc": "*",
+    "terser-webpack-plugin": "^5.0.3",
+    "webpack": "^5.12.0",
+    "webpack-cli": "4",
+    "webpack-subresource-integrity": "*",
+    "wsi-test-helper": "*"
+  }
+}

@@ -1,11 +1,11 @@
-<% for (var index in htmlWebpackPlugin.files.js) { %>
+<% for (let index in htmlWebpackPlugin.files.js) { %>
   <script src="<%= htmlWebpackPlugin.files.js[index] %>"
           integrity="<%= htmlWebpackPlugin.files.jsIntegrity[index] %>"
           crossorigin="<%= webpackConfig.output.crossOriginLoading %>"
   ></script>
 <% } %>
 
-<% for (var index in htmlWebpackPlugin.files.css) { %>
+<% for (let index in htmlWebpackPlugin.files.css) { %>
   <link href="<%= htmlWebpackPlugin.files.css[index] %>"
         integrity="<%= htmlWebpackPlugin.files.cssIntegrity[index] %>"
         crossorigin="<%= webpackConfig.output.crossOriginLoading %>"
