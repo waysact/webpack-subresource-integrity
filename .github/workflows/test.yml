@@ -14,10 +14,10 @@ jobs:
       - name: Install moreutils
         run: sudo apt-get install -y moreutils
       - name: Amend version
-        run: jq ".version += "'"'"+${GITHUB_SHA}"'"' package.json | sponge package.json
+        run: jq ".version += "'"'"+${GITHUB_SHA}"'"' webpack-subresource-integrity/package.json | sponge webpack-subresource-integrity/package.json
         working-directory: webpack-subresource-integrity
       - name: Remember version
-        run: (echo -n "PACKAGE_VERSION=" && jq .version package.json) >> $GITHUB_ENV
+        run: (echo -n "PACKAGE_VERSION=" && jq .version webpack-subresource-integrity/package.json) >> $GITHUB_ENV
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
