@@ -64,6 +64,8 @@ jobs:
           node-version: 14.x
       - name: Install dependencies
         run: yarn
+      - name: Build all files
+        run: yarn build
       - name: Run test coverage
         run: yarn cover:run && yarn cover:lcov
       # - name: Coveralls
