@@ -29,11 +29,11 @@ jobs:
       - name: Create npm package
         run: yarn pack
         working-directory: webpack-subresource-integrity
-    # - name: Upload npm package
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: webpack-subresouce-integrity-${{ env.PACKAGE_VERSION }}
-    #     path: webpack-subresource-integrity/package.tgz
+      - name: Upload npm package artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: webpack-subresouce-integrity-${{ env.PACKAGE_VERSION }}
+          path: webpack-subresource-integrity/package.tgz
 
   test:
     strategy:
