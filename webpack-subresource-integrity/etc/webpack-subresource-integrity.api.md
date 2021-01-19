@@ -8,16 +8,18 @@ import { Compiler } from 'webpack';
 
 // @public
 export class SubresourceIntegrityPlugin {
-    constructor(options: SubresourceIntegrityPluginOptions);
+    constructor(options?: SubresourceIntegrityPluginOptions);
     // (undocumented)
     apply(compiler: Compiler): void;
     }
 
 // @public (undocumented)
-export type SubresourceIntegrityPluginOptions = {
-    readonly hashFuncNames: [string, ...string[]];
-    readonly enabled?: boolean;
-};
+export interface SubresourceIntegrityPluginOptions {
+    // (undocumented)
+    readonly enabled?: "auto" | true | false;
+    // (undocumented)
+    readonly hashFuncNames?: [string, ...string[]];
+}
 
 
 // (No @packageDocumentation comment for this package)
