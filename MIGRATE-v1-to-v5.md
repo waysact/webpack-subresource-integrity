@@ -89,9 +89,9 @@ is disabled when the [Webpack
 mode](https://webpack.js.org/configuration/mode/) is `development` and
 enabling it otherwise (when it is `production` or `none`.)
 
-This should make things work as expected for 99% of users. You're
-obviously free to override the `enabled` setting if this default
-doesn't suit your needs.
+This should make things work as expected for 99% of users. You're free
+to override the `enabled` setting if this default doesn't suit your
+needs.
 
 ### Named export `SubresourceIntegrityPlugin`
 
