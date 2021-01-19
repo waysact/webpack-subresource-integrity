@@ -70,11 +70,11 @@
     "prepublish": "tsc && api-extractor run --local"
   },
   "files": [
-    "index.js",
-    "index.js.map",
-    "webpack-subresource-integrity-public.d.ts",
-    "tsdoc-metadata.json",
-    "README.md",
-    "LICENSE"
+    "/index.js",
+    "/index.js.map",
+    "/webpack-subresource-integrity-public.d.ts",
+    "/tsdoc-metadata.json",
+    "/README.md",
+    "/LICENSE"
   ]
 }
