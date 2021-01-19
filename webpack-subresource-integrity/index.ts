@@ -225,6 +225,9 @@ export class SubresourceIntegrityPlugin {
     }
   }
 
+  /**
+   * @internal
+   */
   private updateAssetIntegrity(assetKey: string, integrity: string) {
     if (!this.assetIntegrity.has(assetKey)) {
       this.assetIntegrity.set(assetKey, integrity);
@@ -457,6 +460,9 @@ export class SubresourceIntegrityPlugin {
       compilation.compiler.options.output.crossOriginLoading || "anonymous";
   };
 
+  /**
+   * @internal
+   */
   private isEnabled(compilation: Compilation): boolean {
     if (this.options.enabled === "auto") {
       return compilation.options.mode !== "development";
