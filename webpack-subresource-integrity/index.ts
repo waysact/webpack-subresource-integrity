@@ -419,7 +419,10 @@ export class SubresourceIntegrityPlugin {
    * @internal
    */
   private processTag = (compilation: Compilation, tag: HtmlTagObject): void => {
-    if (Object.prototype.hasOwnProperty.call(tag.attributes, "integrity")) {
+    if (
+      tag.attributes &&
+      Object.prototype.hasOwnProperty.call(tag.attributes, "integrity")
+    ) {
       return;
     }
 
