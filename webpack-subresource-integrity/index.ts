@@ -6,14 +6,7 @@
  */
 
 import { createHash } from "crypto";
-import webpack, {
-  Chunk,
-  Compiler,
-  Compilation,
-  Template,
-  sources,
-  optimize,
-} from "webpack";
+import type { Chunk, Compiler, Compilation, sources } from "webpack";
 import { relative, sep, join } from "path";
 import { readFileSync } from "fs";
 import * as assert from "typed-assert";
@@ -260,13 +253,14 @@ export class SubresourceIntegrityPlugin {
    * @internal
    */
   private replaceAsset = (
+    compiler: Compiler,
     assets: Record<string, sources.Source>,
     hashByChunkId: Map<string | number, string>,
     chunkFile: string
   ): sources.Source => {
     const oldSource = assets[chunkFile].source();
     const hashFuncNames = this.options.hashFuncNames;
-    const newAsset = new webpack.sources.ReplaceSource(
+    const newAsset = new compiler.webpack.sources.ReplaceSource(
       assets[chunkFile],
       chunkFile
     );
@@ -311,7 +305,12 @@ export class SubresourceIntegrityPlugin {
 
         if (assets[sourcePath]) {
           this.warnIfHotUpdate(compilation, assets[sourcePath].source());
-          const newAsset = this.replaceAsset(assets, hashByChunkId, sourcePath);
+          const newAsset = this.replaceAsset(
+            compilation.compiler,
+            assets,
+            hashByChunkId,
+            sourcePath
+          );
           const integrity = computeIntegrity(
             this.options.hashFuncNames,
             newAsset.source()
@@ -360,7 +359,7 @@ export class SubresourceIntegrityPlugin {
       );
     }
 
-    return Template.asString([
+    return compilation.compiler.webpack.Template.asString([
       source,
       elName + ".integrity = __webpack_require__.sriHashes[chunkId];",
       elName +
@@ -496,7 +495,9 @@ export class SubresourceIntegrityPlugin {
     compilation.hooks.processAssets.tap(
       {
         name: thisPluginName,
-        stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+        stage:
+          compilation.compiler.webpack.Compilation
+            .PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
       },
       (records: Record<string, sources.Source>) => {
         return this.processAssets(compilation, records);
@@ -520,7 +521,7 @@ export class SubresourceIntegrityPlugin {
       }
     );
 
-    optimize.RealContentHashPlugin.getCompilationHooks(
+    compilation.compiler.webpack.optimize.RealContentHashPlugin.getCompilationHooks(
       compilation
     ).updateHash.tap(thisPluginName, (input, oldHash) => {
       const assetKey = this.inverseAssetIntegrity.get(oldHash);
@@ -593,7 +594,7 @@ export class SubresourceIntegrityPlugin {
       const includedChunks = chunk.getChunkMaps(false).hash;
 
       if (Object.keys(includedChunks).length > 0) {
-        return Template.asString([
+        return compilation.compiler.webpack.Template.asString([
           source,
           "__webpack_require__.sriHashes = " +
             JSON.stringify(

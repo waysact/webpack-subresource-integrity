@@ -4,7 +4,7 @@
 
 ```ts
 
-import { Compiler } from 'webpack';
+import type { Compiler } from 'webpack';
 
 // @public
 export class SubresourceIntegrityPlugin {
