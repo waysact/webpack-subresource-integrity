@@ -3498,6 +3498,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"es-module-lexer@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "es-module-lexer@npm:0.4.0"
+  checksum: 41d29cc3eb7e648c535bba09e6511834cbb9d06ed4747972ad102e605e1134567a39a3b3f482b9148693a5a95caf7ffe828db9d8f1ede833b836a5d9593f1933
+  languageName: node
+  linkType: hard
+
 "es-to-primitive@npm:^1.2.1":
   version: 1.2.1
   resolution: "es-to-primitive@npm:1.2.1"
@@ -5605,6 +5612,19 @@ fsevents@^2.1.2:
     webpack: ^5.19.0
     webpack-cli: "*"
     webpack-subresource-integrity: "*"
+  languageName: unknown
+  linkType: soft
+
+"issue-152@workspace:examples/issue-152":
+  version: 0.0.0-use.local
+  resolution: "issue-152@workspace:examples/issue-152"
+  dependencies:
+    expect: ^26.6.2
+    nyc: "*"
+    webpack: 5.24.0
+    webpack-cli: 4
+    webpack-subresource-integrity: "*"
+    wsi-test-helper: "*"
   languageName: unknown
   linkType: soft
 
@@ -10700,6 +10720,42 @@ typescript@^3.3.3:
     wsi-test-helper: "*"
   languageName: unknown
   linkType: soft
+
+"webpack@npm:5.24.0":
+  version: 5.24.0
+  resolution: "webpack@npm:5.24.0"
+  dependencies:
+    "@types/eslint-scope": ^3.7.0
+    "@types/estree": ^0.0.46
+    "@webassemblyjs/ast": 1.11.0
+    "@webassemblyjs/wasm-edit": 1.11.0
+    "@webassemblyjs/wasm-parser": 1.11.0
+    acorn: ^8.0.4
+    browserslist: ^4.14.5
+    chrome-trace-event: ^1.0.2
+    enhanced-resolve: ^5.7.0
+    es-module-lexer: ^0.4.0
+    eslint-scope: ^5.1.1
+    events: ^3.2.0
+    glob-to-regexp: ^0.4.1
+    graceful-fs: ^4.2.4
+    json-parse-better-errors: ^1.0.2
+    loader-runner: ^4.2.0
+    mime-types: ^2.1.27
+    neo-async: ^2.6.2
+    schema-utils: ^3.0.0
+    tapable: ^2.1.1
+    terser-webpack-plugin: ^5.1.1
+    watchpack: ^2.0.0
+    webpack-sources: ^2.1.1
+  peerDependenciesMeta:
+    webpack-cli:
+      optional: true
+  bin:
+    webpack: bin/webpack.js
+  checksum: 6b7b0f9e4b60fb736ed80d37f16a08bfc7a4764c271b3f27108b0da5d8ee9639be15a62b24f4ae3528cf96d4bad7ec9d2439fec192bcc29d625ca03e918625df
+  languageName: node
+  linkType: hard
 
 "webpack@npm:^5.11.0":
   version: 5.11.0
