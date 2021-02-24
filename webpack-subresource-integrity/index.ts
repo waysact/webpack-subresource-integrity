@@ -536,7 +536,8 @@ export class SubresourceIntegrityPlugin {
 
         return newIntegrity;
       }
-      return oldHash;
+      // FIXME: remove type hack pending https://github.com/webpack/webpack/pull/12642#issuecomment-784744910
+      return (undefined as unknown) as string;
     });
 
     if (getHtmlWebpackPluginHooks) {
