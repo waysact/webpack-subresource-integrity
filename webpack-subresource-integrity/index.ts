@@ -298,49 +298,50 @@ export class SubresourceIntegrityPlugin {
       .forEach((childChunk: Chunk) => {
         const files = Array.from(childChunk.files);
 
-        let sourcePath = files[files.length - 1];
-        if (!sourcePath) {
-          return;
-        }
-
-        if (assets[sourcePath]) {
-          this.warnIfHotUpdate(compilation, assets[sourcePath].source());
-          const newAsset = this.replaceAsset(
-            compilation.compiler,
-            assets,
-            hashByChunkId,
-            sourcePath
-          );
-          const integrity = computeIntegrity(
-            this.options.hashFuncNames,
-            newAsset.source()
-          );
-
-          if (childChunk.id !== null) {
-            hashByChunkId.set(childChunk.id, integrity);
+        files.forEach((sourcePath) => {
+          if (!sourcePath) {
+            return;
           }
-          this.updateAssetIntegrity(sourcePath, integrity);
-          compilation.updateAsset(
-            sourcePath,
-            (x) => x,
-            (assetInfo) =>
-              assetInfo && {
-                ...assetInfo,
-                contenthash: Array.isArray(assetInfo.contenthash)
-                  ? [...new Set([...assetInfo.contenthash, integrity])]
-                  : assetInfo.contenthash
-                  ? [assetInfo.contenthash, integrity]
-                  : integrity,
-              }
-          );
-        } else {
-          this.warnOnce(
-            compilation,
-            `No asset found for source path '${sourcePath}', options are ${Object.keys(
-              assets
-            ).join(", ")}`
-          );
-        }
+
+          if (assets[sourcePath]) {
+            this.warnIfHotUpdate(compilation, assets[sourcePath].source());
+            const newAsset = this.replaceAsset(
+              compilation.compiler,
+              assets,
+              hashByChunkId,
+              sourcePath
+            );
+            const integrity = computeIntegrity(
+              this.options.hashFuncNames,
+              newAsset.source()
+            );
+
+            if (childChunk.id !== null) {
+              hashByChunkId.set(childChunk.id, integrity);
+            }
+            this.updateAssetIntegrity(sourcePath, integrity);
+            compilation.updateAsset(
+              sourcePath,
+              (x) => x,
+              (assetInfo) =>
+                assetInfo && {
+                  ...assetInfo,
+                  contenthash: Array.isArray(assetInfo.contenthash)
+                    ? [...new Set([...assetInfo.contenthash, integrity])]
+                    : assetInfo.contenthash
+                    ? [assetInfo.contenthash, integrity]
+                    : integrity,
+                }
+            );
+          } else {
+            this.warnOnce(
+              compilation,
+              `No asset found for source path '${sourcePath}', options are ${Object.keys(
+                assets
+              ).join(", ")}`
+            );
+          }
+        });
       });
   };
 
@@ -746,16 +747,21 @@ export class SubresourceIntegrityPlugin {
       );
 
       compiler.hooks.compilation.tap(
-        "DefaultStatsFactoryPlugin",
+        thisPluginName,
         (compilation: Compilation) => {
           compilation.hooks.statsFactory.tap(thisPluginName, (statsFactory) => {
             statsFactory.hooks.extract
               .for("asset")
               .tap(thisPluginName, (object, asset) => {
-                if (this.assetIntegrity.has(asset.name)) {
-                  (object as any).integrity = String(
-                    this.assetIntegrity.get(asset.name)
-                  );
+                const contenthash = asset.info?.contenthash;
+                if (contenthash) {
+                  const shaHashes = (Array.isArray(contenthash)
+                    ? contenthash
+                    : [contenthash]
+                  ).filter((hash: any) => String(hash).match(/^sha[0-9]+-/));
+                  if (shaHashes.length > 0) {
+                    (object as any).integrity = shaHashes.join(" ");
+                  }
                 }
               });
           });
