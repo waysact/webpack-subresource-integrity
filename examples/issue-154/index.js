@@ -1,9 +1,10 @@
 import "./style.css";
 
 window.addEventListener("load", () => {
-  console.log(
-    getComputedStyle(document.body).background.match(/rgb\(255, 0, 0\)/)
-      ? "ok"
-      : "error"
+  const { integrity } = document.querySelector("link");
+  const loaded = getComputedStyle(document.body).background.match(
+    /rgb\(255, 0, 0\)/
   );
+
+  console.log(integrity && loaded ? "ok" : "error");
 });
