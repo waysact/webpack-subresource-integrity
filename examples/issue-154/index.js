@@ -1,9 +1,9 @@
 import "./style.css";
 
-setTimeout(() => {
+window.addEventListener("DOMContentLoaded", () => {
   console.log(
     getComputedStyle(document.body).background.match(/rgb\(255, 0, 0\)/)
       ? "ok"
       : "error"
   );
-}, 0);
+});
