@@ -1,6 +1,6 @@
 {
   "name": "webpack-subresource-integrity",
-  "version": "5.0.0-alpha.4",
+  "version": "5.0.0-alpha.5",
   "description": "Webpack plugin for enabling Subresource Integrity",
   "author": "Julian Scheid <julian@evergiving.com>",
   "license": "MIT",
