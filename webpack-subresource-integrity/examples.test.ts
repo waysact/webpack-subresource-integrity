@@ -48,7 +48,7 @@ readdirSync("../examples/").forEach((example) => {
       yarn.stderr.on("data", (data) => {
         stderr.push(data);
       });
-      yarn.on("exit", (code, _signal) => {
+      yarn.on("exit", (code) => {
         if (code === 0) {
           resolve();
         } else {

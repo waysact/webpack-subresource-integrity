@@ -12,6 +12,7 @@
   },
   "scripts": {
     "test": "(cd wsi-test-helper && yarn tsc) && (cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit)",
+    "lint": "(cd webpack-subresource-integrity && yarn eslint .)",
     "test:unit": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit unit.test.ts",
     "build": "cd webpack-subresource-integrity && yarn tsc && yarn api-extractor run --local --verbose",
     "coverage": "yarn cover:run && yarn cover:report",

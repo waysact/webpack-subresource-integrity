@@ -5,13 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import webpack, { Stats, StatsError } from "webpack";
-import { resolve, join } from "path";
+import webpack, { Configuration, Stats, StatsAsset, StatsError } from "webpack";
+import { resolve } from "path";
 import tmp from "tmp-promise";
-const { SubresourceIntegrityPlugin } = require("./index.js");
-import { readdirSync, readFileSync } from "fs";
-import { promisify } from "util";
-const readFilePromise = promisify(readFileSync);
+import { SubresourceIntegrityPlugin } from "./index.js";
 
 const errorFromStats = (stats: Stats | undefined): Error => {
   const errors = stats?.toJson()?.errors;
@@ -23,9 +20,9 @@ const errorFromStats = (stats: Stats | undefined): Error => {
   );
 };
 
-const runWebpack = (options: any): Promise<Stats> =>
+const runWebpack = (options: Configuration): Promise<Stats> =>
   new Promise((resolve, reject) => {
-    webpack(options, (err, stats) => {
+    webpack(options, (err: Error | undefined, stats: Stats | undefined) => {
       if (err) {
         reject(err);
       } else if (stats?.hasErrors() === false) {
@@ -45,7 +42,7 @@ test("enabled with webpack mode=production", async () => {
   });
   const mainAsset = stats
     .toJson()
-    .assets?.find((asset: any) => asset.name === "main.js");
+    .assets?.find((asset: StatsAsset) => asset.name === "main.js");
   expect(mainAsset).toBeDefined();
   expect(mainAsset?.integrity).toMatch(/^sha384-\S+$/);
   tmpDir.cleanup();
@@ -61,7 +58,7 @@ test("disabled with webpack mode=development", async () => {
   });
   const mainAsset = stats
     .toJson()
-    .assets?.find((asset: any) => asset.name === "main.js");
+    .assets?.find((asset: StatsAsset) => asset.name === "main.js");
   expect(mainAsset).toBeDefined();
   expect(mainAsset?.integrity).toBeUndefined();
   tmpDir.cleanup();

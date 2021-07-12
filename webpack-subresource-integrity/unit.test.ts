@@ -5,30 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import webpack, {
-  Compiler,
-  Compilation,
-  Configuration,
-  Chunk,
-  Stats,
-  sources,
-} from "webpack";
-import { AsyncSeriesHook, SyncHook } from "tapable";
+import webpack, { Compiler, Compilation, Configuration, Chunk } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
-import { createFsFromVolume, Volume } from "memfs";
-const { SubresourceIntegrityPlugin } = require("./index.js");
-type WebpackErrors = Compilation["errors"];
-type OutputOptions = { crossOriginLoading: boolean };
+import { SubresourceIntegrityPlugin } from "./index.js";
 
 process.on("unhandledRejection", (error) => {
-  console.log(error);
+  console.log(error); // eslint-disable-line no-console
   process.exit(1);
 });
 
 test("throws an error when options is not an object", async () => {
   expect(() => {
-    new SubresourceIntegrityPlugin(function dummy() {} as unknown as {
-      hashFuncNames: string[];
+    new SubresourceIntegrityPlugin(function dummy() {
+      // dummy function, never called
+    } as unknown as {
+      hashFuncNames: [string, ...string[]];
     }); // eslint-disable-line no-new
   }).toThrow(/argument must be an object/);
 });
@@ -95,7 +86,7 @@ test("supports new constructor with array of hash function names", async () => {
 
 test("errors if hash function names is not an array", async () => {
   const plugin = new SubresourceIntegrityPlugin({
-    hashFuncNames: "sha256" as unknown as string[],
+    hashFuncNames: "sha256" as unknown as [string, ...string[]],
   });
 
   const compilation = await runCompilation(
@@ -114,7 +105,7 @@ test("errors if hash function names is not an array", async () => {
 
 test("errors if hash function names contains non-string", async () => {
   const plugin = new SubresourceIntegrityPlugin({
-    hashFuncNames: [1234] as unknown as string[],
+    hashFuncNames: [1234] as unknown as [string, ...string[]],
   });
 
   const compilation = await runCompilation(
@@ -133,7 +124,7 @@ test("errors if hash function names contains non-string", async () => {
 
 test("errors if hash function names are empty", async () => {
   const plugin = new SubresourceIntegrityPlugin({
-    hashFuncNames: [],
+    hashFuncNames: [] as unknown as [string, ...string[]],
   });
 
   const compilation = await runCompilation(
@@ -181,9 +172,8 @@ test("uses default options", async () => {
     })
   );
 
-  expect(plugin.options.hashFuncNames).toEqual(["sha256"]);
-  expect(plugin.options.enabled).toBeTruthy();
-  expect(plugin.options.deprecatedOptions).toBeFalsy();
+  expect(plugin["options"].hashFuncNames).toEqual(["sha256"]);
+  expect(plugin["options"].enabled).toBeTruthy();
   expect(compilation.errors.length).toBe(0);
   expect(compilation.warnings.length).toBe(0);
 });

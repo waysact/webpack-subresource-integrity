@@ -1114,7 +1114,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/experimental-utils@npm:4.28.2":
+"@typescript-eslint/experimental-utils@npm:4.28.2, @typescript-eslint/experimental-utils@npm:^4.0.1":
   version: 4.28.2
   resolution: "@typescript-eslint/experimental-utils@npm:4.28.2"
   dependencies:
@@ -3790,6 +3790,21 @@ __metadata:
   peerDependencies:
     eslint: ^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0
   checksum: 8c64bb96fa35607de3da1ddf5d127a5913aebde5677bc276c55fecb3e539a7287569dc697af4f5c523bd2b08bff8f5b525448df5aa7d6256c86436b615be5abc
+  languageName: node
+  linkType: hard
+
+"eslint-plugin-jest@npm:^24.3.6":
+  version: 24.3.6
+  resolution: "eslint-plugin-jest@npm:24.3.6"
+  dependencies:
+    "@typescript-eslint/experimental-utils": ^4.0.1
+  peerDependencies:
+    "@typescript-eslint/eslint-plugin": ">= 4"
+    eslint: ">=5"
+  peerDependenciesMeta:
+    "@typescript-eslint/eslint-plugin":
+      optional: true
+  checksum: 233e6055b167a58ba2e58cf60dc9ce8a4b065d859abe551cf0029d3d6694aaa4a0cfd3b489dfa7442fffb5f40fc7bc0dc322068dd652d08534d1f5c17c7721a8
   languageName: node
   linkType: hard
 
@@ -11133,6 +11148,7 @@ typescript@^3.3.3:
   version: 0.0.0-use.local
   resolution: "webpack-subresource-integrity@portal:webpack-subresource-integrity::locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
+    tmp-promise: ^3.0.2
     typed-assert: ^1.0.8
   peerDependencies:
     html-webpack-plugin: ">= 5.0.0-beta.1 < 6"
@@ -11159,6 +11175,7 @@ typescript@^3.3.3:
     eslint: ^7.30.0
     eslint-config-prettier: ^6.15.0
     eslint-plugin-import: 2.23.4
+    eslint-plugin-jest: ^24.3.6
     eslint-plugin-node: 11.1.0
     eslint-plugin-prettier: ^3.4.0
     eslint-plugin-promise: 4.3.1

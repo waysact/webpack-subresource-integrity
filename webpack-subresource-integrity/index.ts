@@ -11,6 +11,10 @@ import { relative, sep, join } from "path";
 import { readFileSync } from "fs";
 import * as assert from "typed-assert";
 
+function notNil<TValue>(value: TValue | null | undefined): value is TValue {
+  return value !== null && value !== undefined;
+}
+
 import type HtmlWebpackPlugin from "html-webpack-plugin";
 
 type HtmlTagObject = HtmlWebpackPlugin.HtmlTagObject;
@@ -21,10 +25,34 @@ type getHtmlWebpackPluginHooksType = (
 
 type ChunkGroup = ReturnType<Compilation["addChunkInGroup"]>;
 
-interface TemplateFiles {
+type AssetType = "js" | "css";
+
+type TemplateFiles = { [key in AssetType]: string[] };
+
+interface HWPAssets {
+  publicPath: string;
   js: string[];
   css: string[];
+  favicon?: string | undefined;
+  manifest?: string | undefined;
+  jsIntegrity: string[];
+  cssIntegrity: string[];
 }
+
+type KeysOfType<T, TProp> = {
+  [P in keyof T]: T[P] extends TProp ? P : never;
+}[keyof T];
+
+type HWPAssetsIntegrityKey = KeysOfType<HWPAssets, string[]>;
+
+interface StatsObjectWithIntegrity {
+  integrity: string;
+}
+
+const assetTypeIntegrityKeys: [AssetType, HWPAssetsIntegrityKey][] = [
+  ["js", "jsIntegrity"],
+  ["css", "cssIntegrity"],
+];
 
 const thisPluginName = "webpack-subresource-integrity";
 
@@ -434,31 +462,12 @@ export class SubresourceIntegrityPlugin {
 
     const src = this.hwpAssetPath(tagSrc);
 
-    let integrity = this.getIntegrityChecksumForAsset(compilation.assets, src);
-
-    if (!integrity) {
-      const candidate = join(compilation.compiler.outputPath, src);
-      try {
-        integrity = computeIntegrity(
-          this.options.hashFuncNames,
-          readFileSync(candidate)
-        );
-      } catch (e) {
-        if (e.code !== "ENOENT") {
-          throw e;
-        }
-      }
-    }
-
-    if (!integrity) {
-      this.errorOnce(
-        compilation,
-        "Could not determine integrity for asset at path " + src
+    tag.attributes.integrity =
+      this.getIntegrityChecksumForAsset(compilation.assets, src) ||
+      computeIntegrity(
+        this.options.hashFuncNames,
+        readFileSync(join(compilation.compiler.outputPath, src))
       );
-      return;
-    }
-
-    tag.attributes.integrity = integrity;
     tag.attributes.crossorigin =
       compilation.compiler.options.output.crossOriginLoading || "anonymous";
   };
@@ -551,16 +560,22 @@ export class SubresourceIntegrityPlugin {
         async (pluginArgs) => {
           this.hwpPublicPath = pluginArgs.assets.publicPath;
 
-          (["js", "css"] as (keyof TemplateFiles)[]).forEach((fileType) => {
-            (pluginArgs.assets as any)[fileType + "Integrity"] = (
-              pluginArgs.assets as TemplateFiles
-            )[fileType].map((filePath: string) =>
-              this.getIntegrityChecksumForAsset(
-                compilation.assets,
-                this.hwpAssetPath(filePath)
-              )
-            );
-          });
+          assetTypeIntegrityKeys.forEach(
+            ([a, b]: [AssetType, HWPAssetsIntegrityKey]) => {
+              if (b) {
+                (pluginArgs.assets as HWPAssets)[b] = (
+                  pluginArgs.assets as TemplateFiles
+                )[a]
+                  .map((filePath: string) =>
+                    this.getIntegrityChecksumForAsset(
+                      compilation.assets,
+                      this.hwpAssetPath(filePath)
+                    )
+                  )
+                  .filter(notNil);
+              }
+            }
+          );
 
           return pluginArgs;
         }
@@ -757,9 +772,12 @@ export class SubresourceIntegrityPlugin {
                 if (contenthash) {
                   const shaHashes = (
                     Array.isArray(contenthash) ? contenthash : [contenthash]
-                  ).filter((hash: any) => String(hash).match(/^sha[0-9]+-/));
+                  ).filter((hash: unknown) =>
+                    String(hash).match(/^sha[0-9]+-/)
+                  );
                   if (shaHashes.length > 0) {
-                    (object as any).integrity = shaHashes.join(" ");
+                    (object as unknown as StatsObjectWithIntegrity).integrity =
+                      shaHashes.join(" ");
                   }
                 }
               });
