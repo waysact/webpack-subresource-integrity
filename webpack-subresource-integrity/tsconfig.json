@@ -7,5 +7,5 @@
     "sourceMap": true,
     "strict": true
   },
-  "files": ["index.ts"]
+  "files": ["index.ts", "plugin.ts", "reporter.ts", "util.ts", "types.ts"]
 }

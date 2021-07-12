@@ -7,52 +7,17 @@
 
 import { createHash } from "crypto";
 import type { Chunk, Compiler, Compilation, sources } from "webpack";
-import { relative, sep, join } from "path";
-import { readFileSync } from "fs";
-import * as assert from "typed-assert";
-
-function notNil<TValue>(value: TValue | null | undefined): value is TValue {
-  return value !== null && value !== undefined;
-}
-
-import type HtmlWebpackPlugin from "html-webpack-plugin";
-
-type HtmlTagObject = HtmlWebpackPlugin.HtmlTagObject;
-
-type getHtmlWebpackPluginHooksType = (
-  compilation: Compilation
-) => HtmlWebpackPlugin.Hooks;
-
-type ChunkGroup = ReturnType<Compilation["addChunkInGroup"]>;
-
-type AssetType = "js" | "css";
-
-type TemplateFiles = { [key in AssetType]: string[] };
-
-interface HWPAssets {
-  publicPath: string;
-  js: string[];
-  css: string[];
-  favicon?: string | undefined;
-  manifest?: string | undefined;
-  jsIntegrity: string[];
-  cssIntegrity: string[];
-}
-
-type KeysOfType<T, TProp> = {
-  [P in keyof T]: T[P] extends TProp ? P : never;
-}[keyof T];
-
-type HWPAssetsIntegrityKey = KeysOfType<HWPAssets, string[]>;
+import {
+  SubresourceIntegrityPluginResolvedOptions,
+  getHtmlWebpackPluginHooksType,
+} from "./types";
+import { Plugin } from "./plugin";
+import { Reporter } from "./reporter";
+import { makePlaceholder, findChunks, placeholderPrefix } from "./util";
 
 interface StatsObjectWithIntegrity {
   integrity: string;
 }
-
-const assetTypeIntegrityKeys: [AssetType, HWPAssetsIntegrityKey][] = [
-  ["js", "jsIntegrity"],
-  ["css", "cssIntegrity"],
-];
 
 const thisPluginName = "webpack-subresource-integrity";
 
@@ -60,79 +25,6 @@ const thisPluginName = "webpack-subresource-integrity";
 const standardHashFuncNames = ["sha256", "sha384", "sha512"];
 
 let getHtmlWebpackPluginHooks: getHtmlWebpackPluginHooksType | null = null;
-
-function getTagSrc(tag: HtmlTagObject): string | undefined {
-  if (!["script", "link"].includes(tag.tagName) || !tag.attributes) {
-    return undefined;
-  }
-  if (typeof tag.attributes.href === "string") {
-    return tag.attributes.href;
-  }
-  if (typeof tag.attributes.src === "string") {
-    return tag.attributes.src;
-  }
-  return undefined;
-}
-
-const normalizePath = (p: string) =>
-  p.replace(/\?.*$/, "").split(sep).join("/");
-
-const placeholderPrefix = "*-*-*-CHUNK-SRI-HASH-";
-
-const computeIntegrity = (hashFuncNames: string[], source: string | Buffer) => {
-  const result = hashFuncNames
-    .map(
-      (hashFuncName) =>
-        hashFuncName +
-        "-" +
-        createHash(hashFuncName)
-          .update(
-            typeof source === "string" ? Buffer.from(source, "utf-8") : source
-          )
-          .digest("base64")
-    )
-    .join(" ");
-
-  return result;
-};
-
-const makePlaceholder = (hashFuncNames: string[], id: string | number) => {
-  const placeholder = `${placeholderPrefix}${id}`;
-  const filler = computeIntegrity(hashFuncNames, placeholder);
-  return placeholderPrefix + filler.substring(placeholderPrefix.length);
-};
-
-function findChunks(chunk: Chunk) {
-  const allChunks = new Set<Chunk>();
-  const groupsVisited = new Set<string>();
-
-  function addIfNotExist<T>(set: Set<T>, item: T) {
-    if (set.has(item)) return true;
-    set.add(item);
-    return false;
-  }
-
-  (function recurseChunk(childChunk: Chunk) {
-    function recurseGroup(group: ChunkGroup) {
-      if (addIfNotExist(groupsVisited, group.id)) return;
-      group.chunks.forEach(recurseChunk);
-      group.childrenIterable.forEach(recurseGroup);
-    }
-
-    if (addIfNotExist(allChunks, childChunk)) return;
-    Array.from(childChunk.groupsIterable).forEach(recurseGroup);
-  })(chunk);
-
-  return allChunks;
-}
-
-/**
- * @internal
- */
-interface SubresourceIntegrityPluginResolvedOptions {
-  readonly hashFuncNames: [string, ...string[]];
-  readonly enabled: "auto" | true | false;
-}
 
 /**
  * @public
@@ -148,30 +40,7 @@ export interface SubresourceIntegrityPluginOptions {
  * @public
  */
 export class SubresourceIntegrityPlugin {
-  /**
-   * @internal
-   */
   private readonly options: SubresourceIntegrityPluginResolvedOptions;
-
-  /**
-   * @internal
-   */
-  private emittedMessages: Set<string> = new Set();
-
-  /**
-   * @internal
-   */
-  private assetIntegrity: Map<string, string> = new Map();
-
-  /**
-   * @internal
-   */
-  private inverseAssetIntegrity: Map<string, string> = new Map();
-
-  /**
-   * @internal
-   */
-  private hwpPublicPath: string | null = null;
 
   /**
    * Create a new instance.
@@ -195,282 +64,6 @@ export class SubresourceIntegrityPlugin {
   /**
    * @internal
    */
-  private emitMessage(messages: Error[], message: string): void {
-    messages.push(new Error(`${thisPluginName}: ${message}`));
-  }
-
-  /**
-   * @internal
-   */
-  private emitMessageOnce(messages: Error[], message: string): void {
-    if (!this.emittedMessages.has(message)) {
-      this.emittedMessages.add(message);
-      this.emitMessage(messages, message);
-    }
-  }
-
-  /**
-   * @internal
-   */
-  private warnOnce(compilation: Compilation, message: string): void {
-    this.emitMessageOnce(compilation.warnings, message);
-  }
-
-  /**
-   * @internal
-   */
-  private errorOnce(compilation: Compilation, message: string): void {
-    this.emitMessageOnce(compilation.errors, message);
-  }
-
-  /**
-   * @internal
-   */
-  private error(compilation: Compilation, message: string): void {
-    this.emitMessage(compilation.errors, message);
-  }
-
-  /**
-   * @internal
-   */
-  private warnIfHotUpdate(
-    compilation: Compilation,
-    source: string | Buffer
-  ): void {
-    if (source.indexOf("webpackHotUpdate") >= 0) {
-      this.warnOnce(
-        compilation,
-        "webpack-subresource-integrity may interfere with hot reloading. " +
-          "Consider disabling this plugin in development mode."
-      );
-    }
-  }
-
-  /**
-   * @internal
-   */
-  private updateAssetIntegrity(assetKey: string, integrity: string) {
-    if (!this.assetIntegrity.has(assetKey)) {
-      this.assetIntegrity.set(assetKey, integrity);
-      this.inverseAssetIntegrity.set(integrity, assetKey);
-    }
-  }
-
-  /**
-   * @internal
-   */
-  private addMissingIntegrityHashes = (
-    assets: Record<string, sources.Source>
-  ): void => {
-    Object.keys(assets).forEach((assetKey) => {
-      const asset = assets[assetKey];
-      let source;
-      try {
-        source = asset.source();
-      } catch (_) {
-        return;
-      }
-      this.updateAssetIntegrity(
-        assetKey,
-        computeIntegrity(this.options.hashFuncNames, source)
-      );
-    });
-  };
-
-  /**
-   * @internal
-   */
-  private replaceAsset = (
-    compiler: Compiler,
-    assets: Record<string, sources.Source>,
-    hashByChunkId: Map<string | number, string>,
-    chunkFile: string
-  ): sources.Source => {
-    const oldSource = assets[chunkFile].source();
-    const hashFuncNames = this.options.hashFuncNames;
-    const newAsset = new compiler.webpack.sources.ReplaceSource(
-      assets[chunkFile],
-      chunkFile
-    );
-
-    Array.from(hashByChunkId.entries()).forEach((idAndHash) => {
-      const magicMarker = makePlaceholder(hashFuncNames, idAndHash[0]);
-      const magicMarkerPos = oldSource.indexOf(magicMarker);
-      if (magicMarkerPos >= 0) {
-        newAsset.replace(
-          magicMarkerPos,
-          magicMarkerPos + magicMarker.length - 1,
-          idAndHash[1],
-          chunkFile
-        );
-      }
-    });
-
-    assets[chunkFile] = newAsset;
-
-    return newAsset;
-  };
-
-  /**
-   * @internal
-   */
-  private processChunk = (
-    chunk: Chunk,
-    compilation: Compilation,
-    assets: Record<string, sources.Source>
-  ): void => {
-    const hashByChunkId = new Map<string | number, string>();
-
-    Array.from(findChunks(chunk))
-      .reverse()
-      .forEach((childChunk: Chunk) => {
-        const files = Array.from(childChunk.files);
-
-        files.forEach((sourcePath) => {
-          if (assets[sourcePath]) {
-            this.warnIfHotUpdate(compilation, assets[sourcePath].source());
-            const newAsset = this.replaceAsset(
-              compilation.compiler,
-              assets,
-              hashByChunkId,
-              sourcePath
-            );
-            const integrity = computeIntegrity(
-              this.options.hashFuncNames,
-              newAsset.source()
-            );
-
-            if (childChunk.id !== null) {
-              hashByChunkId.set(childChunk.id, integrity);
-            }
-            this.updateAssetIntegrity(sourcePath, integrity);
-            compilation.updateAsset(
-              sourcePath,
-              (x) => x,
-              (assetInfo) =>
-                assetInfo && {
-                  ...assetInfo,
-                  contenthash: Array.isArray(assetInfo.contenthash)
-                    ? [...new Set([...assetInfo.contenthash, integrity])]
-                    : assetInfo.contenthash
-                    ? [assetInfo.contenthash, integrity]
-                    : integrity,
-                }
-            );
-          } else {
-            this.warnOnce(
-              compilation,
-              `No asset found for source path '${sourcePath}', options are ${Object.keys(
-                assets
-              ).join(", ")}`
-            );
-          }
-        });
-      });
-  };
-
-  /**
-   * @internal
-   */
-  private addAttribute = (
-    compilation: Compilation,
-    elName: string,
-    source: string
-  ): string => {
-    if (!compilation.outputOptions.crossOriginLoading) {
-      this.errorOnce(
-        compilation,
-        "webpack option output.crossOriginLoading not set, code splitting will not work!"
-      );
-    }
-
-    return compilation.compiler.webpack.Template.asString([
-      source,
-      elName + ".integrity = __webpack_require__.sriHashes[chunkId];",
-      elName +
-        ".crossOrigin = " +
-        JSON.stringify(compilation.outputOptions.crossOriginLoading) +
-        ";",
-    ]);
-  };
-
-  /**
-   * @internal
-   */
-  private processAssets = (
-    compilation: Compilation,
-    assets: Record<string, sources.Source>
-  ): void => {
-    Array.from(compilation.chunks)
-      .filter((chunk) => chunk.hasRuntime())
-      .forEach((chunk) => {
-        this.processChunk(chunk, compilation, assets);
-      });
-
-    this.addMissingIntegrityHashes(assets);
-  };
-
-  /**
-   * @internal
-   */
-  private hwpAssetPath = (src: string): string => {
-    assert.isNotNull(this.hwpPublicPath);
-    return relative(this.hwpPublicPath, src);
-  };
-
-  /**
-   * @internal
-   */
-  private getIntegrityChecksumForAsset = (
-    assets: Record<string, sources.Source>,
-    src: string
-  ): string | undefined => {
-    if (this.assetIntegrity.has(src)) {
-      return this.assetIntegrity.get(src);
-    }
-
-    const normalizedSrc = normalizePath(src);
-    const normalizedKey = Object.keys(assets).find(
-      (assetKey) => normalizePath(assetKey) === normalizedSrc
-    );
-    if (normalizedKey) {
-      return this.assetIntegrity.get(normalizedKey);
-    }
-    return undefined;
-  };
-
-  /**
-   * @internal
-   */
-  private processTag = (compilation: Compilation, tag: HtmlTagObject): void => {
-    if (
-      tag.attributes &&
-      Object.prototype.hasOwnProperty.call(tag.attributes, "integrity")
-    ) {
-      return;
-    }
-
-    const tagSrc = getTagSrc(tag);
-
-    if (!tagSrc) {
-      return;
-    }
-
-    const src = this.hwpAssetPath(tagSrc);
-
-    tag.attributes.integrity =
-      this.getIntegrityChecksumForAsset(compilation.assets, src) ||
-      computeIntegrity(
-        this.options.hashFuncNames,
-        readFileSync(join(compilation.compiler.outputPath, src))
-      );
-    tag.attributes.crossorigin =
-      compilation.compiler.options.output.crossOriginLoading || "anonymous";
-  };
-
-  /**
-   * @internal
-   */
   private isEnabled(compilation: Compilation): boolean {
     if (this.options.enabled === "auto") {
       return compilation.options.mode !== "development";
@@ -483,18 +76,22 @@ export class SubresourceIntegrityPlugin {
    * @internal
    */
   private setup = (compilation: Compilation): void => {
-    if (!this.validateOptions(compilation) || !this.isEnabled(compilation)) {
+    const reporter = new Reporter(compilation, thisPluginName);
+
+    if (
+      !this.validateOptions(compilation, reporter) ||
+      !this.isEnabled(compilation)
+    ) {
       return;
     }
+
+    const plugin = new Plugin(compilation, this.options, reporter);
 
     if (
       typeof compilation.outputOptions.chunkLoading === "string" &&
       ["require", "async-node"].includes(compilation.outputOptions.chunkLoading)
     ) {
-      this.warnOnce(
-        compilation,
-        "This plugin is not useful for non-web targets."
-      );
+      reporter.warnOnce("This plugin is not useful for non-web targets.");
       return;
     }
 
@@ -506,7 +103,7 @@ export class SubresourceIntegrityPlugin {
             .PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
       },
       (records: Record<string, sources.Source>) => {
-        return this.processAssets(compilation, records);
+        return plugin.processAssets(records);
       }
     );
 
@@ -519,8 +116,7 @@ export class SubresourceIntegrityPlugin {
               chunkFile in records &&
               records[chunkFile].source().includes(placeholderPrefix)
             ) {
-              this.errorOnce(
-                compilation,
+              reporter.errorOnce(
                 `Asset ${chunkFile} contains unresolved integrity placeholders`
               );
             }
@@ -532,20 +128,8 @@ export class SubresourceIntegrityPlugin {
     compilation.compiler.webpack.optimize.RealContentHashPlugin.getCompilationHooks(
       compilation
     ).updateHash.tap(thisPluginName, (input, oldHash) => {
-      const assetKey = this.inverseAssetIntegrity.get(oldHash);
-      if (assetKey && input.length === 1) {
-        const newIntegrity = computeIntegrity(
-          this.options.hashFuncNames,
-          input[0]
-        );
-        this.inverseAssetIntegrity.delete(oldHash);
-        this.assetIntegrity.delete(assetKey);
-        this.updateAssetIntegrity(assetKey, newIntegrity);
-
-        return newIntegrity;
-      }
       // FIXME: remove type hack pending https://github.com/webpack/webpack/pull/12642#issuecomment-784744910
-      return undefined as unknown as string;
+      return plugin.updateHash(input, oldHash) as unknown as string;
     });
 
     if (getHtmlWebpackPluginHooks) {
@@ -554,25 +138,7 @@ export class SubresourceIntegrityPlugin {
       ).beforeAssetTagGeneration.tapPromise(
         thisPluginName,
         async (pluginArgs) => {
-          this.hwpPublicPath = pluginArgs.assets.publicPath;
-
-          assetTypeIntegrityKeys.forEach(
-            ([a, b]: [AssetType, HWPAssetsIntegrityKey]) => {
-              if (b) {
-                (pluginArgs.assets as HWPAssets)[b] = (
-                  pluginArgs.assets as TemplateFiles
-                )[a]
-                  .map((filePath: string) =>
-                    this.getIntegrityChecksumForAsset(
-                      compilation.assets,
-                      this.hwpAssetPath(filePath)
-                    )
-                  )
-                  .filter(notNil);
-              }
-            }
-          );
-
+          plugin.handleHwpPluginArgs(pluginArgs);
           return pluginArgs;
         }
       );
@@ -583,12 +149,7 @@ export class SubresourceIntegrityPlugin {
           stage: 10000,
         },
         async (data) => {
-          this.addMissingIntegrityHashes(compilation.assets);
-
-          data.headTags
-            .concat(data.bodyTags)
-            .forEach((tag: HtmlTagObject) => this.processTag(compilation, tag));
-
+          plugin.handleHwpBodyTags(data);
           return data;
         }
       );
@@ -597,11 +158,13 @@ export class SubresourceIntegrityPlugin {
     const { mainTemplate } = compilation;
 
     mainTemplate.hooks.jsonpScript.tap(thisPluginName, (source: string) =>
-      this.addAttribute(compilation, "script", source)
+      plugin.addAttribute("script", source)
     );
+
     mainTemplate.hooks.linkPreload.tap(thisPluginName, (source: string) =>
-      this.addAttribute(compilation, "link", source)
+      plugin.addAttribute("link", source)
     );
+
     mainTemplate.hooks.localVars.tap(thisPluginName, (source, chunk) => {
       const allChunks = findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
@@ -635,29 +198,27 @@ export class SubresourceIntegrityPlugin {
   /**
    * @internal
    */
-  private validateOptions = (compilation: Compilation) => {
+  private validateOptions = (compilation: Compilation, reporter: Reporter) => {
     if (
       this.isEnabled(compilation) &&
       !compilation.compiler.options.output.crossOriginLoading
     ) {
-      this.warnOnce(
-        compilation,
+      reporter.warnOnce(
         'SRI requires a cross-origin policy, defaulting to "anonymous". ' +
           "Set webpack option output.crossOriginLoading to a value other than false " +
           "to make this warning go away. " +
           "See https://w3c.github.io/webappsec-subresource-integrity/#cross-origin-data-leakage"
       );
     }
-    return this.validateHashFuncNames(compilation);
+    return this.validateHashFuncNames(reporter);
   };
 
   /**
    * @internal
    */
-  private validateHashFuncNames = (compilation: Compilation): boolean => {
+  private validateHashFuncNames = (reporter: Reporter): boolean => {
     if (!Array.isArray(this.options.hashFuncNames)) {
-      this.error(
-        compilation,
+      reporter.error(
         "options.hashFuncNames must be an array of hash function names, " +
           "instead got '" +
           this.options.hashFuncNames +
@@ -665,16 +226,16 @@ export class SubresourceIntegrityPlugin {
       );
       return false;
     } else if (this.options.hashFuncNames.length === 0) {
-      this.error(compilation, "Must specify at least one hash function name.");
+      reporter.error("Must specify at least one hash function name.");
       return false;
     } else if (
       !this.options.hashFuncNames.every(
-        this.validateHashFuncName.bind(this, compilation)
+        this.validateHashFuncName.bind(this, reporter)
       )
     ) {
       return false;
     } else {
-      this.warnStandardHashFunc(compilation);
+      this.warnStandardHashFunc(reporter);
       return true;
     }
   };
@@ -682,7 +243,7 @@ export class SubresourceIntegrityPlugin {
   /**
    * @internal
    */
-  private warnStandardHashFunc = (compilation: Compilation) => {
+  private warnStandardHashFunc = (reporter: Reporter) => {
     let foundStandardHashFunc = false;
     for (let i = 0; i < this.options.hashFuncNames.length; i += 1) {
       if (standardHashFuncNames.indexOf(this.options.hashFuncNames[i]) >= 0) {
@@ -690,8 +251,7 @@ export class SubresourceIntegrityPlugin {
       }
     }
     if (!foundStandardHashFunc) {
-      this.warnOnce(
-        compilation,
+      reporter.warnOnce(
         "It is recommended that at least one hash function is part of the set " +
           "for which support is mandated by the specification. " +
           "These are: " +
@@ -705,16 +265,12 @@ export class SubresourceIntegrityPlugin {
   /**
    * @internal
    */
-  private validateHashFuncName = (
-    compilation: Compilation,
-    hashFuncName: string
-  ) => {
+  private validateHashFuncName = (reporter: Reporter, hashFuncName: string) => {
     if (
       typeof hashFuncName !== "string" &&
       !((hashFuncName as unknown) instanceof String)
     ) {
-      this.error(
-        compilation,
+      reporter.error(
         "options.hashFuncNames must be an array of hash function names, " +
           "but contained " +
           hashFuncName +
@@ -725,8 +281,7 @@ export class SubresourceIntegrityPlugin {
     try {
       createHash(hashFuncName);
     } catch (error) {
-      this.error(
-        compilation,
+      reporter.error(
         "Cannot use hash function '" + hashFuncName + "': " + error.message
       );
       return false;

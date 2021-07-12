@@ -1,9 +1,16 @@
 version: "2"
 engines:
-   eslint:
-     enabled: true
+  eslint:
+    enabled: true
 ratings:
-   paths: ["webpack-subresource-integrity/index.ts"]
+  paths:
+    [
+      "webpack-subresource-integrity/index.ts",
+      "webpack-subresource-integrity/plugin.ts",
+      "webpack-subresource-integrity/util.ts",
+      "webpack-subresource-integrity/reporter.ts",
+      "webpack-subresource-integrity/types.ts",
+    ]
 exclude_patterns:
   - "webpack-subresource-integrity/*.js"
   - "wsi-test-helper/*.js"

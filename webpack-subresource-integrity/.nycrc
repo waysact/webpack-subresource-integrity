@@ -1,12 +1,7 @@
 {
   "all": true,
-  "include": [
-    "index.js"
-  ],
-  "exclude": [
-    "*.test.js",
-    ".pnp.js"
-  ],
+  "include": ["index.js", "plugin.js", "reporter.js", "util.js", "types.js"],
+  "exclude": ["*.test.js", ".pnp.js"],
   "cache": false,
   "source-map": false,
   "sourceMap": false
