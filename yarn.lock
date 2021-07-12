@@ -11157,7 +11157,6 @@ typescript@^3.3.3:
   version: 0.0.0-use.local
   resolution: "webpack-subresource-integrity@portal:webpack-subresource-integrity::locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
-    tmp-promise: ^3.0.2
     typed-assert: ^1.0.8
   peerDependencies:
     html-webpack-plugin: ">= 5.0.0-beta.1 < 6"
