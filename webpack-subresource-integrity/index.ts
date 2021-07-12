@@ -508,17 +508,19 @@ export class SubresourceIntegrityPlugin {
     compilation.hooks.afterProcessAssets.tap(
       thisPluginName,
       (records: Record<string, sources.Source>) => {
-        Object.keys(records).forEach((assetName) => {
-          if (
-            records[assetName].source().includes(placeholderPrefix) &&
-            !assetName.endsWith(".map") // FIXME
-          ) {
-            this.errorOnce(
-              compilation,
-              `Asset ${assetName} contains unresolved integrity placeholders`
-            );
+        for (const chunk of compilation.chunks.values()) {
+          for (const chunkFile of chunk.files) {
+            if (
+              chunkFile in records &&
+              records[chunkFile].source().includes(placeholderPrefix)
+            ) {
+              this.errorOnce(
+                compilation,
+                `Asset ${chunkFile} contains unresolved integrity placeholders`
+              );
+            }
           }
-        });
+        }
       }
     );
 
