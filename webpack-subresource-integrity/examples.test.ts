@@ -6,7 +6,7 @@
  */
 
 import { readdirSync } from "fs";
-import { spawn } from "child_process";
+import spawn from "cross-spawn";
 import { join } from "path";
 import rimraf from "rimraf";
 import { promisify } from "util";
@@ -44,10 +44,10 @@ readdirSync("../examples/").forEach((example) => {
           stdio: ["ignore", "pipe", "pipe"],
         }
       );
-      yarn.stdout.on("data", (data) => {
+      yarn.stdout?.on("data", (data) => {
         stdout.push(data);
       });
-      yarn.stderr.on("data", (data) => {
+      yarn.stderr?.on("data", (data) => {
         stderr.push(data);
       });
       yarn.on("exit", (code) => {
