@@ -131,6 +131,25 @@ test("errors if hash function names contains non-string", async () => {
   );
 });
 
+test("errors if hash function names are empty", async () => {
+  const plugin = new SubresourceIntegrityPlugin({
+    hashFuncNames: [],
+  });
+
+  const compilation = await runCompilation(
+    webpack({
+      ...defaultOptions,
+      plugins: [plugin],
+    })
+  );
+
+  expect(compilation.errors.length).toBe(1);
+  expect(compilation.warnings.length).toBe(0);
+  expect(compilation.errors[0].message).toMatch(
+    /Must specify at least one hash function name/
+  );
+});
+
 test("errors if hash function names contains unsupported digest", async () => {
   const plugin = new SubresourceIntegrityPlugin({
     hashFuncNames: ["frobnicate"],
