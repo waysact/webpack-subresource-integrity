@@ -23,7 +23,7 @@
   "main": "./index.js",
   "types": "./webpack-subresource-integrity-public.d.ts",
   "engines": {
-    "node": ">= 10"
+    "node": ">= 12"
   },
   "dependencies": {
     "tmp-promise": "^3.0.2",
