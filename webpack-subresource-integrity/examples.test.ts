@@ -20,7 +20,7 @@ readdirSync("../examples/").forEach((example) => {
     const exampleDirectory = join("../examples", example);
     await rimrafPromise(join(exampleDirectory, "dist"));
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const stdout: string[] = [];
       const stderr: string[] = [];
 

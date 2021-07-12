@@ -10324,7 +10324,16 @@ resolve@~1.19.0:
   languageName: node
   linkType: hard
 
-"tmp@npm:^0.2.1":
+"tmp-promise@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "tmp-promise@npm:3.0.2"
+  dependencies:
+    tmp: ^0.2.0
+  checksum: 2d8457c9512e896633f64fab33e5e3fd273c4d8fca33cfc74a04a104a0b921d15ed3e832c4f2a50108635ac88264afef85abddbe5ad8480e15f55fc7f8e76969
+  languageName: node
+  linkType: hard
+
+"tmp@npm:^0.2.0, tmp@npm:^0.2.1":
   version: 0.2.1
   resolution: "tmp@npm:0.2.1"
   dependencies:
@@ -11162,6 +11171,7 @@ typescript@^3.3.3:
     rimraf: ^3.0.2
     tapable: ^2.2.0
     tmp: ^0.2.1
+    tmp-promise: ^3.0.2
     ts-jest: ^26.5.6
     typed-assert: ^1.0.8
     typescript: ^4.3.5

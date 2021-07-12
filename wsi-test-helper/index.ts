@@ -59,7 +59,7 @@ export async function testWithPuppeteer(
         })
     );
 
-    const resultPromise = new Promise((resolve, reject) => {
+    const resultPromise = new Promise<void>((resolve, reject) => {
       page.on("console", (msg) => {
         Promise.all(msg.args().map((arg) => arg.jsonValue())).then((args) => {
           if (args.length === 0) {
