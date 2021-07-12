@@ -5,33 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import webpack, { Configuration, Stats, StatsAsset, StatsError } from "webpack";
+import { StatsAsset } from "webpack";
 import { resolve } from "path";
 import tmp from "tmp-promise";
 import { SubresourceIntegrityPlugin } from "./index.js";
+import { runWebpack } from "./test-utils";
 
-const errorFromStats = (stats: Stats | undefined): Error => {
-  const errors = stats?.toJson()?.errors;
-  if (!errors) {
-    return new Error("No stats");
-  }
-  return new Error(
-    "Error:" + errors.map((error: StatsError) => error.message).join(", ")
-  );
-};
-
-const runWebpack = (options: Configuration): Promise<Stats> =>
-  new Promise((resolve, reject) => {
-    webpack(options, (err: Error | undefined, stats: Stats | undefined) => {
-      if (err) {
-        reject(err);
-      } else if (stats?.hasErrors() === false) {
-        resolve(stats);
-      } else {
-        reject(errorFromStats(stats));
-      }
-    });
-  });
+jest.unmock("html-webpack-plugin");
 
 test("enabled with webpack mode=production", async () => {
   const tmpDir = await tmp.dir({ unsafeCleanup: true });

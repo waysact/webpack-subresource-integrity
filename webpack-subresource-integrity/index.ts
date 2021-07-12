@@ -327,10 +327,6 @@ export class SubresourceIntegrityPlugin {
         const files = Array.from(childChunk.files);
 
         files.forEach((sourcePath) => {
-          if (!sourcePath) {
-            return;
-          }
-
           if (assets[sourcePath]) {
             this.warnIfHotUpdate(compilation, assets[sourcePath].source());
             const newAsset = this.replaceAsset(

@@ -9,6 +9,8 @@ import webpack, { Compiler, Compilation, Configuration, Chunk } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import { SubresourceIntegrityPlugin } from "./index.js";
 
+jest.unmock("html-webpack-plugin");
+
 process.on("unhandledRejection", (error) => {
   console.log(error); // eslint-disable-line no-console
   process.exit(1);

@@ -11,6 +11,8 @@ import { join } from "path";
 import rimraf from "rimraf";
 import { promisify } from "util";
 
+jest.unmock("html-webpack-plugin");
+
 jest.setTimeout(120000);
 
 const rimrafPromise = promisify(rimraf);
