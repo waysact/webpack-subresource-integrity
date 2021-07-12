@@ -27,7 +27,7 @@ process.on("unhandledRejection", (error) => {
 
 test("throws an error when options is not an object", async () => {
   expect(() => {
-    new SubresourceIntegrityPlugin((function dummy() {} as unknown) as {
+    new SubresourceIntegrityPlugin(function dummy() {} as unknown as {
       hashFuncNames: string[];
     }); // eslint-disable-line no-new
   }).toThrow(/argument must be an object/);
@@ -95,7 +95,7 @@ test("supports new constructor with array of hash function names", async () => {
 
 test("errors if hash function names is not an array", async () => {
   const plugin = new SubresourceIntegrityPlugin({
-    hashFuncNames: ("sha256" as unknown) as string[],
+    hashFuncNames: "sha256" as unknown as string[],
   });
 
   const compilation = await runCompilation(
@@ -110,12 +110,11 @@ test("errors if hash function names is not an array", async () => {
   expect(compilation.errors[0].message).toMatch(
     /options.hashFuncNames must be an array of hash function names, instead got 'sha256'/
   );
-  // expect(plugin.options.enabled).toBeFalsy();
 });
 
 test("errors if hash function names contains non-string", async () => {
   const plugin = new SubresourceIntegrityPlugin({
-    hashFuncNames: ([1234] as unknown) as string[],
+    hashFuncNames: [1234] as unknown as string[],
   });
 
   const compilation = await runCompilation(
@@ -130,7 +129,6 @@ test("errors if hash function names contains non-string", async () => {
   expect(compilation.errors[0].message).toMatch(
     /options.hashFuncNames must be an array of hash function names, but contained 1234/
   );
-  // expect(plugin.options.enabled).toBeFalsy();
 });
 
 test("errors if hash function names contains unsupported digest", async () => {
@@ -150,7 +148,6 @@ test("errors if hash function names contains unsupported digest", async () => {
   expect(compilation.errors[0].message).toMatch(
     /Cannot use hash function 'frobnicate': Digest method not supported/
   );
-  // expect(plugin.options.enabled).toBeFalsy();
 });
 
 test("uses default options", async () => {
@@ -165,9 +162,9 @@ test("uses default options", async () => {
     })
   );
 
-  // expect(plugin.options.hashFuncNames).toEqual(["sha256"]);
-  // expect(plugin.options.enabled).toBeTruthy();
-  // expect(plugin.options.deprecatedOptions).toBeFalsy();
+  expect(plugin.options.hashFuncNames).toEqual(["sha256"]);
+  expect(plugin.options.enabled).toBeTruthy();
+  expect(plugin.options.deprecatedOptions).toBeFalsy();
   expect(compilation.errors.length).toBe(0);
   expect(compilation.warnings.length).toBe(0);
 });
@@ -183,8 +180,8 @@ test("should warn when output.crossOriginLoading is not set", async () => {
     })
   );
 
-  compilation.mainTemplate.hooks.jsonpScript.call("", ({} as unknown) as Chunk);
-  compilation.mainTemplate.hooks.linkPreload.call("", ({} as unknown) as Chunk);
+  compilation.mainTemplate.hooks.jsonpScript.call("", {} as unknown as Chunk);
+  compilation.mainTemplate.hooks.linkPreload.call("", {} as unknown as Chunk);
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(1);
@@ -213,7 +210,7 @@ test("should ignore tags without attributes", async () => {
   };
 
   HtmlWebpackPlugin.getHooks(
-    (compilation as unknown) as Compilation
+    compilation as unknown as Compilation
   ).alterAssetTagGroups.promise({
     headTags: [],
     bodyTags: [tag],
