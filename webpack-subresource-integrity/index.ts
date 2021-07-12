@@ -538,7 +538,7 @@ export class SubresourceIntegrityPlugin {
         return newIntegrity;
       }
       // FIXME: remove type hack pending https://github.com/webpack/webpack/pull/12642#issuecomment-784744910
-      return (undefined as unknown) as string;
+      return undefined as unknown as string;
     });
 
     if (getHtmlWebpackPluginHooks) {
@@ -550,11 +550,9 @@ export class SubresourceIntegrityPlugin {
           this.hwpPublicPath = pluginArgs.assets.publicPath;
 
           (["js", "css"] as (keyof TemplateFiles)[]).forEach((fileType) => {
-            (pluginArgs.assets as any)[
-              fileType + "Integrity"
-            ] = (pluginArgs.assets as TemplateFiles)[
-              fileType
-            ].map((filePath: string) =>
+            (pluginArgs.assets as any)[fileType + "Integrity"] = (
+              pluginArgs.assets as TemplateFiles
+            )[fileType].map((filePath: string) =>
               this.getIntegrityChecksumForAsset(
                 compilation.assets,
                 this.hwpAssetPath(filePath)
@@ -755,9 +753,8 @@ export class SubresourceIntegrityPlugin {
               .tap(thisPluginName, (object, asset) => {
                 const contenthash = asset.info?.contenthash;
                 if (contenthash) {
-                  const shaHashes = (Array.isArray(contenthash)
-                    ? contenthash
-                    : [contenthash]
+                  const shaHashes = (
+                    Array.isArray(contenthash) ? contenthash : [contenthash]
                   ).filter((hash: any) => String(hash).match(/^sha[0-9]+-/));
                   if (shaHashes.length > 0) {
                     (object as any).integrity = shaHashes.join(" ");
