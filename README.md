@@ -1,6 +1,9 @@
 # webpack-subresource-integrity
 
-[![npm version](https://badge.fury.io/js/webpack-subresource-integrity.svg)](https://badge.fury.io/js/webpack-subresource-integrity)
+[![npm version](npm-badge)](npm-url)
+[![Build Status](tests-badge)](tests-url)
+[![Coverage Status](coverage-badge)](coverage-url)
+[![License](license-badge)](license-url)
 
 If you're looking for **installation and usage instructions**, visit the [main package](https://github.com/waysact/webpack-subresource-integrity/blob/next/webpack-subresource-integrity/#readme).
 
@@ -49,3 +52,12 @@ integration test. An example is a self-contained package in directory
   should use
   [wsi-test-helper](https://github.com/waysact/webpack-subresource-integrity/blob/master/wsi-test-helper/)
   to do so. See its README for more information.
+
+[npm-badge]: https://img.shields.io/npm/v/webpack-subresource-integrity/next.svg
+[npm-url]: https://www.npmjs.com/package/webpack-subresource-integrity
+[tests-badge]: https://github.com/waysact/webpack-subresource-integrity/actions/workflows/test.yml/badge.svg?branch=next
+[tests-url]: https://github.com/waysact/webpack-subresource-integrity/actions
+[coverage-badge]: https://coveralls.io/repos/github/waysact/webpack-subresource-integrity/badge.svg?branch=next
+[coverage-url]: https://coveralls.io/github/waysact/webpack-subresource-integrity?branch=next
+[license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[license-url]: https://raw.githubusercontent.com/waysact/webpack-subresource-integrity/next/LICENSE
