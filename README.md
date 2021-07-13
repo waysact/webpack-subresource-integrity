@@ -1,9 +1,9 @@
 # webpack-subresource-integrity
 
-[![npm version](npm-badge)](npm-url)
-[![Build Status](tests-badge)](tests-url)
-[![Coverage Status](coverage-badge)](coverage-url)
-[![License](license-badge)](license-url)
+[![npm version][npm-badge]][npm-url]
+[![Build Status][tests-badge]][tests-url]
+[![Coverage Status][coverage-badge]][coverage-url]
+[![License][license-badge]][license-url]
 
 If you're looking for **installation and usage instructions**, visit the [main package](https://github.com/waysact/webpack-subresource-integrity/blob/next/webpack-subresource-integrity/#readme).
 
