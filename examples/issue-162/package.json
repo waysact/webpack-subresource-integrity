@@ -1,0 +1,15 @@
+{
+  "name": "issue-162",
+  "description": "Test case for https://github.com/waysact/webpack-subresource-integrity/issues/162",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "expect": "^26.6.2",
+    "nyc": "*",
+    "webpack": "5.47.0",
+    "webpack-cli": "4",
+    "webpack-subresource-integrity": "*",
+    "wsi-test-helper": "*"
+  }
+}
