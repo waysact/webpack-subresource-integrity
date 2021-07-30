@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Chunk, Compiler, Compilation, sources } from "webpack";
+import type { AssetInfo, Chunk, Compiler, Compilation, sources } from "webpack";
 import { relative, join } from "path";
 import { readFileSync } from "fs";
 import * as assert from "typed-assert";
@@ -169,6 +169,26 @@ export class Plugin {
     return newAsset;
   };
 
+  private warnAboutLongTermCaching = (assetInfo: AssetInfo) => {
+    if (
+      (assetInfo.fullhash ||
+        assetInfo.chunkhash ||
+        assetInfo.modulehash ||
+        assetInfo.contenthash) &&
+      !(
+        assetInfo.contenthash &&
+        this.compilation.compiler.options.optimization.realContentHash
+      )
+    ) {
+      this.reporter.warnOnce(
+        "Using [hash], [fullhash], [modulehash], or [chunkhash] is dangerous \
+with SRI. The same is true for [contenthash] when realContentHash is disabled. \
+Use [contenthash] and ensure realContentHash is enabled. See the README for \
+more information."
+      );
+    }
+  };
+
   /**
    * @internal
    */
@@ -204,15 +224,22 @@ export class Plugin {
             this.compilation.updateAsset(
               sourcePath,
               (x) => x,
-              (assetInfo) =>
-                assetInfo && {
+              (assetInfo) => {
+                if (!assetInfo) {
+                  return undefined;
+                }
+
+                this.warnAboutLongTermCaching(assetInfo);
+
+                return {
                   ...assetInfo,
                   contenthash: Array.isArray(assetInfo.contenthash)
                     ? [...new Set([...assetInfo.contenthash, integrity])]
                     : assetInfo.contenthash
                     ? [assetInfo.contenthash, integrity]
                     : integrity,
-                }
+                };
+              }
             );
           } else {
             this.reporter.warnOnce(

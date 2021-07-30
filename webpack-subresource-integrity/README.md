@@ -104,6 +104,10 @@ you must set the `Cache-Control: no-transform` response header or your
 page will break when assets are loaded through a transforming
 proxy. [See below](#proxies) for more information.
 
+When using caching, stale assets will fail to load since they will not pass
+integrity checks. It is vital that you configure caching correctly in your web
+server. [See below](#caching) for more information.
+
 ### Options
 
 #### hashFuncNames
@@ -125,14 +129,14 @@ See [here](https://github.com/w3c/webappsec/issues/477) for additional
 information on why SHA-384 was chosen by the W3C over their initial suggestion,
 SHA-256.
 
-As one of the commenters in this discussion points out, "SRI hashes are likely
+As one of the commenters in that discussion points out, "SRI hashes are likely
 delivered over SSL" which today (2021) is often using SHA-256 so that there is
 probably little harm in downgrading this to `sha256` instead.
 
 By using SHA-256 you will save 21 bytes per chunk and perhaps a few CPU cycles,
 although SHA-384 is actually faster to compute on some hardware. Not that it
 matters, as the difference is dwarfed by all the other work a browser has to do
-when it downloads and parses a JS or CSS asset.
+in order to download and parse a JS or CSS asset.
 
 You probably want to use `sha512` instead of the default only if you're
 paranoid. It will cost you an additional 21 bytes per chunk; the CPU overhead is
@@ -177,14 +181,26 @@ Webpack >= 4).
 
 ## Caveats
 
-### Preloading
+### Caching
 
-This plugin adds the integrity attribute to `<link rel="preload">`
-tags, but preloading with SRI doesn't work as expected in current
-Chrome versions. The resource will be loaded twice, defeating the
-purpose of preloading. This problem doesn't appear to exist in
-Firefox or Safari. See [issue
-#111](https://github.com/waysact/webpack-subresource-integrity/issues/111)
+Using SRI presents a potential risk to the availability of your website when
+setting up HTTP response caching incorrectly.
+
+It's never good when a stale asset version is served but there are many cases
+where your website will still work. The change may be inconsequential (for
+example, a whitespace-only change) or your website might end up running old
+code, but still running.
+
+With SRI, however, a stale asset will refuse to load and likely break your
+site. It is therefore imperative that you use a robust caching setup, one where
+_any_ change in content will cause the cache to be invalidated.
+
+With Webpack and long-term caching this means using `[contenthash]` (with
+`realContentHash`, which is enabled by default in production mode). Using
+`[contenthash]` with `realContentHash` disabled, or using a different type of
+hash placeholder (such as `[chunkhash]`) provides weaker guarantees, which is
+why this plugin will output a warning in these cases. See [issue
+#162](https://github.com/waysact/webpack-subresource-integrity/issues/162)
 for more information.
 
 ### Proxies
@@ -206,6 +222,16 @@ However, if you really need to use SRI and HTTP together, you should
 set the `Cache-Control: no-transform` response header. This will
 instruct all well-behaved proxies (including Chrome Data Saver) to
 refrain from modifying the assets.
+
+### Preloading
+
+This plugin adds the integrity attribute to `<link rel="preload">`
+tags, but preloading with SRI doesn't work as expected in current
+Chrome versions. The resource will be loaded twice, defeating the
+purpose of preloading. This problem doesn't appear to exist in
+Firefox or Safari. See [issue
+#111](https://github.com/waysact/webpack-subresource-integrity/issues/111)
+for more information.
 
 ### Browser support
 

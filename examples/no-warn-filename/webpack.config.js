@@ -15,7 +15,14 @@ module.exports = {
     {
       apply: (compiler) => {
         compiler.hooks.done.tap("wsi-test", (stats) => {
-          expect(stats.compilation.warnings).toEqual([]);
+          expect(
+            stats.compilation.warnings.filter(
+              (warning) =>
+                !warning.message.match(
+                  /Use \[contenthash\] and ensure realContentHash/
+                )
+            )
+          ).toEqual([]);
         });
       },
     },
