@@ -11,10 +11,13 @@
     "wsi-test-helper": "portal:wsi-test-helper"
   },
   "scripts": {
-    "test": "(cd wsi-test-helper && yarn tsc) && (cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit)",
+    "check": "yarn lint && yarn test:jest && yarn test:smoke",
     "lint": "(cd webpack-subresource-integrity && yarn eslint .)",
+    "test:jest": "(cd wsi-test-helper && yarn tsc) && (cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit)",
     "test:unit": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit unit.test.ts",
+    "test:examples": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit examples.test.ts",
     "test:integration": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit integration.test.ts",
+    "test:smoke": "cd webpack-subresource-integrity && yarn prepublish && yarn pack --filename ../smoke-test/webpack-subresource-integrity.tgz && cd ../smoke-test && rm -rf yarn.lock && touch yarn.lock && yarn >/dev/null && yarn test",
     "build": "cd webpack-subresource-integrity && yarn tsc && yarn api-extractor run --local --verbose",
     "coverage": "yarn cover:run && yarn cover:report",
     "cover:run": "rm -Rf .nyc_output && mkdir -p .nyc_output && rm -Rf .nyc_merged && mkdir -p .nyc_merged && (cd wsi-test-helper && yarn tsc) && cd webpack-subresource-integrity && yarn tsc && yarn nyc instrument --in-place=true \"$PWD/webpack-subresource-integrity\" && USE_COVERAGE=1 yarn jest --coverage --detectOpenHandles --forceExit --verbose && cp coverage/coverage-final.json ../.nyc_output/ && cd ../nyc-apply-source-map && yarn node ./index.js ../.nyc_output ../.nyc_merged",
