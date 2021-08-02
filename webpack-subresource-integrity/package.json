@@ -4,7 +4,7 @@
   "description": "Webpack plugin for enabling Subresource Integrity",
   "author": "Julian Scheid <julian@evergiving.com>",
   "license": "MIT",
-  "homepage": "https://github.com/waysact/webpack-subresource-integrity#readme",
+  "homepage": "https://github.com/waysact/webpack-subresource-integrity/tree/main/webpack-subresource-integrity#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/waysact/webpack-subresource-integrity.git"
