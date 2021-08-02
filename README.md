@@ -53,7 +53,7 @@ integration test. An example is a self-contained package in directory
   [wsi-test-helper](https://github.com/waysact/webpack-subresource-integrity/blob/main/wsi-test-helper/)
   to do so. See its README for more information.
 
-[npm-badge]: https://img.shields.io/npm/v/webpack-subresource-integrity/main.svg
+[npm-badge]: https://img.shields.io/npm/v/webpack-subresource-integrity/next.svg
 [npm-url]: https://www.npmjs.com/package/webpack-subresource-integrity
 [tests-badge]: https://github.com/waysact/webpack-subresource-integrity/actions/workflows/test.yml/badge.svg?branch=main
 [tests-url]: https://github.com/waysact/webpack-subresource-integrity/actions
