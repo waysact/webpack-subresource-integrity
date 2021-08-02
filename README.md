@@ -32,9 +32,9 @@ yarn test
 
 ## Adding a new test
 
-The easiest way to add a new test is to create an example, which is an
+The easiest way to add a new test is to create an _example_, which is an
 integration test. An example is a self-contained package in directory
-`example` which follows these rules:
+`example`. It should follow these simple rules:
 
 - When `yarn webpack` is invoked inside the package, it returns a zero
   exit code for a test pass, and a non-zero exit code for a test
