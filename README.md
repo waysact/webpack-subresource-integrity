@@ -5,7 +5,7 @@
 [![Coverage Status][coverage-badge]][coverage-url]
 [![License][license-badge]][license-url]
 
-If you're looking for **installation and usage instructions**, visit the [main package](https://github.com/waysact/webpack-subresource-integrity/blob/next/webpack-subresource-integrity/#readme).
+If you're looking for **installation and usage instructions**, visit the [main package](https://github.com/waysact/webpack-subresource-integrity/blob/main/webpack-subresource-integrity/#readme).
 
 Or you might be looking for the 1.x version with **support for Webpack 1-4 and older versions of html-webpack-plugin**? Visit the [1.x branch](https://github.com/waysact/webpack-subresource-integrity/tree/1.x/#readme).
 
@@ -50,14 +50,14 @@ integration test. An example is a self-contained package in directory
   there's a good reason to use a different version.
 - If the example is an end-to-end test (runs tests in the browser) it
   should use
-  [wsi-test-helper](https://github.com/waysact/webpack-subresource-integrity/blob/master/wsi-test-helper/)
+  [wsi-test-helper](https://github.com/waysact/webpack-subresource-integrity/blob/main/wsi-test-helper/)
   to do so. See its README for more information.
 
-[npm-badge]: https://img.shields.io/npm/v/webpack-subresource-integrity/next.svg
+[npm-badge]: https://img.shields.io/npm/v/webpack-subresource-integrity/main.svg
 [npm-url]: https://www.npmjs.com/package/webpack-subresource-integrity
-[tests-badge]: https://github.com/waysact/webpack-subresource-integrity/actions/workflows/test.yml/badge.svg?branch=next
+[tests-badge]: https://github.com/waysact/webpack-subresource-integrity/actions/workflows/test.yml/badge.svg?branch=main
 [tests-url]: https://github.com/waysact/webpack-subresource-integrity/actions
-[coverage-badge]: https://coveralls.io/repos/github/waysact/webpack-subresource-integrity/badge.svg?branch=next
-[coverage-url]: https://coveralls.io/github/waysact/webpack-subresource-integrity?branch=next
+[coverage-badge]: https://coveralls.io/repos/github/waysact/webpack-subresource-integrity/badge.svg?branch=main
+[coverage-url]: https://coveralls.io/github/waysact/webpack-subresource-integrity?branch=main
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[license-url]: https://raw.githubusercontent.com/waysact/webpack-subresource-integrity/next/LICENSE
+[license-url]: https://raw.githubusercontent.com/waysact/webpack-subresource-integrity/main/LICENSE
