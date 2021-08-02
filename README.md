@@ -28,8 +28,11 @@ package manager.)
 
 ## Running tests
 
+The following will run all unit tests, integration tests, examples, and lint.
+It will also build the package and run a smoke test on the resulting tarball:
+
 ```
-yarn test
+yarn check
 ```
 
 ## Adding a new test
