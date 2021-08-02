@@ -1,5 +1,5 @@
 {
-  "name": "test-deployment",
+  "name": "smoke-test",
   "private": true,
   "packageManager": "yarn@3.0.0",
   "devDependencies": {
