@@ -9,6 +9,8 @@ feature that enables browsers to verify that files they fetch (for
 example, from a CDN) are delivered without unexpected
 manipulation.
 
+**Upgrading from version 1.x? [Read the migration guide](https://github.com/waysact/webpack-subresource-integrity/blob/main/MIGRATE-v1-to-v5.md).**
+
 ## Features
 
 - Optional integration with [html-webpack-plugin](https://github.com/ampedandwired/html-webpack-plugin).

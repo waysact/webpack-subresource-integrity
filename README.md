@@ -9,7 +9,9 @@ If you're looking for **installation and usage instructions**, visit the [main p
 
 Or you might be looking for the 1.x version with **support for Webpack 1-4 and older versions of html-webpack-plugin**? Visit the [1.x branch](https://github.com/waysact/webpack-subresource-integrity/tree/1.x/#readme).
 
-If you want to hack on the package, read on -- you're in the right place.
+**Upgrading from version 1.x? [Read the migration guide](https://github.com/waysact/webpack-subresource-integrity/blob/main/MIGRATE-v1-to-v5.md).**
+
+If you want to hack on the package, read on &mdash; you're in the right place.
 
 ## Installing from source
 
