@@ -12,6 +12,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: "Set environmental variables"
+        run: |
+          echo "PUPPETEER_DOWNLOAD_PATH=$HOME/puppeteer" >> $GITHUB_ENV
+
       - run: sudo apt-get install -y moreutils
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -27,6 +31,12 @@ jobs:
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ matrix.node-version }}-${{ hashFiles('**/yarn.lock') }}
+
+      - uses: actions/cache@v2
+        id: puppeteer-cache
+        with:
+          path: ${{ env.PUPPETEER_DOWNLOAD_PATH }}
+          key: ${{ runner.os }}-puppeteer-${{ hashFiles('**/yarn.lock') }}
 
       - run: yarn
       - run: yarn test:smoke
