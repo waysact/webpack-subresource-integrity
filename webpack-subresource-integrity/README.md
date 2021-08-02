@@ -1,4 +1,7 @@
-![Build](https://github.com/waysact/webpack-subresource-integrity/workflows/Build/badge.svg?branch=main) [![Coverage Status](https://coveralls.io/repos/github/waysact/webpack-subresource-integrity/badge.svg?branch=main)](https://coveralls.io/github/waysact/webpack-subresource-integrity?branch=main) [![Code Climate](https://codeclimate.com/github/waysact/webpack-subresource-integrity/badges/gpa.svg)](https://codeclimate.com/github/waysact/webpack-subresource-integrity) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/waysact/webpack-subresource-integrity/main/LICENSE)
+[![Build Status][tests-badge]][tests-url]
+[![Coverage Status][coverage-badge]][coverage-url]
+[![Code Climate][codeclimate-badge]][codeclimate-url]
+[![License][license-badge]][license-url]
 
 # webpack-subresource-integrity
 
@@ -275,3 +278,12 @@ when source URL is same-origin with respect to the asset.
 Copyright (c) 2015-present Waysact Pty Ltd
 
 MIT (see [LICENSE](LICENSE))
+
+[tests-badge]: https://github.com/waysact/webpack-subresource-integrity/actions/workflows/test.yml/badge.svg?branch=main
+[tests-url]: https://github.com/waysact/webpack-subresource-integrity/actions
+[coverage-badge]: https://coveralls.io/repos/github/waysact/webpack-subresource-integrity/badge.svg?branch=main
+[coverage-url]: https://coveralls.io/github/waysact/webpack-subresource-integrity?branch=main
+[codeclimate-badge]: https://codeclimate.com/github/waysact/webpack-subresource-integrity/badges/gpa.svg
+[codeclimate-url]: https://codeclimate.com/github/waysact/webpack-subresource-integrity
+[license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[license-url]: https://raw.githubusercontent.com/waysact/webpack-subresource-integrity/main/LICENSE
