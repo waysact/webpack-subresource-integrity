@@ -8347,6 +8347,18 @@ fsevents@^2.1.2:
   languageName: node
   linkType: hard
 
+"plugin-order@workspace:examples/plugin-order":
+  version: 0.0.0-use.local
+  resolution: "plugin-order@workspace:examples/plugin-order"
+  dependencies:
+    expect: ^26.6.2
+    nyc: "*"
+    webpack: ^5.44.0
+    webpack-cli: 4
+    webpack-subresource-integrity: "*"
+  languageName: unknown
+  linkType: soft
+
 "posix-character-classes@npm:^0.1.0":
   version: 0.1.1
   resolution: "posix-character-classes@npm:0.1.1"
