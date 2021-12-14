@@ -89,16 +89,16 @@ export function notNil<TValue>(
   return value !== null && value !== undefined;
 }
 
-export function generateSriHashPlaceholders(chunks: Iterable<Chunk>, hashFuncNames: [string, ...string[]]) {
+export function generateSriHashPlaceholders(
+  chunks: Iterable<Chunk>,
+  hashFuncNames: [string, ...string[]]
+) {
   return Array.from(chunks).reduce((sriHashes, depChunk: Chunk) => {
     if (depChunk.id) {
-      sriHashes[depChunk.id] = makePlaceholder(
-        hashFuncNames,
-        depChunk.id
-      );
+      sriHashes[depChunk.id] = makePlaceholder(hashFuncNames, depChunk.id);
     }
     return sriHashes;
-  }, {} as { [key: string]: string })
+  }, {} as { [key: string]: string });
 }
 
 export interface Graph<T> {
@@ -106,12 +106,13 @@ export interface Graph<T> {
   edges: Map<T, Set<T>>;
 }
 
-export function buildTopologicallySortedChunkGraph(chunks: Iterable<Chunk>): 
-  [
-    sortedVertices: StronglyConnectedComponent<Chunk>[], 
-    sccGraph: Graph<StronglyConnectedComponent<Chunk>>,
-    chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>>
-  ] {
+export function buildTopologicallySortedChunkGraph(
+  chunks: Iterable<Chunk>
+): [
+  sortedVertices: StronglyConnectedComponent<Chunk>[],
+  sccGraph: Graph<StronglyConnectedComponent<Chunk>>,
+  chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>>
+] {
   const queue = [...chunks];
   const vertices = new Set<Chunk>();
   const edges = new Map<Chunk, Set<Chunk>>();
@@ -132,13 +133,13 @@ export function buildTopologicallySortedChunkGraph(chunks: Iterable<Chunk>):
     }
   }
 
-  const dag = createDAGfromGraph({vertices, edges});
+  const dag = createDAGfromGraph({ vertices, edges });
 
   const sortedVertices = topologicalSort(dag);
   const chunkToSccMap = new Map<Chunk, StronglyConnectedComponent<Chunk>>();
   for (const scc of dag.vertices) {
     for (const chunk of scc.nodes) {
-      chunkToSccMap.set(chunk, scc)
+      chunkToSccMap.set(chunk, scc);
     }
   }
 
@@ -149,16 +150,25 @@ export interface StronglyConnectedComponent<T> {
   nodes: Set<T>;
 }
 
-interface TarjanVertexMetadata {index?: number, lowlink?: number, onstack?: boolean}
+interface TarjanVertexMetadata {
+  index?: number;
+  lowlink?: number;
+  onstack?: boolean;
+}
 
 /**
  * Tarjan's strongly connected components algorithm
  * https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
  */
-function createDAGfromGraph<T>({vertices, edges}: Graph<T>): Graph<StronglyConnectedComponent<T>> {
+function createDAGfromGraph<T>({
+  vertices,
+  edges,
+}: Graph<T>): Graph<StronglyConnectedComponent<T>> {
   let index = 0;
   const stack: T[] = [];
-  const vertexMetadata = new Map<T, TarjanVertexMetadata>([...vertices].map(vertex => [vertex, {}]));
+  const vertexMetadata = new Map<T, TarjanVertexMetadata>(
+    [...vertices].map((vertex) => [vertex, {}])
+  );
 
   const stronglyConnectedComponents = new Set<StronglyConnectedComponent<T>>();
 
@@ -182,25 +192,25 @@ function createDAGfromGraph<T>({vertices, edges}: Graph<T>): Graph<StronglyConne
       if (childData.index === undefined) {
         // Child has not yet been visited; recurse on it
         strongConnect(child);
-        vertexData.lowlink = Math.min(vertexData.lowlink, childData.lowlink!)
+        vertexData.lowlink = Math.min(vertexData.lowlink, childData.lowlink!);
       } else if (childData.onstack) {
         // Child is in stack and hence in the current SCC
         // If child is not on stack, then (vertex, child) is an edge pointing to an SCC already found and must be ignored
         // Note: The next line may look odd - but is correct.
         // It says childData.index not childData.lowlink; that is deliberate and from the original paper
-        vertexData.lowlink = Math.min(vertexData.lowlink, childData.index)
+        vertexData.lowlink = Math.min(vertexData.lowlink, childData.index);
       }
     }
-    
+
     // If vertex is a root node, pop the stack and generate an SCC
     if (vertexData.index === vertexData.lowlink) {
-      const newStronglyConnectedComponent = {nodes: new Set<T>()};
+      const newStronglyConnectedComponent = { nodes: new Set<T>() };
       let currentNode: T;
       do {
         currentNode = stack.pop()!;
         vertexMetadata.get(currentNode)!.onstack = false;
         newStronglyConnectedComponent.nodes.add(currentNode);
-      } while (currentNode !== vertex)
+      } while (currentNode !== vertex);
 
       stronglyConnectedComponents.add(newStronglyConnectedComponent);
     }
@@ -208,7 +218,10 @@ function createDAGfromGraph<T>({vertices, edges}: Graph<T>): Graph<StronglyConne
 
   // Now that all SCCs have been identified, rebuild the graph
   const vertexToSCCMap = new Map<T, StronglyConnectedComponent<T>>();
-  const sccEdges = new Map<StronglyConnectedComponent<T>, Set<StronglyConnectedComponent<T>>>();
+  const sccEdges = new Map<
+    StronglyConnectedComponent<T>,
+    Set<StronglyConnectedComponent<T>>
+  >();
 
   for (const scc of stronglyConnectedComponents) {
     for (const vertex of scc.nodes) {
@@ -220,21 +233,21 @@ function createDAGfromGraph<T>({vertices, edges}: Graph<T>): Graph<StronglyConne
     const childSCCNodes = new Set<StronglyConnectedComponent<T>>();
     for (const vertex of scc.nodes) {
       for (const childVertex of edges.get(vertex) ?? []) {
-        childSCCNodes.add(vertexToSCCMap.get(childVertex)!)
+        childSCCNodes.add(vertexToSCCMap.get(childVertex)!);
       }
     }
     sccEdges.set(scc, childSCCNodes);
   }
 
-  return { vertices: stronglyConnectedComponents, edges: sccEdges};
+  return { vertices: stronglyConnectedComponents, edges: sccEdges };
 }
 
 // This implementation assumes a directed acyclic graph (such as one produce by createDAGfromGraph),
 // and does not attempt to detect cycles
-function topologicalSort<T>({vertices, edges}: Graph<T>): T[] {
+function topologicalSort<T>({ vertices, edges }: Graph<T>): T[] {
   const sortedItems: T[] = [];
 
-  const seenNodes= new Set<T>();
+  const seenNodes = new Set<T>();
 
   function visit(node: T) {
     if (seenNodes.has(node)) {

@@ -14,7 +14,15 @@ import {
 } from "./types";
 import { Plugin } from "./plugin";
 import { Reporter } from "./reporter";
-import { makePlaceholder, findChunks, placeholderPrefix, Graph, StronglyConnectedComponent, buildTopologicallySortedChunkGraph, generateSriHashPlaceholders } from "./util";
+import {
+  makePlaceholder,
+  findChunks,
+  placeholderPrefix,
+  Graph,
+  StronglyConnectedComponent,
+  buildTopologicallySortedChunkGraph,
+  generateSriHashPlaceholders,
+} from "./util";
 
 interface StatsObjectWithIntegrity {
   integrity: string;
@@ -82,11 +90,17 @@ export class SubresourceIntegrityPlugin {
   private setup = (compilation: Compilation): void => {
     const reporter = new Reporter(compilation, thisPluginName);
     let sccChunkGraph: Graph<StronglyConnectedComponent<Chunk>> = {
-      vertices: new Set<StronglyConnectedComponent<Chunk>>(), 
-      edges: new Map<StronglyConnectedComponent<Chunk>, Set<StronglyConnectedComponent<Chunk>>>()
+      vertices: new Set<StronglyConnectedComponent<Chunk>>(),
+      edges: new Map<
+        StronglyConnectedComponent<Chunk>,
+        Set<StronglyConnectedComponent<Chunk>>
+      >(),
     };
     let sortedSccChunks: StronglyConnectedComponent<Chunk>[] = [];
-    let chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>> = new Map<Chunk, StronglyConnectedComponent<Chunk>>();
+    let chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>> = new Map<
+      Chunk,
+      StronglyConnectedComponent<Chunk>
+    >();
 
     if (
       !this.validateOptions(compilation, reporter) ||
@@ -106,12 +120,10 @@ export class SubresourceIntegrityPlugin {
     }
 
     if (this.options.lazyHashes) {
-      compilation.hooks.beforeChunkAssets.tap(
-        thisPluginName,
-        () => {
-          ([sortedSccChunks, sccChunkGraph, chunkToSccMap] = buildTopologicallySortedChunkGraph(compilation.chunks))
-        }
-      )
+      compilation.hooks.beforeChunkAssets.tap(thisPluginName, () => {
+        [sortedSccChunks, sccChunkGraph, chunkToSccMap] =
+          buildTopologicallySortedChunkGraph(compilation.chunks);
+      });
     }
 
     compilation.hooks.processAssets.tap(
@@ -185,7 +197,9 @@ export class SubresourceIntegrityPlugin {
     );
 
     mainTemplate.hooks.localVars.tap(thisPluginName, (source, chunk) => {
-      const allChunks = this.options.lazyHashes ? getDirectChildChunks(chunk) : findChunks(chunk);
+      const allChunks = this.options.lazyHashes
+        ? getDirectChildChunks(chunk)
+        : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
 
       if (Object.keys(includedChunks).length > 0) {
@@ -194,13 +208,14 @@ export class SubresourceIntegrityPlugin {
           `${sriHashVariableReference} = ` +
             JSON.stringify(
               generateSriHashPlaceholders(
-                Array.from(allChunks)
-                .filter(depChunk => 
-                  (depChunk.id !== null &&
-                  includedChunks[depChunk.id.toString()])),
-                  this.options.hashFuncNames
-                )
-              ) +
+                Array.from(allChunks).filter(
+                  (depChunk) =>
+                    depChunk.id !== null &&
+                    includedChunks[depChunk.id.toString()]
+                ),
+                this.options.hashFuncNames
+              )
+            ) +
             ";",
         ]);
       }
@@ -209,24 +224,30 @@ export class SubresourceIntegrityPlugin {
     });
 
     if (this.options.lazyHashes) {
-      JavascriptModulesPlugin.getCompilationHooks(compilation).renderChunk.tap(thisPluginName, (originalSource, {chunk}) => {
-        const childChunks = getDirectChildChunks(chunk);
+      JavascriptModulesPlugin.getCompilationHooks(compilation).renderChunk.tap(
+        thisPluginName,
+        (originalSource, { chunk }) => {
+          const childChunks = getDirectChildChunks(chunk);
 
-        if (childChunks.size === 0) {
-          return originalSource;
-        } else {
-          const newSource = new sources.ConcatSource();
+          if (childChunks.size === 0) {
+            return originalSource;
+          } else {
+            const newSource = new sources.ConcatSource();
 
-          newSource.add(`Object.assign(${
-            sriHashVariableReference
-          }, ${
-            JSON.stringify(generateSriHashPlaceholders(childChunks, this.options.hashFuncNames))
-          });`)
+            newSource.add(
+              `Object.assign(${sriHashVariableReference}, ${JSON.stringify(
+                generateSriHashPlaceholders(
+                  childChunks,
+                  this.options.hashFuncNames
+                )
+              )});`
+            );
 
-          newSource.add(originalSource);
-          return newSource;
+            newSource.add(originalSource);
+            return newSource;
+          }
         }
-      })
+      );
     }
 
     function getDirectChildChunks(chunk: Chunk) {
@@ -236,7 +257,6 @@ export class SubresourceIntegrityPlugin {
         // This is a bug if this happens
         return childChunks;
       }
-
 
       for (const childScc of sccChunkGraph.edges.get(chunkScc) ?? []) {
         for (const childChunk of childScc.nodes) {
