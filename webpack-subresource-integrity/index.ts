@@ -6,20 +6,22 @@
  */
 
 import { createHash } from "crypto";
-import type { Chunk, Compiler, Compilation, sources } from "webpack";
+import type { Chunk, Compiler, Compilation } from "webpack";
+import { JavascriptModulesPlugin, sources } from "webpack";
 import {
   SubresourceIntegrityPluginResolvedOptions,
   getHtmlWebpackPluginHooksType,
 } from "./types";
 import { Plugin } from "./plugin";
 import { Reporter } from "./reporter";
-import { makePlaceholder, findChunks, placeholderPrefix } from "./util";
+import { makePlaceholder, findChunks, placeholderPrefix, Graph, StronglyConnectedComponent, buildTopologicallySortedChunkGraph, generateSriHashPlaceholders } from "./util";
 
 interface StatsObjectWithIntegrity {
   integrity: string;
 }
 
 const thisPluginName = "webpack-subresource-integrity";
+const sriHashVariableReference = "__webpack_require__.sriHashes";
 
 // https://www.w3.org/TR/2016/REC-SRI-20160623/#cryptographic-hash-functions
 const standardHashFuncNames = ["sha256", "sha384", "sha512"];
@@ -32,6 +34,7 @@ let getHtmlWebpackPluginHooks: getHtmlWebpackPluginHooksType | null = null;
 export interface SubresourceIntegrityPluginOptions {
   readonly hashFuncNames?: [string, ...string[]];
   readonly enabled?: "auto" | true | false;
+  readonly lazyHashes?: boolean;
 }
 
 /**
@@ -57,6 +60,7 @@ export class SubresourceIntegrityPlugin {
     this.options = {
       hashFuncNames: ["sha384"],
       enabled: "auto",
+      lazyHashes: false,
       ...options,
     };
   }
@@ -77,6 +81,12 @@ export class SubresourceIntegrityPlugin {
    */
   private setup = (compilation: Compilation): void => {
     const reporter = new Reporter(compilation, thisPluginName);
+    let sccChunkGraph: Graph<StronglyConnectedComponent<Chunk>> = {
+      vertices: new Set<StronglyConnectedComponent<Chunk>>(), 
+      edges: new Map<StronglyConnectedComponent<Chunk>, Set<StronglyConnectedComponent<Chunk>>>()
+    };
+    let sortedSccChunks: StronglyConnectedComponent<Chunk>[] = [];
+    let chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>> = new Map<Chunk, StronglyConnectedComponent<Chunk>>();
 
     if (
       !this.validateOptions(compilation, reporter) ||
@@ -93,6 +103,15 @@ export class SubresourceIntegrityPlugin {
     ) {
       reporter.warnOnce("This plugin is not useful for non-web targets.");
       return;
+    }
+
+    if (this.options.lazyHashes) {
+      compilation.hooks.beforeChunkAssets.tap(
+        thisPluginName,
+        () => {
+          ([sortedSccChunks, sccChunkGraph, chunkToSccMap] = buildTopologicallySortedChunkGraph(compilation.chunks))
+        }
+      )
     }
 
     compilation.hooks.processAssets.tap(
@@ -166,33 +185,67 @@ export class SubresourceIntegrityPlugin {
     );
 
     mainTemplate.hooks.localVars.tap(thisPluginName, (source, chunk) => {
-      const allChunks = findChunks(chunk);
+      const allChunks = this.options.lazyHashes ? getDirectChildChunks(chunk) : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
 
       if (Object.keys(includedChunks).length > 0) {
         return compilation.compiler.webpack.Template.asString([
           source,
-          "__webpack_require__.sriHashes = " +
+          `${sriHashVariableReference} = ` +
             JSON.stringify(
-              Array.from(allChunks).reduce((sriHashes, depChunk: Chunk) => {
-                if (
-                  depChunk.id !== null &&
-                  includedChunks[depChunk.id.toString()]
-                ) {
-                  sriHashes[depChunk.id] = makePlaceholder(
-                    this.options.hashFuncNames,
-                    depChunk.id
-                  );
-                }
-                return sriHashes;
-              }, {} as { [key: string]: string })
-            ) +
+              generateSriHashPlaceholders(
+                Array.from(allChunks)
+                .filter(depChunk => 
+                  (depChunk.id !== null &&
+                  includedChunks[depChunk.id.toString()])),
+                  this.options.hashFuncNames
+                )
+              ) +
             ";",
         ]);
       }
 
       return source;
     });
+
+    if (this.options.lazyHashes) {
+      JavascriptModulesPlugin.getCompilationHooks(compilation).renderChunk.tap(thisPluginName, (originalSource, {chunk}) => {
+        const childChunks = getDirectChildChunks(chunk);
+
+        if (childChunks.size === 0) {
+          return originalSource;
+        } else {
+          const newSource = new sources.ConcatSource();
+
+          newSource.add(`Object.assign(${
+            sriHashVariableReference
+          }, ${
+            JSON.stringify(generateSriHashPlaceholders(childChunks, this.options.hashFuncNames))
+          });`)
+
+          newSource.add(originalSource);
+          return newSource;
+        }
+      })
+    }
+
+    function getDirectChildChunks(chunk: Chunk) {
+      const chunkScc = chunkToSccMap.get(chunk);
+      const childChunks = new Set<Chunk>();
+      if (!chunkScc) {
+        // This is a bug if this happens
+        return childChunks;
+      }
+
+
+      for (const childScc of sccChunkGraph.edges.get(chunkScc) ?? []) {
+        for (const childChunk of childScc.nodes) {
+          childChunks.add(childChunk);
+        }
+      }
+
+      return childChunks;
+    }
   };
 
   /**

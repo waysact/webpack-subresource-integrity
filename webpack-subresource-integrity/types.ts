@@ -12,4 +12,5 @@ export type getHtmlWebpackPluginHooksType = (
 export interface SubresourceIntegrityPluginResolvedOptions {
   readonly hashFuncNames: [string, ...string[]];
   readonly enabled: "auto" | true | false;
+  readonly lazyHashes: boolean;
 }
