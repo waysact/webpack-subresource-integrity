@@ -136,12 +136,9 @@ export function buildTopologicallySortedChunkGraph(
   const dag = createDAGfromGraph({ vertices, edges });
 
   const sortedVertices = topologicalSort(dag);
-  const chunkToSccMap = new Map<Chunk, StronglyConnectedComponent<Chunk>>();
-  for (const scc of dag.vertices) {
-    for (const chunk of scc.nodes) {
-      chunkToSccMap.set(chunk, scc);
-    }
-  }
+  const chunkToSccMap = new Map<Chunk, StronglyConnectedComponent<Chunk>>(
+    [...dag.vertices].flatMap((scc) => [...scc.nodes].map(chunk => [chunk, scc]))
+  );
 
   return [sortedVertices, dag, chunkToSccMap];
 }

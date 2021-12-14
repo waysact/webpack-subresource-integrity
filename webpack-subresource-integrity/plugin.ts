@@ -21,6 +21,9 @@ import {
   normalizePath,
   getTagSrc,
   notNil,
+  buildTopologicallySortedChunkGraph,
+  Graph,
+  StronglyConnectedComponent,
 } from "./util";
 
 type AssetType = "js" | "css";
@@ -81,6 +84,28 @@ export class Plugin {
    * @internal
    */
   private hwpPublicPath: string | null = null;
+
+  /**
+   * @internal
+   */
+  private sccChunkGraph: Graph<StronglyConnectedComponent<Chunk>> = {
+    vertices: new Set<StronglyConnectedComponent<Chunk>>(),
+    edges: new Map<
+      StronglyConnectedComponent<Chunk>,
+      Set<StronglyConnectedComponent<Chunk>>
+    >(),
+  };
+
+  /**
+   * @internal
+   */
+  private sortedSccChunks: StronglyConnectedComponent<Chunk>[] = [];
+
+  /**
+   * @internal
+   */
+  private chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>> =
+    new Map<Chunk, StronglyConnectedComponent<Chunk>>();
 
   public constructor(
     compilation: Compilation,
@@ -343,6 +368,34 @@ more information."
       this.compilation.compiler.options.output.crossOriginLoading ||
       "anonymous";
   };
+
+  /**
+   * @internal
+   */
+  beforeChunkAssets = () => {
+    const [sortedSccChunks, sccChunkGraph, chunkToSccMap] =
+      buildTopologicallySortedChunkGraph(this.compilation.chunks);
+    this.sortedSccChunks = sortedSccChunks;
+    this.sccChunkGraph = sccChunkGraph;
+    this.chunkToSccMap = chunkToSccMap;
+  };
+
+  getDirectChildChunks(chunk: Chunk): Set<Chunk> {
+    const chunkScc = this.chunkToSccMap.get(chunk);
+    const childChunks = new Set<Chunk>();
+    if (!chunkScc) {
+      // This is a bug if this happens
+      return childChunks;
+    }
+
+    for (const childScc of this.sccChunkGraph.edges.get(chunkScc) ?? []) {
+      for (const childChunk of childScc.nodes) {
+        childChunks.add(childChunk);
+      }
+    }
+
+    return childChunks;
+  }
 
   handleHwpPluginArgs = ({ assets }: { assets: HWPAssets }): void => {
     this.hwpPublicPath = assets.publicPath;

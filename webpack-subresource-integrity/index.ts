@@ -89,18 +89,6 @@ export class SubresourceIntegrityPlugin {
    */
   private setup = (compilation: Compilation): void => {
     const reporter = new Reporter(compilation, thisPluginName);
-    let sccChunkGraph: Graph<StronglyConnectedComponent<Chunk>> = {
-      vertices: new Set<StronglyConnectedComponent<Chunk>>(),
-      edges: new Map<
-        StronglyConnectedComponent<Chunk>,
-        Set<StronglyConnectedComponent<Chunk>>
-      >(),
-    };
-    let sortedSccChunks: StronglyConnectedComponent<Chunk>[] = [];
-    let chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>> = new Map<
-      Chunk,
-      StronglyConnectedComponent<Chunk>
-    >();
 
     if (
       !this.validateOptions(compilation, reporter) ||
@@ -121,8 +109,7 @@ export class SubresourceIntegrityPlugin {
 
     if (this.options.lazyHashes) {
       compilation.hooks.beforeChunkAssets.tap(thisPluginName, () => {
-        [sortedSccChunks, sccChunkGraph, chunkToSccMap] =
-          buildTopologicallySortedChunkGraph(compilation.chunks);
+        plugin.beforeChunkAssets();
       });
     }
 
@@ -198,7 +185,7 @@ export class SubresourceIntegrityPlugin {
 
     mainTemplate.hooks.localVars.tap(thisPluginName, (source, chunk) => {
       const allChunks = this.options.lazyHashes
-        ? getDirectChildChunks(chunk)
+        ? plugin.getDirectChildChunks(chunk)
         : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
 
@@ -227,7 +214,7 @@ export class SubresourceIntegrityPlugin {
       JavascriptModulesPlugin.getCompilationHooks(compilation).renderChunk.tap(
         thisPluginName,
         (originalSource, { chunk }) => {
-          const childChunks = getDirectChildChunks(chunk);
+          const childChunks = plugin.getDirectChildChunks(chunk);
 
           if (childChunks.size === 0) {
             return originalSource;
@@ -248,23 +235,6 @@ export class SubresourceIntegrityPlugin {
           }
         }
       );
-    }
-
-    function getDirectChildChunks(chunk: Chunk) {
-      const chunkScc = chunkToSccMap.get(chunk);
-      const childChunks = new Set<Chunk>();
-      if (!chunkScc) {
-        // This is a bug if this happens
-        return childChunks;
-      }
-
-      for (const childScc of sccChunkGraph.edges.get(chunkScc) ?? []) {
-        for (const childChunk of childScc.nodes) {
-          childChunks.add(childChunk);
-        }
-      }
-
-      return childChunks;
     }
   };
 
