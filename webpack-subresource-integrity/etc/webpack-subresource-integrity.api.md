@@ -11,7 +11,7 @@ export class SubresourceIntegrityPlugin {
     constructor(options?: SubresourceIntegrityPluginOptions);
     // (undocumented)
     apply(compiler: Compiler): void;
-    }
+}
 
 // @public (undocumented)
 export interface SubresourceIntegrityPluginOptions {
@@ -19,8 +19,9 @@ export interface SubresourceIntegrityPluginOptions {
     readonly enabled?: "auto" | true | false;
     // (undocumented)
     readonly hashFuncNames?: [string, ...string[]];
+    // (undocumented)
+    readonly lazyHashes?: boolean;
 }
-
 
 // (No @packageDocumentation comment for this package)
 
