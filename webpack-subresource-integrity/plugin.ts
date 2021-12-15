@@ -125,7 +125,9 @@ export class Plugin {
     this.compilation = compilation;
     this.options = options;
     this.reporter = reporter;
-    this.sriHashVariableReference = `${this.compilation.outputOptions.globalObject || 'self'}.sriHashes`
+    this.sriHashVariableReference = `${
+      this.compilation.outputOptions.globalObject || "self"
+    }.sriHashes`;
   }
 
   /**

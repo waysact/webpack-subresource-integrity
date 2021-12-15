@@ -181,7 +181,7 @@ export class SubresourceIntegrityPlugin {
         ? plugin.getDirectChildChunks(chunk)
         : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
-      
+
       if (Object.keys(includedChunks).length > 0) {
         return compilation.compiler.webpack.Template.asString([
           source,

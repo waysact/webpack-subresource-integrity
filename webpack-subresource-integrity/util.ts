@@ -12,7 +12,6 @@ import { HtmlTagObject } from "./types";
 
 type ChunkGroup = ReturnType<Compilation["addChunkInGroup"]>;
 
-
 export function getTagSrc(tag: HtmlTagObject): string | undefined {
   if (!["script", "link"].includes(tag.tagName) || !tag.attributes) {
     return undefined;
@@ -117,7 +116,7 @@ export function buildTopologicallySortedChunkGraph(
   const queue = [...chunks];
   const vertices = new Set<Chunk>();
   const edges = new Map<Chunk, Set<Chunk>>();
-  
+
   while (queue.length) {
     const vertex = queue.pop()!;
     if (vertices.has(vertex)) {
@@ -267,7 +266,7 @@ function topologicalSort<T>({ vertices, edges }: Graph<T>): T[] {
 
     sortedItems.push(node);
   }
-  
+
   for (const vertex of vertices) {
     visit(vertex);
   }
