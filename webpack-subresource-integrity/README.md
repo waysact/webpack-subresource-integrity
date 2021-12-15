@@ -172,6 +172,18 @@ One of `"auto"`, `true`, or `false`.
 mode](https://webpack.js.org/configuration/mode/) is `production` or
 `none` and disable it when it is `development`.
 
+#### lazyHashes
+
+Default value: `false`
+
+A boolen used to control where the integrity hashes will be defined.
+
+`false` means that integrity hashes for all assets will be defined in the entry chunk.
+
+`true` means that integrity hashes for any given asset will be defined in its direct parents 
+in the chunk graph. This can lead to duplication of hashes across assets, but can significantly
+reduce the size of your entry chunk(s) if you have a large number of async chunks.
+
 ## Exporting `integrity` values
 
 You might want to export generated integrity hashes, perhaps for use
