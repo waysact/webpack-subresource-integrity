@@ -6,7 +6,7 @@
  */
 
 import { createHash } from "crypto";
-import type { Chunk, Compiler, Compilation } from "webpack";
+import type { Compiler, Compilation } from "webpack";
 import { javascript, sources } from "webpack";
 import {
   SubresourceIntegrityPluginResolvedOptions,
@@ -212,7 +212,6 @@ export class SubresourceIntegrityPlugin {
         if (childChunks.size === 0 || chunk.hasRuntime()) {
           return originalSource;
         } else {
-          debugger;
           const newSource = new sources.ConcatSource();
 
           newSource.add(

@@ -8,7 +8,7 @@
 import { createHash } from "crypto";
 import type { Chunk, Compilation } from "webpack";
 import { sep } from "path";
-import { HtmlTagObject } from "./types";
+import type { HtmlTagObject, Graph, StronglyConnectedComponent } from "./types";
 
 type ChunkGroup = ReturnType<Compilation["addChunkInGroup"]>;
 
@@ -92,63 +92,13 @@ export function notNil<TValue>(
 export function generateSriHashPlaceholders(
   chunks: Iterable<Chunk>,
   hashFuncNames: [string, ...string[]]
-) {
+): Record<string, string> {
   return Array.from(chunks).reduce((sriHashes, depChunk: Chunk) => {
     if (depChunk.id) {
       sriHashes[depChunk.id] = makePlaceholder(hashFuncNames, depChunk.id);
     }
     return sriHashes;
   }, {} as { [key: string]: string });
-}
-
-export interface Graph<T> {
-  vertices: Set<T>;
-  edges: Map<T, Set<T>>;
-}
-
-export function buildTopologicallySortedChunkGraph(
-  chunks: Iterable<Chunk>
-): [
-  sortedVertices: StronglyConnectedComponent<Chunk>[],
-  sccGraph: Graph<StronglyConnectedComponent<Chunk>>,
-  chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>>
-] {
-  const queue = [...chunks];
-  const vertices = new Set<Chunk>();
-  const edges = new Map<Chunk, Set<Chunk>>();
-
-  while (queue.length) {
-    const vertex = queue.pop()!;
-    if (vertices.has(vertex)) {
-      continue;
-    }
-    vertices.add(vertex);
-    edges.set(vertex, new Set<Chunk>());
-    for (const vertexGroup of vertex.groupsIterable) {
-      for (const childGroup of vertexGroup.childrenIterable) {
-        for (const childChunk of childGroup.chunks) {
-          edges.get(vertex)?.add(childChunk);
-          if (!vertices.has(childChunk)) {
-            queue.push(childChunk);
-          }
-        }
-      }
-    }
-  }
-
-  const dag = createDAGfromGraph({ vertices, edges });
-  const sortedVertices = topologicalSort(dag);
-  const chunkToSccMap = new Map<Chunk, StronglyConnectedComponent<Chunk>>(
-    [...dag.vertices].flatMap((scc) =>
-      [...scc.nodes].map((chunk) => [chunk, scc])
-    )
-  );
-
-  return [sortedVertices, dag, chunkToSccMap];
-}
-
-export interface StronglyConnectedComponent<T> {
-  nodes: Set<T>;
 }
 
 interface TarjanVertexMetadata {
@@ -172,12 +122,6 @@ function createDAGfromGraph<T>({
   );
 
   const stronglyConnectedComponents = new Set<StronglyConnectedComponent<T>>();
-
-  for (const vertex of vertices) {
-    if (vertexMetadata.get(vertex)!.index === undefined) {
-      strongConnect(vertex);
-    }
-  }
 
   function strongConnect(vertex: T) {
     // Set the depth index for v to the smallest unused index
@@ -214,6 +158,12 @@ function createDAGfromGraph<T>({
       } while (currentNode !== vertex);
 
       stronglyConnectedComponents.add(newStronglyConnectedComponent);
+    }
+  }
+
+  for (const vertex of vertices) {
+    if (vertexMetadata.get(vertex)!.index === undefined) {
+      strongConnect(vertex);
     }
   }
 
@@ -272,4 +222,45 @@ function topologicalSort<T>({ vertices, edges }: Graph<T>): T[] {
   }
 
   return sortedItems;
+}
+
+export function buildTopologicallySortedChunkGraph(
+  chunks: Iterable<Chunk>
+): [
+  sortedVertices: StronglyConnectedComponent<Chunk>[],
+  sccGraph: Graph<StronglyConnectedComponent<Chunk>>,
+  chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>>
+] {
+  const queue = [...chunks];
+  const vertices = new Set<Chunk>();
+  const edges = new Map<Chunk, Set<Chunk>>();
+
+  while (queue.length) {
+    const vertex = queue.pop()!;
+    if (vertices.has(vertex)) {
+      continue;
+    }
+    vertices.add(vertex);
+    edges.set(vertex, new Set<Chunk>());
+    for (const vertexGroup of vertex.groupsIterable) {
+      for (const childGroup of vertexGroup.childrenIterable) {
+        for (const childChunk of childGroup.chunks) {
+          edges.get(vertex)?.add(childChunk);
+          if (!vertices.has(childChunk)) {
+            queue.push(childChunk);
+          }
+        }
+      }
+    }
+  }
+
+  const dag = createDAGfromGraph({ vertices, edges });
+  const sortedVertices = topologicalSort(dag);
+  const chunkToSccMap = new Map<Chunk, StronglyConnectedComponent<Chunk>>(
+    [...dag.vertices].flatMap((scc) =>
+      [...scc.nodes].map((chunk) => [chunk, scc])
+    )
+  );
+
+  return [sortedVertices, dag, chunkToSccMap];
 }

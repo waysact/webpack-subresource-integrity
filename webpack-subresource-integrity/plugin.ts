@@ -12,6 +12,8 @@ import * as assert from "typed-assert";
 import {
   HtmlTagObject,
   SubresourceIntegrityPluginResolvedOptions,
+  Graph,
+  StronglyConnectedComponent,
 } from "./types";
 import { Reporter } from "./reporter";
 import {
@@ -22,8 +24,6 @@ import {
   getTagSrc,
   notNil,
   buildTopologicallySortedChunkGraph,
-  Graph,
-  StronglyConnectedComponent,
 } from "./util";
 
 type AssetType = "js" | "css";
@@ -396,7 +396,7 @@ more information."
   /**
    * @internal
    */
-  beforeRuntimeRequirements = () => {
+  beforeRuntimeRequirements = (): void => {
     if (this.options.lazyHashes) {
       const [sortedSccChunks, sccChunkGraph, chunkToSccMap] =
         buildTopologicallySortedChunkGraph(this.compilation.chunks);

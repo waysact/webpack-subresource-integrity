@@ -14,3 +14,12 @@ export interface SubresourceIntegrityPluginResolvedOptions {
   readonly enabled: "auto" | true | false;
   readonly lazyHashes: boolean;
 }
+
+export interface Graph<T> {
+  vertices: Set<T>;
+  edges: Map<T, Set<T>>;
+}
+
+export interface StronglyConnectedComponent<T> {
+  nodes: Set<T>;
+}
