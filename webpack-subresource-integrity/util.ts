@@ -12,6 +12,7 @@ import { HtmlTagObject } from "./types";
 
 type ChunkGroup = ReturnType<Compilation["addChunkInGroup"]>;
 
+
 export function getTagSrc(tag: HtmlTagObject): string | undefined {
   if (!["script", "link"].includes(tag.tagName) || !tag.attributes) {
     return undefined;
@@ -116,9 +117,12 @@ export function buildTopologicallySortedChunkGraph(
   const queue = [...chunks];
   const vertices = new Set<Chunk>();
   const edges = new Map<Chunk, Set<Chunk>>();
-
+  
   while (queue.length) {
     const vertex = queue.pop()!;
+    if (vertices.has(vertex)) {
+      continue;
+    }
     vertices.add(vertex);
     edges.set(vertex, new Set<Chunk>());
     for (const vertexGroup of vertex.groupsIterable) {
@@ -134,10 +138,11 @@ export function buildTopologicallySortedChunkGraph(
   }
 
   const dag = createDAGfromGraph({ vertices, edges });
-
   const sortedVertices = topologicalSort(dag);
   const chunkToSccMap = new Map<Chunk, StronglyConnectedComponent<Chunk>>(
-    [...dag.vertices].flatMap((scc) => [...scc.nodes].map(chunk => [chunk, scc]))
+    [...dag.vertices].flatMap((scc) =>
+      [...scc.nodes].map((chunk) => [chunk, scc])
+    )
   );
 
   return [sortedVertices, dag, chunkToSccMap];
@@ -230,7 +235,10 @@ function createDAGfromGraph<T>({
     const childSCCNodes = new Set<StronglyConnectedComponent<T>>();
     for (const vertex of scc.nodes) {
       for (const childVertex of edges.get(vertex) ?? []) {
-        childSCCNodes.add(vertexToSCCMap.get(childVertex)!);
+        const childScc = vertexToSCCMap.get(childVertex);
+        if (childScc && childScc !== scc) {
+          childSCCNodes.add(childScc);
+        }
       }
     }
     sccEdges.set(scc, childSCCNodes);
@@ -258,6 +266,10 @@ function topologicalSort<T>({ vertices, edges }: Graph<T>): T[] {
     }
 
     sortedItems.push(node);
+  }
+  
+  for (const vertex of vertices) {
+    visit(vertex);
   }
 
   return sortedItems;

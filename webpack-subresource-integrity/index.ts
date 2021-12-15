@@ -7,7 +7,7 @@
 
 import { createHash } from "crypto";
 import type { Chunk, Compiler, Compilation } from "webpack";
-import { JavascriptModulesPlugin, sources } from "webpack";
+import { javascript, sources } from "webpack";
 import {
   SubresourceIntegrityPluginResolvedOptions,
   getHtmlWebpackPluginHooksType,
@@ -15,12 +15,8 @@ import {
 import { Plugin } from "./plugin";
 import { Reporter } from "./reporter";
 import {
-  makePlaceholder,
   findChunks,
   placeholderPrefix,
-  Graph,
-  StronglyConnectedComponent,
-  buildTopologicallySortedChunkGraph,
   generateSriHashPlaceholders,
 } from "./util";
 
@@ -29,7 +25,6 @@ interface StatsObjectWithIntegrity {
 }
 
 const thisPluginName = "webpack-subresource-integrity";
-const sriHashVariableReference = "__webpack_require__.sriHashes";
 
 // https://www.w3.org/TR/2016/REC-SRI-20160623/#cryptographic-hash-functions
 const standardHashFuncNames = ["sha256", "sha384", "sha512"];
@@ -107,11 +102,9 @@ export class SubresourceIntegrityPlugin {
       return;
     }
 
-    if (this.options.lazyHashes) {
-      compilation.hooks.beforeChunkAssets.tap(thisPluginName, () => {
-        plugin.beforeChunkAssets();
-      });
-    }
+    compilation.hooks.beforeRuntimeRequirements.tap(thisPluginName, () => {
+      plugin.beforeRuntimeRequirements();
+    });
 
     compilation.hooks.processAssets.tap(
       {
@@ -188,11 +181,11 @@ export class SubresourceIntegrityPlugin {
         ? plugin.getDirectChildChunks(chunk)
         : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
-
+      
       if (Object.keys(includedChunks).length > 0) {
         return compilation.compiler.webpack.Template.asString([
           source,
-          `${sriHashVariableReference} = ` +
+          `${plugin.sriHashVariableReference} = ` +
             JSON.stringify(
               generateSriHashPlaceholders(
                 Array.from(allChunks).filter(
@@ -211,30 +204,30 @@ export class SubresourceIntegrityPlugin {
     });
 
     if (this.options.lazyHashes) {
-      JavascriptModulesPlugin.getCompilationHooks(compilation).renderChunk.tap(
-        thisPluginName,
-        (originalSource, { chunk }) => {
-          const childChunks = plugin.getDirectChildChunks(chunk);
+      javascript.JavascriptModulesPlugin.getCompilationHooks(
+        compilation
+      ).renderContent.tap(thisPluginName, (originalSource, { chunk }) => {
+        const childChunks = plugin.getDirectChildChunks(chunk);
 
-          if (childChunks.size === 0) {
-            return originalSource;
-          } else {
-            const newSource = new sources.ConcatSource();
+        if (childChunks.size === 0 || chunk.hasRuntime()) {
+          return originalSource;
+        } else {
+          debugger;
+          const newSource = new sources.ConcatSource();
 
-            newSource.add(
-              `Object.assign(${sriHashVariableReference}, ${JSON.stringify(
-                generateSriHashPlaceholders(
-                  childChunks,
-                  this.options.hashFuncNames
-                )
-              )});`
-            );
+          newSource.add(
+            `Object.assign(${plugin.sriHashVariableReference}, ${JSON.stringify(
+              generateSriHashPlaceholders(
+                childChunks,
+                this.options.hashFuncNames
+              )
+            )});`
+          );
+          newSource.add(originalSource);
 
-            newSource.add(originalSource);
-            return newSource;
-          }
+          return newSource;
         }
-      );
+      });
     }
   };
 

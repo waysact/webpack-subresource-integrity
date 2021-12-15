@@ -107,6 +107,16 @@ export class Plugin {
   private chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>> =
     new Map<Chunk, StronglyConnectedComponent<Chunk>>();
 
+  /**
+   * @internal
+   */
+  private hashByChunkId = new Map<string | number, string>();
+
+  /**
+   * @internal
+   */
+  public readonly sriHashVariableReference: string;
+
   public constructor(
     compilation: Compilation,
     options: SubresourceIntegrityPluginResolvedOptions,
@@ -115,6 +125,7 @@ export class Plugin {
     this.compilation = compilation;
     this.options = options;
     this.reporter = reporter;
+    this.sriHashVariableReference = `${this.compilation.outputOptions.globalObject || 'self'}.sriHashes`
   }
 
   /**
@@ -221,60 +232,63 @@ more information."
     chunk: Chunk,
     assets: Record<string, sources.Source>
   ): void => {
-    const hashByChunkId = new Map<string | number, string>();
-
     Array.from(findChunks(chunk))
       .reverse()
-      .forEach((childChunk: Chunk) => {
-        const files = Array.from(childChunk.files);
+      .forEach((chunk) => this.processChunkAssets(chunk, assets));
+  };
 
-        files.forEach((sourcePath) => {
-          if (assets[sourcePath]) {
-            this.warnIfHotUpdate(assets[sourcePath].source());
-            const newAsset = this.replaceAsset(
-              this.compilation.compiler,
-              assets,
-              hashByChunkId,
-              sourcePath
-            );
-            const integrity = computeIntegrity(
-              this.options.hashFuncNames,
-              newAsset.source()
-            );
+  private processChunkAssets = (
+    childChunk: Chunk,
+    assets: Record<string, sources.Source>
+  ) => {
+    const files = Array.from(childChunk.files);
 
-            if (childChunk.id !== null) {
-              hashByChunkId.set(childChunk.id, integrity);
+    files.forEach((sourcePath) => {
+      if (assets[sourcePath]) {
+        this.warnIfHotUpdate(assets[sourcePath].source());
+        const newAsset = this.replaceAsset(
+          this.compilation.compiler,
+          assets,
+          this.hashByChunkId,
+          sourcePath
+        );
+        const integrity = computeIntegrity(
+          this.options.hashFuncNames,
+          newAsset.source()
+        );
+
+        if (childChunk.id !== null) {
+          this.hashByChunkId.set(childChunk.id, integrity);
+        }
+        this.updateAssetIntegrity(sourcePath, integrity);
+        this.compilation.updateAsset(
+          sourcePath,
+          (x) => x,
+          (assetInfo) => {
+            if (!assetInfo) {
+              return undefined;
             }
-            this.updateAssetIntegrity(sourcePath, integrity);
-            this.compilation.updateAsset(
-              sourcePath,
-              (x) => x,
-              (assetInfo) => {
-                if (!assetInfo) {
-                  return undefined;
-                }
 
-                this.warnAboutLongTermCaching(assetInfo);
+            this.warnAboutLongTermCaching(assetInfo);
 
-                return {
-                  ...assetInfo,
-                  contenthash: Array.isArray(assetInfo.contenthash)
-                    ? [...new Set([...assetInfo.contenthash, integrity])]
-                    : assetInfo.contenthash
-                    ? [assetInfo.contenthash, integrity]
-                    : integrity,
-                };
-              }
-            );
-          } else {
-            this.reporter.warnOnce(
-              `No asset found for source path '${sourcePath}', options are ${Object.keys(
-                assets
-              ).join(", ")}`
-            );
+            return {
+              ...assetInfo,
+              contenthash: Array.isArray(assetInfo.contenthash)
+                ? [...new Set([...assetInfo.contenthash, integrity])]
+                : assetInfo.contenthash
+                ? [assetInfo.contenthash, integrity]
+                : integrity,
+            };
           }
-        });
-      });
+        );
+      } else {
+        this.reporter.warnOnce(
+          `No asset found for source path '${sourcePath}', options are ${Object.keys(
+            assets
+          ).join(", ")}`
+        );
+      }
+    });
   };
 
   /**
@@ -289,7 +303,7 @@ more information."
 
     return this.compilation.compiler.webpack.Template.asString([
       source,
-      elName + ".integrity = __webpack_require__.sriHashes[chunkId];",
+      elName + `.integrity = ${this.sriHashVariableReference}[chunkId];`,
       elName +
         ".crossOrigin = " +
         JSON.stringify(this.compilation.outputOptions.crossOriginLoading) +
@@ -301,11 +315,19 @@ more information."
    * @internal
    */
   processAssets = (assets: Record<string, sources.Source>): void => {
-    Array.from(this.compilation.chunks)
-      .filter((chunk) => chunk.hasRuntime())
-      .forEach((chunk) => {
-        this.processChunk(chunk, assets);
-      });
+    if (this.options.lazyHashes) {
+      for (const scc of this.sortedSccChunks) {
+        for (const chunk of scc.nodes) {
+          this.processChunkAssets(chunk, assets);
+        }
+      }
+    } else {
+      Array.from(this.compilation.chunks)
+        .filter((chunk) => chunk.hasRuntime())
+        .forEach((chunk) => {
+          this.processChunk(chunk, assets);
+        });
+    }
 
     this.addMissingIntegrityHashes(assets);
   };
@@ -372,12 +394,15 @@ more information."
   /**
    * @internal
    */
-  beforeChunkAssets = () => {
-    const [sortedSccChunks, sccChunkGraph, chunkToSccMap] =
-      buildTopologicallySortedChunkGraph(this.compilation.chunks);
-    this.sortedSccChunks = sortedSccChunks;
-    this.sccChunkGraph = sccChunkGraph;
-    this.chunkToSccMap = chunkToSccMap;
+  beforeRuntimeRequirements = () => {
+    if (this.options.lazyHashes) {
+      const [sortedSccChunks, sccChunkGraph, chunkToSccMap] =
+        buildTopologicallySortedChunkGraph(this.compilation.chunks);
+      this.sortedSccChunks = sortedSccChunks;
+      this.sccChunkGraph = sccChunkGraph;
+      this.chunkToSccMap = chunkToSccMap;
+    }
+    this.hashByChunkId.clear();
   };
 
   getDirectChildChunks(chunk: Chunk): Set<Chunk> {
