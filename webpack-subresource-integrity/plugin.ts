@@ -408,16 +408,23 @@ more information."
   };
 
   getDirectChildChunks(chunk: Chunk): Set<Chunk> {
-    const chunkScc = this.chunkToSccMap.get(chunk);
     const childChunks = new Set<Chunk>();
-    if (!chunkScc) {
-      // This is a bug if this happens
-      return childChunks;
-    }
+    const chunkSCC = this.chunkToSccMap.get(chunk);
+    debugger;
 
-    for (const childScc of this.sccChunkGraph.edges.get(chunkScc) ?? []) {
-      for (const childChunk of childScc.nodes) {
-        childChunks.add(childChunk);
+    for (const chunkGroup of chunk.groupsIterable) {
+      for (const childGroup of chunkGroup.childrenIterable) {
+        for (const childChunk of childGroup.chunks) {
+          const childChunkSCC = this.chunkToSccMap.get(childChunk);
+          if (childChunkSCC === chunkSCC) {
+            // Don't include your own SCC.
+            // Your parent will have the hashes for your SCC siblings
+            continue;
+          }
+          for (const childChunkSccNode of childChunkSCC?.nodes ?? []) {
+            childChunks.add(childChunkSccNode)
+          }
+        }
       }
     }
 
