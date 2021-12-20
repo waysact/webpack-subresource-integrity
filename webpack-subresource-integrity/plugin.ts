@@ -410,7 +410,6 @@ more information."
   getDirectChildChunks(chunk: Chunk): Set<Chunk> {
     const childChunks = new Set<Chunk>();
     const chunkSCC = this.chunkToSccMap.get(chunk);
-    debugger;
 
     for (const chunkGroup of chunk.groupsIterable) {
       for (const childGroup of chunkGroup.childrenIterable) {
@@ -422,7 +421,7 @@ more information."
             continue;
           }
           for (const childChunkSccNode of childChunkSCC?.nodes ?? []) {
-            childChunks.add(childChunkSccNode)
+            childChunks.add(childChunkSccNode);
           }
         }
       }

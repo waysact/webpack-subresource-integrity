@@ -1,3 +1,3 @@
 export default {
-    chunk: 'leaf'
+  chunk: "leaf",
 };

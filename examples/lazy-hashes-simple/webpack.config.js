@@ -14,7 +14,7 @@ module.exports = {
   plugins: [
     new SubresourceIntegrityPlugin({
       enabled: true,
-      lazyHashes: true
+      lazyHashes: true,
     }),
     new HtmlWebpackPlugin(),
     {
@@ -30,23 +30,31 @@ module.exports = {
           }
           function getSriHashes(chunkName, isEntry) {
             const fileContent = readFileSync(
-              join(__dirname, 'dist', `${chunkName}.js`),
+              join(__dirname, "dist", `${chunkName}.js`),
               "utf-8"
             );
-            const sriRegex = new RegExp(`${isEntry ? 'self.sriHashes=' : 'Object.assign\\(self.sriHashes,'}(?<sriHashJson>\{.*?\})`)
+            const sriRegex = new RegExp(
+              `${
+                isEntry ? "self.sriHashes=" : "Object.assign\\(self.sriHashes,"
+              }(?<sriHashJson>\{.*?\})`
+            );
             const sriHashJson = sriRegex.exec(fileContent)?.groups?.sriHashJson;
             if (!sriHashJson) {
               return null;
             }
             try {
               // The hashes are not *strict* JSON, since they can have numerical keys
-              return JSON.parse(sriHashJson.replace(/\d+(?=:)/g, num => `"${num}"`));
+              return JSON.parse(
+                sriHashJson.replace(/\d+(?=:)/g, (num) => `"${num}"`)
+              );
             } catch (err) {
-              throw new Error(`Could not parse SRI hashes \n\t${sriHashJson}\n in asset: ${err}`)
+              throw new Error(
+                `Could not parse SRI hashes \n\t${sriHashJson}\n in asset: ${err}`
+              );
             }
-          };
+          }
 
-          const indexHashes = getSriHashes('index', true);
+          const indexHashes = getSriHashes("index", true);
           expect(Object.keys(indexHashes).length).toEqual(1);
 
           const _1jsHashes = getSriHashes(Object.keys(indexHashes)[0], false);
@@ -55,7 +63,12 @@ module.exports = {
           const _2jsHashes = getSriHashes(Object.keys(_1jsHashes)[0], false);
           expect(_2jsHashes).toEqual(null);
 
-          expect(stats.toJson().assets.filter(({name}) => /\.js$/.test(name)).every(({integrity}) => !!integrity)).toEqual(true)
+          expect(
+            stats
+              .toJson()
+              .assets.filter(({ name }) => /\.js$/.test(name))
+              .every(({ integrity }) => !!integrity)
+          ).toEqual(true);
         });
       },
     },
