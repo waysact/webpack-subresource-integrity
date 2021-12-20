@@ -176,7 +176,7 @@ mode](https://webpack.js.org/configuration/mode/) is `production` or
 
 Default value: `false`
 
-A boolen used to control where the integrity hashes will be defined.
+A boolean used to control where the integrity hashes will be defined.
 
 `false` means that integrity hashes for all assets will be defined in the entry chunk.
 
