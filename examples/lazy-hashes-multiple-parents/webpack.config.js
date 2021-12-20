@@ -38,7 +38,8 @@ module.exports = {
                 isEntry ? "self.sriHashes=" : "Object.assign\\(self.sriHashes,"
               }(?<sriHashJson>\{.*?\})`
             );
-            const sriHashJson = sriRegex.exec(fileContent)?.groups?.sriHashJson;
+            const regexMatch = sriRegex.exec(fileContent);
+            const sriHashJson = regexMatch ? regexMatch.groups.sriHashJson : null;
             if (!sriHashJson) {
               return null;
             }
