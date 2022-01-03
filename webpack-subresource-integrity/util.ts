@@ -12,6 +12,8 @@ import type { HtmlTagObject, Graph, StronglyConnectedComponent } from "./types";
 
 type ChunkGroup = ReturnType<Compilation["addChunkInGroup"]>;
 
+export const sriHashVariableReference = "__webpack_require__.sriHashes";
+
 export function getTagSrc(tag: HtmlTagObject): string | undefined {
   if (!["script", "link"].includes(tag.tagName) || !tag.attributes) {
     return undefined;

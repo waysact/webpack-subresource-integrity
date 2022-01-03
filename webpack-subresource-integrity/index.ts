@@ -7,7 +7,7 @@
 
 import { createHash } from "crypto";
 import type { Compiler, Compilation } from "webpack";
-import { javascript, sources } from "webpack";
+import { RuntimeModule, Template, sources } from "webpack";
 import {
   SubresourceIntegrityPluginResolvedOptions,
   getHtmlWebpackPluginHooksType,
@@ -18,6 +18,7 @@ import {
   findChunks,
   placeholderPrefix,
   generateSriHashPlaceholders,
+  sriHashVariableReference,
 } from "./util";
 
 interface StatsObjectWithIntegrity {
@@ -38,6 +39,23 @@ export interface SubresourceIntegrityPluginOptions {
   readonly hashFuncNames?: [string, ...string[]];
   readonly enabled?: "auto" | true | false;
   readonly lazyHashes?: boolean;
+}
+
+class AddLazySriRuntimeModule extends RuntimeModule {
+  private sriHashes: unknown;
+
+  constructor(sriHashes: unknown) {
+    super("webpack-subresource-integrity add SRI hashes lazily");
+    this.sriHashes = sriHashes;
+  }
+
+  generate() {
+    return Template.asString([
+      `Object.assign(${sriHashVariableReference}, ${JSON.stringify(
+        this.sriHashes
+      )});`,
+    ]);
+  }
 }
 
 /**
@@ -185,7 +203,7 @@ export class SubresourceIntegrityPlugin {
       if (Object.keys(includedChunks).length > 0) {
         return compilation.compiler.webpack.Template.asString([
           source,
-          `${plugin.sriHashVariableReference} = ` +
+          `${sriHashVariableReference} = ` +
             JSON.stringify(
               generateSriHashPlaceholders(
                 Array.from(allChunks).filter(
@@ -204,29 +222,23 @@ export class SubresourceIntegrityPlugin {
     });
 
     if (this.options.lazyHashes) {
-      javascript.JavascriptModulesPlugin.getCompilationHooks(
-        compilation
-      ).renderContent.tap(thisPluginName, (originalSource, { chunk }) => {
-        const childChunks = plugin.getDirectChildChunks(chunk);
-
-        if (childChunks.size === 0 || chunk.hasRuntime()) {
-          return originalSource;
-        } else {
-          const newSource = new sources.ConcatSource();
-
-          newSource.add(
-            `Object.assign(${plugin.sriHashVariableReference}, ${JSON.stringify(
-              generateSriHashPlaceholders(
-                childChunks,
-                this.options.hashFuncNames
+      compilation.hooks.additionalChunkRuntimeRequirements.tap(
+        thisPluginName,
+        (chunk) => {
+          const childChunks = plugin.getDirectChildChunks(chunk);
+          if (childChunks.size > 0 && !chunk.hasRuntime()) {
+            compilation.addRuntimeModule(
+              chunk,
+              new AddLazySriRuntimeModule(
+                generateSriHashPlaceholders(
+                  childChunks,
+                  this.options.hashFuncNames
+                )
               )
-            )});`
-          );
-          newSource.add(originalSource);
-
-          return newSource;
+            );
+          }
         }
-      });
+      );
     }
   };
 

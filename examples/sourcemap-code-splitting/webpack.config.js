@@ -48,7 +48,7 @@ module.exports = {
           );
           const sriHashesInMap = findAndStripSriHashString(
             "dist/index.js.map",
-            "self.sriHashes = "
+            "__webpack_require__.sriHashes = "
           );
           expect(sriHashesInSource.length).toEqual(sriHashesInMap.length);
         });

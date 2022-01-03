@@ -11,6 +11,7 @@ module.exports = {
   output: {
     crossOriginLoading: "anonymous",
   },
+  // optimization: {minimize: false},
   plugins: [
     new SubresourceIntegrityPlugin({
       enabled: true,
@@ -35,11 +36,15 @@ module.exports = {
             );
             const sriRegex = new RegExp(
               `${
-                isEntry ? "self.sriHashes=" : "Object.assign\\(self.sriHashes,"
+                isEntry
+                  ? "(\\w+|__webpack_require__)\\.sriHashes="
+                  : "Object.assign\\((\\w+|__webpack_require__)\\.sriHashes,"
               }(?<sriHashJson>\{.*?\})`
             );
             const regexMatch = sriRegex.exec(fileContent);
-            const sriHashJson = regexMatch ? regexMatch.groups.sriHashJson : null;
+            const sriHashJson = regexMatch
+              ? regexMatch.groups.sriHashJson
+              : null;
             if (!sriHashJson) {
               return null;
             }

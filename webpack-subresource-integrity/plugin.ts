@@ -24,6 +24,7 @@ import {
   getTagSrc,
   notNil,
   buildTopologicallySortedChunkGraph,
+  sriHashVariableReference,
 } from "./util";
 
 type AssetType = "js" | "css";
@@ -112,11 +113,6 @@ export class Plugin {
    */
   private hashByChunkId = new Map<string | number, string>();
 
-  /**
-   * @internal
-   */
-  public readonly sriHashVariableReference: string;
-
   public constructor(
     compilation: Compilation,
     options: SubresourceIntegrityPluginResolvedOptions,
@@ -125,9 +121,6 @@ export class Plugin {
     this.compilation = compilation;
     this.options = options;
     this.reporter = reporter;
-    this.sriHashVariableReference = `${
-      this.compilation.outputOptions.globalObject || "self"
-    }.sriHashes`;
   }
 
   /**
@@ -305,7 +298,7 @@ more information."
 
     return this.compilation.compiler.webpack.Template.asString([
       source,
-      elName + `.integrity = ${this.sriHashVariableReference}[chunkId];`,
+      elName + `.integrity = ${sriHashVariableReference}[chunkId];`,
       elName +
         ".crossOrigin = " +
         JSON.stringify(this.compilation.outputOptions.crossOriginLoading) +
