@@ -12,7 +12,6 @@ import * as assert from "typed-assert";
 import {
   HtmlTagObject,
   SubresourceIntegrityPluginResolvedOptions,
-  Graph,
   StronglyConnectedComponent,
 } from "./types";
 import { Reporter } from "./reporter";
@@ -23,7 +22,7 @@ import {
   normalizePath,
   getTagSrc,
   notNil,
-  buildTopologicallySortedChunkGraph,
+  getChunkToManifestMap,
   sriHashVariableReference,
 } from "./util";
 
@@ -89,24 +88,12 @@ export class Plugin {
   /**
    * @internal
    */
-  private sccChunkGraph: Graph<StronglyConnectedComponent<Chunk>> = {
-    vertices: new Set<StronglyConnectedComponent<Chunk>>(),
-    edges: new Map<
-      StronglyConnectedComponent<Chunk>,
-      Set<StronglyConnectedComponent<Chunk>>
-    >(),
-  };
-
-  /**
-   * @internal
-   */
   private sortedSccChunks: StronglyConnectedComponent<Chunk>[] = [];
 
   /**
    * @internal
    */
-  private chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>> =
-    new Map<Chunk, StronglyConnectedComponent<Chunk>>();
+  private chunkManifest: Map<Chunk, Set<Chunk>> = new Map<Chunk, Set<Chunk>>();
 
   /**
    * @internal
@@ -391,41 +378,17 @@ more information."
    */
   beforeRuntimeRequirements = (): void => {
     if (this.options.lazyHashes) {
-      const [sortedSccChunks, sccChunkGraph, chunkToSccMap] =
-        buildTopologicallySortedChunkGraph(this.compilation.chunks);
+      const [sortedSccChunks, chunkManifest] = getChunkToManifestMap(
+        this.compilation.chunks
+      );
       this.sortedSccChunks = sortedSccChunks;
-      this.sccChunkGraph = sccChunkGraph;
-      this.chunkToSccMap = chunkToSccMap;
+      this.chunkManifest = chunkManifest;
     }
     this.hashByChunkId.clear();
   };
 
   getChildChunksToAddToChunkManifest(chunk: Chunk): Set<Chunk> {
-    const childChunks = new Set<Chunk>();
-    const chunkSCC = this.chunkToSccMap.get(chunk);
-
-    for (const chunkGroup of chunk.groupsIterable) {
-      if (chunkGroup.chunks[chunkGroup.chunks.length - 1] !== chunk) {
-        // Only add sri hashes for one chunk per chunk group,
-        // where the last chunk in the group is the primary chunk
-        continue;
-      }
-      for (const childGroup of chunkGroup.childrenIterable) {
-        for (const childChunk of childGroup.chunks) {
-          const childChunkSCC = this.chunkToSccMap.get(childChunk);
-          if (childChunkSCC === chunkSCC) {
-            // Don't include your own SCC.
-            // Your parent will have the hashes for your SCC siblings
-            continue;
-          }
-          for (const childChunkSccNode of childChunkSCC?.nodes ?? []) {
-            childChunks.add(childChunkSccNode);
-          }
-        }
-      }
-    }
-
-    return childChunks;
+    return this.chunkManifest.get(chunk) ?? new Set<Chunk>();
   }
 
   handleHwpPluginArgs = ({ assets }: { assets: HWPAssets }): void => {

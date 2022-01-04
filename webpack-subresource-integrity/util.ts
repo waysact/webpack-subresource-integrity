@@ -266,3 +266,120 @@ export function buildTopologicallySortedChunkGraph(
 
   return [sortedVertices, dag, chunkToSccMap];
 }
+
+export function getChunkToManifestMap(
+  chunks: Iterable<Chunk>
+): [
+  sortedVertices: StronglyConnectedComponent<Chunk>[],
+  chunkManifest: Map<Chunk, Set<Chunk>>
+] {
+  const [sortedVertices, ,chunkToSccMap] =
+    buildTopologicallySortedChunkGraph(chunks);
+
+  // This map tracks which hashes a chunk group has in its manifest and the intersection
+  // of all its parents (and intersection of all their parents, etc.)
+  // This is meant as a guarantee that the hash for a given chunk is handled by a chunk group
+  // or its parents regardless of the tree traversal used from the roots
+  const hashesByChunkGroupAndParents = new Map<ChunkGroup, Set<Chunk>>();
+
+  // A map of what child chunks a given chunk should contain hashes for
+  const chunkManifest = new Map<Chunk, Set<Chunk>>();
+
+  function intersectSets<T>(setsToIntersect: Set<T>[]): Set<T> {
+    if (setsToIntersect.length == 0) {
+      return new Set<T>();
+    } else {
+      return new Set<T>(
+        [...setsToIntersect[0]].filter((item) =>
+          setsToIntersect.every((set) => set.has(item))
+        )
+      );
+    }
+  }
+
+  function findIntersectionOfParentSets(chunk: Chunk): Set<Chunk> {
+    const setsToIntersect: Set<Chunk>[] = [];
+    for (const group of chunk.groupsIterable) {
+      for (const parent of group.parentsIterable) {
+        setsToIntersect.push(
+          hashesByChunkGroupAndParents.get(parent) ?? new Set<Chunk>()
+        );
+      }
+    }
+
+    return intersectSets(setsToIntersect);
+  }
+
+  function getChildChunksToAddToChunkManifest(chunk: Chunk): Set<Chunk> {
+    const childChunks = new Set<Chunk>();
+    const chunkSCC = chunkToSccMap.get(chunk);
+
+    for (const chunkGroup of chunk.groupsIterable) {
+      if (chunkGroup.chunks[chunkGroup.chunks.length - 1] !== chunk) {
+        // Only add sri hashes for one chunk per chunk group,
+        // where the last chunk in the group is the primary chunk
+        continue;
+      }
+      for (const childGroup of chunkGroup.childrenIterable) {
+        for (const childChunk of childGroup.chunks) {
+          const childChunkSCC = chunkToSccMap.get(childChunk);
+          if (childChunkSCC === chunkSCC) {
+            // Don't include your own SCC.
+            // Your parent will have the hashes for your SCC siblings
+            continue;
+          }
+          for (const childChunkSccNode of childChunkSCC?.nodes ?? []) {
+            childChunks.add(childChunkSccNode);
+          }
+        }
+      }
+    }
+
+    const parentManifest = findIntersectionOfParentSets(chunk);
+    for (const manifestEntry of parentManifest) {
+      childChunks.delete(manifestEntry);
+    }
+
+    return childChunks;
+  }
+
+  // Duplicate the array before reversing it.
+  // We want to walk from the root nodes down to the leaves
+  for (const scc of [...sortedVertices].reverse()) {
+    for (const chunk of scc.nodes) {
+      const manifest = getChildChunksToAddToChunkManifest(chunk);
+      const combinedParentManifest = findIntersectionOfParentSets(chunk);
+
+      for (const chunk of manifest) {
+        if (combinedParentManifest.has(chunk)) {
+          manifest.delete(chunk);
+        } else {
+          combinedParentManifest.add(chunk);
+        }
+      }
+
+      chunkManifest.set(chunk, manifest);
+      for (const group of chunk.groupsIterable) {
+        // Get intersection of all parent manifests
+        const groupCombinedManifest = intersectSets(
+          [...group.parentsIterable].map(
+            (parent) =>
+              hashesByChunkGroupAndParents.get(parent) ?? new Set<Chunk>()
+          )
+        );
+        // Add this chunk's manifest
+        for (const chunk of manifest) {
+          groupCombinedManifest.add(chunk);
+        }
+        // Add any existing manifests part of the group
+        for (const chunk of hashesByChunkGroupAndParents.get(group) ??
+          new Set<Chunk>()) {
+          groupCombinedManifest.add(chunk);
+        }
+        hashesByChunkGroupAndParents.set(group, groupCombinedManifest);
+      }
+    }
+  }
+
+  return [sortedVertices, chunkManifest];
+}
