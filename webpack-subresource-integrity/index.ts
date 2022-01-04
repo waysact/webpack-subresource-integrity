@@ -44,8 +44,8 @@ export interface SubresourceIntegrityPluginOptions {
 class AddLazySriRuntimeModule extends RuntimeModule {
   private sriHashes: unknown;
 
-  constructor(sriHashes: unknown) {
-    super("webpack-subresource-integrity add SRI hashes lazily");
+  constructor(sriHashes: unknown, chunkName: string | number) {
+    super(`webpack-subresource-integrity lazy hashes for direct children of chunk ${chunkName}`);
     this.sriHashes = sriHashes;
   }
 
@@ -233,7 +233,8 @@ export class SubresourceIntegrityPlugin {
                 generateSriHashPlaceholders(
                   childChunks,
                   this.options.hashFuncNames
-                )
+                ),
+                chunk.name ?? chunk.id
               )
             );
           }
