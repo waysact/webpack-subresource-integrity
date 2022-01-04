@@ -196,7 +196,7 @@ export class SubresourceIntegrityPlugin {
 
     mainTemplate.hooks.localVars.tap(thisPluginName, (source, chunk) => {
       const allChunks = this.options.lazyHashes
-        ? plugin.getDirectChildChunks(chunk)
+        ? plugin.getChildChunksToAddToChunkManifest(chunk)
         : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
 
@@ -225,7 +225,7 @@ export class SubresourceIntegrityPlugin {
       compilation.hooks.additionalChunkRuntimeRequirements.tap(
         thisPluginName,
         (chunk) => {
-          const childChunks = plugin.getDirectChildChunks(chunk);
+          const childChunks = plugin.getChildChunksToAddToChunkManifest(chunk);
           if (childChunks.size > 0 && !chunk.hasRuntime()) {
             compilation.addRuntimeModule(
               chunk,

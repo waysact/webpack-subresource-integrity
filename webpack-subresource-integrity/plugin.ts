@@ -400,11 +400,16 @@ more information."
     this.hashByChunkId.clear();
   };
 
-  getDirectChildChunks(chunk: Chunk): Set<Chunk> {
+  getChildChunksToAddToChunkManifest(chunk: Chunk): Set<Chunk> {
     const childChunks = new Set<Chunk>();
     const chunkSCC = this.chunkToSccMap.get(chunk);
 
     for (const chunkGroup of chunk.groupsIterable) {
+      if (chunkGroup.chunks[chunkGroup.chunks.length - 1] !== chunk) {
+        // Only add sri hashes for one chunk per chunk group,
+        // where the last chunk in the group is the primary chunk
+        continue;
+      }
       for (const childGroup of chunkGroup.childrenIterable) {
         for (const childChunk of childGroup.chunks) {
           const childChunkSCC = this.chunkToSccMap.get(childChunk);
