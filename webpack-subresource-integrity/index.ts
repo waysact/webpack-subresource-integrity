@@ -45,7 +45,9 @@ class AddLazySriRuntimeModule extends RuntimeModule {
   private sriHashes: unknown;
 
   constructor(sriHashes: unknown, chunkName: string | number) {
-    super(`webpack-subresource-integrity lazy hashes for direct children of chunk ${chunkName}`);
+    super(
+      `webpack-subresource-integrity lazy hashes for direct children of chunk ${chunkName}`
+    );
     this.sriHashes = sriHashes;
   }
 

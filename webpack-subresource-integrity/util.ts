@@ -103,6 +103,46 @@ export function generateSriHashPlaceholders(
   }, {} as { [key: string]: string });
 }
 
+function* intersect<T>(sets: Iterable<Set<T>>): Generator<T> {
+  const { value: initialSet } = sets[Symbol.iterator]().next();
+  if (!initialSet) {
+    return;
+  }
+
+  for (const item of initialSet) {
+    let itemInAllSets = true;
+    for (const set of sets) {
+      if (!set.has(item)) {
+        itemInAllSets = false;
+        break;
+      }
+    }
+    if (itemInAllSets) {
+      yield item;
+    }
+  }
+}
+
+function* map<T, TResult>(
+  items: Iterable<T>,
+  fn: (item: T) => TResult
+): Generator<TResult> {
+  for (const item of items) {
+    yield fn(item);
+  }
+}
+
+function* flatMap<T, TResult>(
+  collections: Iterable<T>,
+  fn: (item: T) => Iterable<TResult>
+): Generator<TResult> {
+  for (const item of collections) {
+    for (const result of fn(item)) {
+      yield result;
+    }
+  }
+}
+
 interface TarjanVertexMetadata {
   index?: number;
   lowlink?: number;
@@ -120,7 +160,7 @@ function createDAGfromGraph<T>({
   let index = 0;
   const stack: T[] = [];
   const vertexMetadata = new Map<T, TarjanVertexMetadata>(
-    [...vertices].map((vertex) => [vertex, {}])
+    map(vertices, (vertex) => [vertex, {}])
   );
 
   const stronglyConnectedComponents = new Set<StronglyConnectedComponent<T>>();
@@ -233,12 +273,11 @@ export function buildTopologicallySortedChunkGraph(
   sccGraph: Graph<StronglyConnectedComponent<Chunk>>,
   chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>>
 ] {
-  const queue = [...chunks];
   const vertices = new Set<Chunk>();
   const edges = new Map<Chunk, Set<Chunk>>();
 
-  while (queue.length) {
-    const vertex = queue.pop()!;
+  // Chunks should have *all* chunks, not simply entry chunks
+  for (const vertex of chunks) {
     if (vertices.has(vertex)) {
       continue;
     }
@@ -248,9 +287,6 @@ export function buildTopologicallySortedChunkGraph(
       for (const childGroup of vertexGroup.childrenIterable) {
         for (const childChunk of childGroup.chunks) {
           edges.get(vertex)?.add(childChunk);
-          if (!vertices.has(childChunk)) {
-            queue.push(childChunk);
-          }
         }
       }
     }
@@ -259,9 +295,7 @@ export function buildTopologicallySortedChunkGraph(
   const dag = createDAGfromGraph({ vertices, edges });
   const sortedVertices = topologicalSort(dag);
   const chunkToSccMap = new Map<Chunk, StronglyConnectedComponent<Chunk>>(
-    [...dag.vertices].flatMap((scc) =>
-      [...scc.nodes].map((chunk) => [chunk, scc])
-    )
+    flatMap(dag.vertices, (scc) => map(scc.nodes, (chunk) => [chunk, scc]))
   );
 
   return [sortedVertices, dag, chunkToSccMap];
@@ -273,7 +307,7 @@ export function getChunkToManifestMap(
   sortedVertices: StronglyConnectedComponent<Chunk>[],
   chunkManifest: Map<Chunk, Set<Chunk>>
 ] {
-  const [sortedVertices, ,chunkToSccMap] =
+  const [sortedVertices, , chunkToSccMap] =
     buildTopologicallySortedChunkGraph(chunks);
 
   // This map tracks which hashes a chunk group has in its manifest and the intersection
@@ -285,16 +319,8 @@ export function getChunkToManifestMap(
   // A map of what child chunks a given chunk should contain hashes for
   const chunkManifest = new Map<Chunk, Set<Chunk>>();
 
-  function intersectSets<T>(setsToIntersect: Set<T>[]): Set<T> {
-    if (setsToIntersect.length == 0) {
-      return new Set<T>();
-    } else {
-      return new Set<T>(
-        [...setsToIntersect[0]].filter((item) =>
-          setsToIntersect.every((set) => set.has(item))
-        )
-      );
-    }
+  function intersectSets<T>(setsToIntersect: Iterable<Set<T>>): Set<T> {
+    return new Set<T>(intersect(setsToIntersect));
   }
 
   function findIntersectionOfParentSets(chunk: Chunk): Set<Chunk> {
@@ -343,9 +369,9 @@ export function getChunkToManifestMap(
     return childChunks;
   }
 
-  // Duplicate the array before reversing it.
   // We want to walk from the root nodes down to the leaves
-  for (const scc of [...sortedVertices].reverse()) {
+  for (let i = sortedVertices.length - 1; i >= 0; i--) {
+    const scc = sortedVertices[i];
     for (const chunk of scc.nodes) {
       const manifest = getChildChunksToAddToChunkManifest(chunk);
       const combinedParentManifest = findIntersectionOfParentSets(chunk);
@@ -362,7 +388,8 @@ export function getChunkToManifestMap(
       for (const group of chunk.groupsIterable) {
         // Get intersection of all parent manifests
         const groupCombinedManifest = intersectSets(
-          [...group.parentsIterable].map(
+          map(
+            group.parentsIterable,
             (parent) =>
               hashesByChunkGroupAndParents.get(parent) ?? new Set<Chunk>()
           )
