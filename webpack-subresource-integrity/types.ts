@@ -12,7 +12,7 @@ export type getHtmlWebpackPluginHooksType = (
 export interface SubresourceIntegrityPluginResolvedOptions {
   readonly hashFuncNames: [string, ...string[]];
   readonly enabled: "auto" | true | false;
-  readonly lazyHashes: boolean;
+  readonly hashLoading: "eager" | "lazy";
 }
 
 export interface Graph<T> {

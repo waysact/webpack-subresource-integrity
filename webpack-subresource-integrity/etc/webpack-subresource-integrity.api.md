@@ -20,7 +20,7 @@ export interface SubresourceIntegrityPluginOptions {
     // (undocumented)
     readonly hashFuncNames?: [string, ...string[]];
     // (undocumented)
-    readonly lazyHashes?: boolean;
+    readonly hashLoading?: "eager" | "lazy";
 }
 
 // (No @packageDocumentation comment for this package)

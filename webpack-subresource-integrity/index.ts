@@ -38,7 +38,7 @@ let getHtmlWebpackPluginHooks: getHtmlWebpackPluginHooksType | null = null;
 export interface SubresourceIntegrityPluginOptions {
   readonly hashFuncNames?: [string, ...string[]];
   readonly enabled?: "auto" | true | false;
-  readonly lazyHashes?: boolean;
+  readonly hashLoading?: "eager" | "lazy";
 }
 
 class AddLazySriRuntimeModule extends RuntimeModule {
@@ -83,7 +83,7 @@ export class SubresourceIntegrityPlugin {
     this.options = {
       hashFuncNames: ["sha384"],
       enabled: "auto",
-      lazyHashes: false,
+      hashLoading: "eager",
       ...options,
     };
   }
@@ -197,9 +197,10 @@ export class SubresourceIntegrityPlugin {
     );
 
     mainTemplate.hooks.localVars.tap(thisPluginName, (source, chunk) => {
-      const allChunks = this.options.lazyHashes
-        ? plugin.getChildChunksToAddToChunkManifest(chunk)
-        : findChunks(chunk);
+      const allChunks =
+        this.options.hashLoading === "lazy"
+          ? plugin.getChildChunksToAddToChunkManifest(chunk)
+          : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
 
       if (Object.keys(includedChunks).length > 0) {
@@ -223,7 +224,7 @@ export class SubresourceIntegrityPlugin {
       return source;
     });
 
-    if (this.options.lazyHashes) {
+    if (this.options.hashLoading === "lazy") {
       compilation.hooks.additionalChunkRuntimeRequirements.tap(
         thisPluginName,
         (chunk) => {

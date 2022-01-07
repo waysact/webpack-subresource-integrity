@@ -172,15 +172,15 @@ One of `"auto"`, `true`, or `false`.
 mode](https://webpack.js.org/configuration/mode/) is `production` or
 `none` and disable it when it is `development`.
 
-#### lazyHashes
+#### hashLoading
 
-Default value: `false`
+Default value: `"eager"`
 
-A boolean used to control where the integrity hashes will be defined.
+One of `"eager"` or `"lazy"`
 
-`false` means that integrity hashes for all assets will be defined in the entry chunk.
+`"eager""` means that integrity hashes for all assets will be defined in the entry chunk.
 
-`true` means that integrity hashes for any given asset will be defined in its direct parents 
+`"lazy"` means that integrity hashes for any given asset will be defined in its direct parents 
 in the chunk graph. This can lead to duplication of hashes across assets, but can significantly
 reduce the size of your entry chunk(s) if you have a large number of async chunks.
 

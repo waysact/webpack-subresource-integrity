@@ -14,6 +14,12 @@ type ChunkGroup = ReturnType<Compilation["addChunkInGroup"]>;
 
 export const sriHashVariableReference = "__webpack_require__.sriHashes";
 
+export function assert(value: unknown, message: string): asserts value {
+  if (!value) {
+    throw new Error(message);
+  }
+}
+
 export function getTagSrc(tag: HtmlTagObject): string | undefined {
   if (!["script", "link"].includes(tag.tagName) || !tag.attributes) {
     return undefined;
@@ -109,17 +115,13 @@ function* intersect<T>(sets: Iterable<Set<T>>): Generator<T> {
     return;
   }
 
-  for (const item of initialSet) {
-    let itemInAllSets = true;
+  initialSetLoop: for (const item of initialSet) {
     for (const set of sets) {
       if (!set.has(item)) {
-        itemInAllSets = false;
-        break;
+        continue initialSetLoop;
       }
     }
-    if (itemInAllSets) {
-      yield item;
-    }
+    yield item;
   }
 }
 
@@ -167,7 +169,8 @@ function createDAGfromGraph<T>({
 
   function strongConnect(vertex: T) {
     // Set the depth index for v to the smallest unused index
-    const vertexData = vertexMetadata.get(vertex)!;
+    const vertexData = vertexMetadata.get(vertex);
+    assert(vertexData, "Vertex metadata missing");
     vertexData.index = index;
     vertexData.lowlink = index;
     index++;
@@ -175,11 +178,15 @@ function createDAGfromGraph<T>({
     vertexData.onstack = true;
 
     for (const child of edges.get(vertex) ?? []) {
-      const childData = vertexMetadata.get(child)!;
+      const childData = vertexMetadata.get(child);
+      assert(childData, "Child vertex metadata missing");
       if (childData.index === undefined) {
         // Child has not yet been visited; recurse on it
         strongConnect(child);
-        vertexData.lowlink = Math.min(vertexData.lowlink, childData.lowlink!);
+        vertexData.lowlink = Math.min(
+          vertexData.lowlink,
+          childData.lowlink ?? Infinity
+        );
       } else if (childData.onstack) {
         // Child is in stack and hence in the current SCC
         // If child is not on stack, then (vertex, child) is an edge pointing to an SCC already found and must be ignored
@@ -192,10 +199,13 @@ function createDAGfromGraph<T>({
     // If vertex is a root node, pop the stack and generate an SCC
     if (vertexData.index === vertexData.lowlink) {
       const newStronglyConnectedComponent = { nodes: new Set<T>() };
-      let currentNode: T;
+      let currentNode: T | undefined;
       do {
-        currentNode = stack.pop()!;
-        vertexMetadata.get(currentNode)!.onstack = false;
+        currentNode = stack.pop();
+        assert(currentNode, "Working stack was empty");
+        const metadata = vertexMetadata.get(currentNode);
+        assert(metadata, "All nodes on stack should have metadata");
+        metadata.onstack = false;
         newStronglyConnectedComponent.nodes.add(currentNode);
       } while (currentNode !== vertex);
 
@@ -204,7 +214,9 @@ function createDAGfromGraph<T>({
   }
 
   for (const vertex of vertices) {
-    if (vertexMetadata.get(vertex)!.index === undefined) {
+    const data = vertexMetadata.get(vertex);
+    assert(data, "Vertex metadata not found");
+    if (data.index === undefined) {
       strongConnect(vertex);
     }
   }
@@ -238,7 +250,7 @@ function createDAGfromGraph<T>({
   return { vertices: stronglyConnectedComponents, edges: sccEdges };
 }
 
-// This implementation assumes a directed acyclic graph (such as one produce by createDAGfromGraph),
+// This implementation assumes a directed acyclic graph (such as one produced by createDAGfromGraph),
 // and does not attempt to detect cycles
 function topologicalSort<T>({ vertices, edges }: Graph<T>): T[] {
   const sortedItems: T[] = [];

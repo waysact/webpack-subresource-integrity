@@ -297,7 +297,7 @@ more information."
    * @internal
    */
   processAssets = (assets: Record<string, sources.Source>): void => {
-    if (this.options.lazyHashes) {
+    if (this.options.hashLoading === "lazy") {
       for (const scc of this.sortedSccChunks) {
         for (const chunk of scc.nodes) {
           this.processChunkAssets(chunk, assets);
@@ -377,7 +377,7 @@ more information."
    * @internal
    */
   beforeRuntimeRequirements = (): void => {
-    if (this.options.lazyHashes) {
+    if (this.options.hashLoading === "lazy") {
       const [sortedSccChunks, chunkManifest] = getChunkToManifestMap(
         this.compilation.chunks
       );

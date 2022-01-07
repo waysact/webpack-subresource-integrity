@@ -14,7 +14,7 @@ module.exports = {
   plugins: [
     new SubresourceIntegrityPlugin({
       enabled: true,
-      lazyHashes: true,
+      hashLoading: "lazy",
     }),
     new HtmlWebpackPlugin(),
     {
