@@ -6,14 +6,20 @@
  */
 
 import { createHash } from "crypto";
-import type { Chunk, Compiler, Compilation, sources } from "webpack";
+import type { Compiler, Compilation } from "webpack";
+import { RuntimeModule, Template, sources } from "webpack";
 import {
   SubresourceIntegrityPluginResolvedOptions,
   getHtmlWebpackPluginHooksType,
 } from "./types";
 import { Plugin } from "./plugin";
 import { Reporter } from "./reporter";
-import { makePlaceholder, findChunks, placeholderPrefix } from "./util";
+import {
+  findChunks,
+  placeholderPrefix,
+  generateSriHashPlaceholders,
+  sriHashVariableReference,
+} from "./util";
 
 interface StatsObjectWithIntegrity {
   integrity: string;
@@ -32,6 +38,26 @@ let getHtmlWebpackPluginHooks: getHtmlWebpackPluginHooksType | null = null;
 export interface SubresourceIntegrityPluginOptions {
   readonly hashFuncNames?: [string, ...string[]];
   readonly enabled?: "auto" | true | false;
+  readonly hashLoading?: "eager" | "lazy";
+}
+
+class AddLazySriRuntimeModule extends RuntimeModule {
+  private sriHashes: unknown;
+
+  constructor(sriHashes: unknown, chunkName: string | number) {
+    super(
+      `webpack-subresource-integrity lazy hashes for direct children of chunk ${chunkName}`
+    );
+    this.sriHashes = sriHashes;
+  }
+
+  generate() {
+    return Template.asString([
+      `Object.assign(${sriHashVariableReference}, ${JSON.stringify(
+        this.sriHashes
+      )});`,
+    ]);
+  }
 }
 
 /**
@@ -57,6 +83,7 @@ export class SubresourceIntegrityPlugin {
     this.options = {
       hashFuncNames: ["sha384"],
       enabled: "auto",
+      hashLoading: "eager",
       ...options,
     };
   }
@@ -94,6 +121,10 @@ export class SubresourceIntegrityPlugin {
       reporter.warnOnce("This plugin is not useful for non-web targets.");
       return;
     }
+
+    compilation.hooks.beforeRuntimeRequirements.tap(thisPluginName, () => {
+      plugin.beforeRuntimeRequirements();
+    });
 
     compilation.hooks.processAssets.tap(
       {
@@ -166,26 +197,25 @@ export class SubresourceIntegrityPlugin {
     );
 
     mainTemplate.hooks.localVars.tap(thisPluginName, (source, chunk) => {
-      const allChunks = findChunks(chunk);
+      const allChunks =
+        this.options.hashLoading === "lazy"
+          ? plugin.getChildChunksToAddToChunkManifest(chunk)
+          : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
 
       if (Object.keys(includedChunks).length > 0) {
         return compilation.compiler.webpack.Template.asString([
           source,
-          "__webpack_require__.sriHashes = " +
+          `${sriHashVariableReference} = ` +
             JSON.stringify(
-              Array.from(allChunks).reduce((sriHashes, depChunk: Chunk) => {
-                if (
-                  depChunk.id !== null &&
-                  includedChunks[depChunk.id.toString()]
-                ) {
-                  sriHashes[depChunk.id] = makePlaceholder(
-                    this.options.hashFuncNames,
-                    depChunk.id
-                  );
-                }
-                return sriHashes;
-              }, {} as { [key: string]: string })
+              generateSriHashPlaceholders(
+                Array.from(allChunks).filter(
+                  (depChunk) =>
+                    depChunk.id !== null &&
+                    includedChunks[depChunk.id.toString()]
+                ),
+                this.options.hashFuncNames
+              )
             ) +
             ";",
         ]);
@@ -193,6 +223,27 @@ export class SubresourceIntegrityPlugin {
 
       return source;
     });
+
+    if (this.options.hashLoading === "lazy") {
+      compilation.hooks.additionalChunkRuntimeRequirements.tap(
+        thisPluginName,
+        (chunk) => {
+          const childChunks = plugin.getChildChunksToAddToChunkManifest(chunk);
+          if (childChunks.size > 0 && !chunk.hasRuntime()) {
+            compilation.addRuntimeModule(
+              chunk,
+              new AddLazySriRuntimeModule(
+                generateSriHashPlaceholders(
+                  childChunks,
+                  this.options.hashFuncNames
+                ),
+                chunk.name ?? chunk.id
+              )
+            );
+          }
+        }
+      );
+    }
   };
 
   /**

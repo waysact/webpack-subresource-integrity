@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.18.1",
-    "@tsconfig/node10": "^1.0.8",
+    "@tsconfig/node12": "^1.0.9",
     "@types/cross-spawn": "^6.0.2",
     "@types/jest": "^26.0.24",
     "@types/json-schema": "^7.0.8",

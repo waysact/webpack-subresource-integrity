@@ -12,4 +12,14 @@ export type getHtmlWebpackPluginHooksType = (
 export interface SubresourceIntegrityPluginResolvedOptions {
   readonly hashFuncNames: [string, ...string[]];
   readonly enabled: "auto" | true | false;
+  readonly hashLoading: "eager" | "lazy";
+}
+
+export interface Graph<T> {
+  vertices: Set<T>;
+  edges: Map<T, Set<T>>;
+}
+
+export interface StronglyConnectedComponent<T> {
+  nodes: Set<T>;
 }

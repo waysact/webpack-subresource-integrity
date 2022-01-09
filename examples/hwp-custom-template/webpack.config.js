@@ -40,14 +40,16 @@ module.exports = {
 
           const jsIntegrity = stats
             .toJson()
-            .assets.find((asset) => asset.name === "subdir/bundle.js")
-            .integrity;
+            .assets.find(
+              (asset) => asset.name === "subdir/bundle.js"
+            ).integrity;
           expect(jsIntegrity).toMatch(/^sha/);
 
           const cssIntegrity = stats
             .toJson()
-            .assets.find((asset) => asset.name === "subdir/styles.css")
-            .integrity;
+            .assets.find(
+              (asset) => asset.name === "subdir/styles.css"
+            ).integrity;
           expect(cssIntegrity).toMatch(/^sha/);
 
           return new Promise((resolve, reject) => {
