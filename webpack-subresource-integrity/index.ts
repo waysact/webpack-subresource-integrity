@@ -261,7 +261,9 @@ export class SubresourceIntegrityPlugin {
           "See https://w3c.github.io/webappsec-subresource-integrity/#cross-origin-data-leakage"
       );
     }
-    return this.validateHashFuncNames(reporter);
+    return (
+      this.validateHashFuncNames(reporter) && this.validateHashLoading(reporter)
+    );
   };
 
   /**
@@ -289,6 +291,25 @@ export class SubresourceIntegrityPlugin {
       this.warnStandardHashFunc(reporter);
       return true;
     }
+  };
+
+  /**
+   * @internal
+   */
+  private validateHashLoading = (reporter: Reporter): boolean => {
+    const supportedHashLoadingOptions = Object.freeze(["eager", "lazy"]);
+    if (supportedHashLoadingOptions.includes(this.options.hashLoading)) {
+      return true;
+    }
+
+    const optionsStr = supportedHashLoadingOptions
+      .map((opt) => `'${opt}'`)
+      .join(", ");
+
+    reporter.error(
+      `options.hashLoading must be one of ${optionsStr}, instead got '${this.options.hashLoading}'`
+    );
+    return false;
   };
 
   /**

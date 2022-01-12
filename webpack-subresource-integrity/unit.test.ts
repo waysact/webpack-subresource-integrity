@@ -8,6 +8,7 @@
 import webpack, { Compiler, Compilation, Configuration, Chunk } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import { SubresourceIntegrityPlugin } from "./index.js";
+import type { SubresourceIntegrityPluginOptions } from "./index.js";
 
 jest.unmock("html-webpack-plugin");
 
@@ -159,6 +160,26 @@ test("errors if hash function names contains unsupported digest", async () => {
   expect(compilation.warnings.length).toBe(0);
   expect(compilation.errors[0].message).toMatch(
     /Cannot use hash function 'frobnicate': Digest method not supported/
+  );
+});
+
+test("errors if hashLoading option uses unknown value", async () => {
+  const plugin = new SubresourceIntegrityPlugin({
+    hashLoading:
+      "invalid" as unknown as SubresourceIntegrityPluginOptions["hashLoading"],
+  });
+
+  const compilation = await runCompilation(
+    webpack({
+      ...defaultOptions,
+      plugins: [plugin],
+    })
+  );
+
+  expect(compilation.errors.length).toBe(1);
+  expect(compilation.warnings.length).toBe(0);
+  expect(compilation.errors[0].message).toMatch(
+    /options.hashLoading must be one of 'eager', 'lazy', instead got 'invalid'/
   );
 });
 
