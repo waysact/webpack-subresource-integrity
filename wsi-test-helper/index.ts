@@ -20,6 +20,66 @@ type PuppeteerOptions = {
   onDone?: () => void;
 };
 
+function createPrinter(prefix: string) {
+  return (message: unknown) => {
+    process.stderr.write(`${prefix}: ${String(message)}\n`);
+  };
+}
+
+const defaultError = createPrinter("Error");
+const defaultPageError = createPrinter("Page Error");
+
+function defaultConsoleError(text: string) {
+  process.stderr.write("Console: error: " + text + "\n");
+}
+
+function createResultPromise(page: puppeteer.Page, options: PuppeteerOptions) {
+  return new Promise<void>((resolve, reject) => {
+    page.on("console", (msg) => {
+      Promise.all(msg.args().map((arg) => arg.jsonValue())).then((args) => {
+        if (args.length === 0) {
+          if (msg.type() === "error") {
+            (options.onConsoleError || defaultConsoleError)(msg.text());
+          }
+        } else if (args[0] === "ok") {
+          resolve();
+        } else if (args[0] === "error") {
+          reject(new Error(args.slice(1).join(" ")));
+        } else {
+          process.stderr.write("Console: " + args.join(" ") + "\n");
+        }
+      });
+    });
+  });
+}
+
+function createTimeoutPromise(delayMillis: number) {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error("Timeout loading page"));
+    }, delayMillis);
+  });
+}
+
+async function handlePage(
+  page: puppeteer.Page,
+  options: PuppeteerOptions,
+  port: number
+) {
+  page.on("pageerror", options.onPageError || defaultPageError);
+  page.on("error", options.onError || defaultError);
+
+  await Promise.all([
+    page.goto(`http://localhost:${port}/`, {
+      waitUntil: "networkidle0",
+    }),
+    Promise.race([
+      createResultPromise(page, options),
+      createTimeoutPromise(10000),
+    ]),
+  ]);
+}
+
 export async function testWithPuppeteer(
   stats: Stats,
   options: PuppeteerOptions
@@ -43,58 +103,7 @@ export async function testWithPuppeteer(
 
     const page = await browser.newPage();
 
-    page.on(
-      "pageerror",
-      options.onPageError ||
-        ((err) => {
-          process.stderr.write("Error: " + err.toString() + "\n");
-        })
-    );
-
-    page.on(
-      "error",
-      options.onError ||
-        ((err) => {
-          process.stderr.write("Page Error: " + err.toString() + "\n");
-        })
-    );
-
-    const resultPromise = new Promise<void>((resolve, reject) => {
-      page.on("console", (msg) => {
-        Promise.all(msg.args().map((arg) => arg.jsonValue())).then((args) => {
-          if (args.length === 0) {
-            if (msg.type() === "error") {
-              (
-                options.onConsoleError ||
-                ((text) =>
-                  process.stderr.write(
-                    "Console: " + msg.type() + ": " + text + "\n"
-                  ))
-              )(msg.text());
-            }
-          } else if (args[0] === "ok") {
-            resolve();
-          } else if (args[0] === "error") {
-            reject(new Error(args.slice(1).join(" ")));
-          } else {
-            process.stderr.write("Console: " + args.join(" ") + "\n");
-          }
-        });
-      });
-    });
-
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error("Timeout loading page"));
-      }, 10000);
-    });
-
-    await Promise.all([
-      page.goto(`http://localhost:${port}/`, {
-        waitUntil: "networkidle0",
-      }),
-      Promise.race([resultPromise, timeoutPromise]),
-    ]);
+    await handlePage(page, options, port);
 
     if (options.onDone) options.onDone();
   } finally {
