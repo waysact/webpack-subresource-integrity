@@ -92,16 +92,13 @@ class ChunkToManifestMapBuilder {
 
   private createManifest() {
     // A map of what child chunks a given chunk should contain hashes for
-    const manifest = new Map<Chunk, Set<Chunk>>();
-
     // We want to walk from the root nodes down to the leaves
-    for (let i = this.sortedVertices.length - 1; i >= 0; i--) {
-      for (const chunk of this.sortedVertices[i].nodes) {
+    return this.sortedVertices.reduceRight((manifest, vertex) => {
+      for (const chunk of vertex.nodes) {
         manifest.set(chunk, this.createChunkManifest(chunk));
       }
-    }
-
-    return manifest;
+      return manifest;
+    }, new Map<Chunk, Set<Chunk>>());
   }
 
   private createChunkManifest(chunk: Chunk) {
@@ -200,7 +197,7 @@ export class AddLazySriRuntimeModule extends RuntimeModule {
     this.sriHashes = sriHashes;
   }
 
-  generate(): string {
+  override generate(): string {
     return Template.asString([
       `Object.assign(${sriHashVariableReference}, ${JSON.stringify(
         this.sriHashes

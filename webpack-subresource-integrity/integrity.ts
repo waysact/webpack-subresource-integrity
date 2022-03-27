@@ -27,7 +27,7 @@ export class AssetIntegrity {
 
   public updateHash(input: Buffer[], oldHash: string): string | undefined {
     const assetKey = this.inverseAssetIntegrity.get(oldHash);
-    if (assetKey && input.length === 1) {
+    if (assetKey && input[0]) {
       const newIntegrity = computeIntegrity(this.hashFuncNames, input[0]);
       this.inverseAssetIntegrity.delete(oldHash);
       this.assetIntegrity.delete(assetKey);

@@ -110,8 +110,8 @@ export class Plugin {
   addMissingIntegrityHashes = (
     assets: Record<string, sources.Source>
   ): void => {
-    Object.keys(assets).forEach((assetKey) => {
-      const source = tryGetSource(assets[assetKey]);
+    Object.entries(assets).forEach(([assetKey, asset]) => {
+      const source = tryGetSource(asset);
       if (source) {
         this.assetIntegrity.updateFromSource(assetKey, source);
       }
@@ -127,9 +127,11 @@ export class Plugin {
     hashByChunkId: Map<string | number, string>,
     chunkFile: string
   ): sources.Source => {
+    const asset = assets[chunkFile];
+    assert(asset, `Missing asset for file ${chunkFile}`);
     return (assets[chunkFile] = replaceInSource(
       compiler,
-      assets[chunkFile],
+      asset,
       chunkFile,
       map(hashByChunkId.entries(), ([id, hash]) => [
         makePlaceholder(this.options.hashFuncNames, id),
@@ -167,8 +169,9 @@ export class Plugin {
     assets: Record<string, sources.Source>
   ) => {
     Array.from(childChunk.files).forEach((sourcePath) => {
-      if (assets[sourcePath]) {
-        this.warnIfHotUpdate(assets[sourcePath].source());
+      const asset = assets[sourcePath];
+      if (asset) {
+        this.warnIfHotUpdate(asset.source());
         const newAsset = this.replaceAsset(
           this.compilation.compiler,
           assets,
@@ -281,13 +284,13 @@ export class Plugin {
 
     const src = this.hwpAssetPath(tagSrc);
 
-    tag.attributes.integrity =
+    tag.attributes["integrity"] =
       this.getIntegrityChecksumForAsset(this.compilation.assets, src) ||
       computeIntegrity(
         this.options.hashFuncNames,
         readFileSync(join(this.compilation.compiler.outputPath, src))
       );
-    tag.attributes.crossorigin =
+    tag.attributes["crossorigin"] =
       this.compilation.compiler.options.output.crossOriginLoading ||
       "anonymous";
   };

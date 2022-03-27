@@ -61,8 +61,7 @@ test("warns when no standard hash function name is specified", async () => {
   );
 
   expect(compilation.errors).toEqual([]);
-  expect(compilation.warnings[0]).toBeInstanceOf(Error);
-  expect(compilation.warnings[0].message).toMatch(
+  expect(compilation.warnings[0]?.message).toMatch(
     new RegExp(
       "It is recommended that at least one hash function is part of " +
         "the set for which support is mandated by the specification"
@@ -101,7 +100,7 @@ test("errors if hash function names is not an array", async () => {
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /options.hashFuncNames must be an array of hash function names, instead got 'sha256'/
   );
 });
@@ -120,7 +119,7 @@ test("errors if hash function names contains non-string", async () => {
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /options.hashFuncNames must be an array of hash function names, but contained 1234/
   );
 });
@@ -139,7 +138,7 @@ test("errors if hash function names are empty", async () => {
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /Must specify at least one hash function name/
   );
 });
@@ -158,7 +157,7 @@ test("errors if hash function names contains unsupported digest", async () => {
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /Cannot use hash function 'frobnicate': Digest method not supported/
   );
 });
@@ -178,7 +177,7 @@ test("errors if hashLoading option uses unknown value", async () => {
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /options.hashLoading must be one of 'eager', 'lazy', instead got 'invalid'/
   );
 });
@@ -217,10 +216,10 @@ test("should warn when output.crossOriginLoading is not set", async () => {
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(1);
-  expect(compilation.warnings[0].message).toMatch(
+  expect(compilation.warnings[0]?.message).toMatch(
     /Set webpack option output\.crossOriginLoading/
   );
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /webpack option output\.crossOriginLoading not set, code splitting will not work!/
   );
 });

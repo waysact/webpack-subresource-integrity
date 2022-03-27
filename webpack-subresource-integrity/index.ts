@@ -116,10 +116,8 @@ export class SubresourceIntegrityPlugin {
       (records: Record<string, sources.Source>) => {
         for (const chunk of compilation.chunks.values()) {
           for (const chunkFile of chunk.files) {
-            if (
-              chunkFile in records &&
-              records[chunkFile].source().includes(placeholderPrefix)
-            ) {
+            const record = records[chunkFile];
+            if (record && record.source().includes(placeholderPrefix)) {
               reporter.errorUnresolvedIntegrity(chunkFile);
             }
           }
@@ -273,11 +271,12 @@ export class SubresourceIntegrityPlugin {
    */
   private warnStandardHashFunc = (reporter: Reporter) => {
     let foundStandardHashFunc = false;
-    for (let i = 0; i < this.options.hashFuncNames.length; i += 1) {
-      if (standardHashFuncNames.indexOf(this.options.hashFuncNames[i]) >= 0) {
+
+    this.options.hashFuncNames.forEach((hashFuncName) => {
+      if (standardHashFuncNames.indexOf(hashFuncName) >= 0) {
         foundStandardHashFunc = true;
       }
-    }
+    });
     if (!foundStandardHashFunc) {
       reporter.warnStandardHashFuncs();
     }

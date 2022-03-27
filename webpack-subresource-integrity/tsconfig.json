@@ -5,7 +5,15 @@
     "declarationMap": true,
     "noEmitOnError": true,
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitOverride": true
+    /* "exactOptionalPropertyTypes": true */
   },
   "files": ["index.ts", "plugin.ts", "reporter.ts", "util.ts", "types.ts"]
 }

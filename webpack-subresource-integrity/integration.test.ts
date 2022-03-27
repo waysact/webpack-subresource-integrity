@@ -44,7 +44,7 @@ test("enabled with webpack mode=production", async () => {
     .toJson()
     .assets?.find((asset: StatsAsset) => asset.name === "main.js");
   expect(mainAsset).toBeDefined();
-  expect(mainAsset?.integrity).toMatch(/^sha384-\S+$/);
+  expect(mainAsset?.["integrity"]).toMatch(/^sha384-\S+$/);
 });
 
 test("disabled with webpack mode=development", async () => {
@@ -52,7 +52,7 @@ test("disabled with webpack mode=development", async () => {
     .toJson()
     .assets?.find((asset: StatsAsset) => asset.name === "main.js");
   expect(mainAsset).toBeDefined();
-  expect(mainAsset?.integrity).toBeUndefined();
+  expect(mainAsset?.["integrity"]).toBeUndefined();
 });
 
 const isHashWarning = (warning: WebpackError) =>
