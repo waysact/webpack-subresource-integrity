@@ -1,4 +1,4 @@
-import { Graph, StronglyConnectedComponent } from "./types";
+import type { Graph, StronglyConnectedComponent } from "./types";
 import { assert } from "./util";
 
 interface TarjanVertexMetadata {
@@ -7,10 +7,6 @@ interface TarjanVertexMetadata {
   onstack?: boolean;
 }
 
-/**
- * Tarjan's strongly connected components algorithm
- * https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
- */
 class SccVerticesBuilder<T> {
   private vertices: Set<T>;
   private edges: Map<T, Set<T>>;
@@ -25,15 +21,15 @@ class SccVerticesBuilder<T> {
   constructor({ vertices, edges }: Graph<T>) {
     this.vertices = vertices;
     this.edges = edges;
-  }
 
-  build(): Set<StronglyConnectedComponent<T>> {
     for (const vertex of this.vertices) {
       if (!this.vertexMetadata.has(vertex)) {
         this.strongConnect(vertex);
       }
     }
+  }
 
+  public build(): Set<StronglyConnectedComponent<T>> {
     return this.stronglyConnectedComponents;
   }
 
@@ -113,7 +109,7 @@ class SccEdgesBuilder<T> {
     }
   }
 
-  build() {
+  public build() {
     // Now that all SCCs have been identified, rebuild the graph
     const sccEdges = new Map<
       StronglyConnectedComponent<T>,
@@ -127,7 +123,7 @@ class SccEdgesBuilder<T> {
     return sccEdges;
   }
 
-  getChildSCCNodes(scc: StronglyConnectedComponent<T>) {
+  private getChildSCCNodes(scc: StronglyConnectedComponent<T>) {
     const childSCCNodes = new Set<StronglyConnectedComponent<T>>();
     scc.nodes.forEach((vertex) => {
       const edge = this.edges.get(vertex);
@@ -145,6 +141,10 @@ class SccEdgesBuilder<T> {
   }
 }
 
+/**
+ * Tarjan's strongly connected components algorithm
+ * https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+ */
 export function createDAGfromGraph<T>(
   graph: Graph<T>
 ): Graph<StronglyConnectedComponent<T>> {

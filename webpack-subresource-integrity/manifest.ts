@@ -1,4 +1,3 @@
-import type { Chunk } from "webpack";
 import { Graph, StronglyConnectedComponent } from "./types";
 import {
   addIfNotExist,
@@ -64,37 +63,43 @@ function buildTopologicallySortedChunkGraph(
 }
 
 class ChunkToManifestMapBuilder {
-  sortedVertices: StronglyConnectedComponent<Chunk>[];
-  chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>>;
+  private sortedVertices: StronglyConnectedComponent<Chunk>[];
+  private chunkToSccMap: Map<Chunk, StronglyConnectedComponent<Chunk>>;
+  private manifest: Map<Chunk, Set<Chunk>>;
 
   // This map tracks which hashes a chunk group has in its manifest and the intersection
   // of all its parents (and intersection of all their parents, etc.)
   // This is meant as a guarantee that the hash for a given chunk is handled by a chunk group
   // or its parents regardless of the tree traversal used from the roots
-  hashesByChunkGroupAndParents = new Map<ChunkGroup, Set<Chunk>>();
+  private hashesByChunkGroupAndParents = new Map<ChunkGroup, Set<Chunk>>();
 
   constructor(chunks: Iterable<Chunk>) {
     const [sortedVertices, , chunkToSccMap] =
       buildTopologicallySortedChunkGraph(chunks);
     this.sortedVertices = sortedVertices;
     this.chunkToSccMap = chunkToSccMap;
+    this.manifest = this.createManifest();
   }
 
-  build(): [
+  public build(): [
     sortedVertices: StronglyConnectedComponent<Chunk>[],
     chunkManifest: Map<Chunk, Set<Chunk>>
   ] {
+    return [this.sortedVertices, this.manifest];
+  }
+
+  private createManifest() {
     // A map of what child chunks a given chunk should contain hashes for
-    const chunkManifest = new Map<Chunk, Set<Chunk>>();
+    const manifest = new Map<Chunk, Set<Chunk>>();
 
     // We want to walk from the root nodes down to the leaves
     for (let i = this.sortedVertices.length - 1; i >= 0; i--) {
       for (const chunk of this.sortedVertices[i].nodes) {
-        chunkManifest.set(chunk, this.createChunkManifest(chunk));
+        manifest.set(chunk, this.createChunkManifest(chunk));
       }
     }
 
-    return [this.sortedVertices, chunkManifest];
+    return manifest;
   }
 
   private createChunkManifest(chunk: Chunk) {
