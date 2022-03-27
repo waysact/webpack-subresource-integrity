@@ -5,7 +5,7 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
-    "before-build-webpack": "^0.2.11",
+    "before-build-webpack": "^0.2.12",
     "expect": "^26.6.2",
     "html-webpack-plugin": ">= 5.0.0-beta.1",
     "nyc": "*",
