@@ -1,5 +1,4 @@
 const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
 const expect = require("expect");
 
 module.exports = {

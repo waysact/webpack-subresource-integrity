@@ -3,7 +3,6 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WebpackBeforeBuildPlugin = require("before-build-webpack");
 const webpack = require("webpack");
 const path = require("path");
-const { readFileSync } = require("fs");
 const { RunInPuppeteerPlugin } = require("wsi-test-helper");
 
 module.exports = {

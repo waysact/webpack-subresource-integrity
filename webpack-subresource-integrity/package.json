@@ -51,16 +51,7 @@
     "@types/node": "^14.17.5",
     "@types/rimraf": "^3.0.1",
     "@types/tmp": "^0.2.1",
-    "@typescript-eslint/eslint-plugin": "5.16.0",
-    "@typescript-eslint/parser": "^5.16.0",
     "cross-spawn": "^7.0.3",
-    "eslint": "^8.12.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-import": "2.25.4",
-    "eslint-plugin-jest": "^26.1.3",
-    "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-promise": "6.0.0",
     "html-webpack-plugin": ">= 5.0.0-beta.1",
     "jest": "^26.6.3",
     "lodash": "^4.17.21",
@@ -78,5 +69,10 @@
     "clean-dist": "find dist ! -name package.json -type f -exec rm -f \\{\\} +",
     "prepublish": "yarn clean-dist && tsc -p tsconfig.json && tsc -p tsconfig-mjs.json && api-extractor run --local"
   },
-  "files": ["/dist", "/tsdoc-metadata.json", "/README.md", "/LICENSE"]
+  "files": [
+    "/dist",
+    "/tsdoc-metadata.json",
+    "/README.md",
+    "/LICENSE"
+  ]
 }

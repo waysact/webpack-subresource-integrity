@@ -38,7 +38,7 @@ module.exports = {
                 isEntry
                   ? "(\\w+|__webpack_require__)\\.sriHashes="
                   : "Object.assign\\((\\w+|__webpack_require__)\\.sriHashes,"
-              }(?<sriHashJson>\{.*?\})`
+              }(?<sriHashJson>{.*?})`
             );
             const regexMatch = sriRegex.exec(fileContent);
             const sriHashJson = regexMatch

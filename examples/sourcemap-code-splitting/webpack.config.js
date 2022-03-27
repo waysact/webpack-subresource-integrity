@@ -34,11 +34,11 @@ module.exports = {
               join(__dirname, filePath),
               "utf-8"
             );
-            return (string = fileContent
+            return fileContent
               .substring(fileContent.indexOf(pattern) + (offset || 0))
               .match(/\{(.*?)\}/)[0]
               .replace(/\\/g, "")
-              .replace(/\"/g, ""));
+              .replace(/"/g, "");
           };
 
           const sriHashesInSource = findAndStripSriHashString(

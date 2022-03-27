@@ -2,7 +2,7 @@
   "name": "wsi-test-helper",
   "version": "1.0.0",
   "description": "Helpers for webpack-subresource-integrity tests",
-  "main": "index.js",
+  "main": "dist/index.js",
   "license": "MIT",
   "private": true,
   "devDependencies": {

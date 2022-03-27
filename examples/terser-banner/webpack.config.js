@@ -16,7 +16,7 @@ module.exports = {
       new TerserPlugin({
         extractComments: {
           condition: () => true,
-          filename: (fileData) => "LICENSE.txt",
+          filename: () => "LICENSE.txt",
           banner: (licenseFile) => {
             return `License information can be found in ${licenseFile}`;
           },

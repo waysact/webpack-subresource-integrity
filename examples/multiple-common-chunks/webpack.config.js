@@ -1,5 +1,4 @@
 const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
-const webpack = require("webpack");
 const { readFileSync } = require("fs");
 const { join } = require("path");
 const expect = require("expect");

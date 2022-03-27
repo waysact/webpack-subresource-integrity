@@ -19,7 +19,7 @@ module.exports = {
     new WebpackAssetsManifest({ integrity: true }),
     {
       apply: (compiler) => {
-        compiler.hooks.done.tap("wsi-test", (stats) => {
+        compiler.hooks.done.tap("wsi-test", () => {
           const manifest = JSON.parse(
             readFileSync(join(__dirname, "dist/manifest.json"), "utf-8")
           );
