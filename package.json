@@ -27,7 +27,7 @@
     "prettier": "prettier --write '**/*.{js,ts}'"
   },
   "devDependencies": {
-    "prettier": "^2.3.2"
+    "prettier": "^2.6.1"
   },
   "packageManager": "yarn@3.0.0"
 }

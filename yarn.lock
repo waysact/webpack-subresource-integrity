@@ -8538,12 +8538,12 @@ fsevents@^2.1.2:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.3.2":
-  version: 2.3.2
-  resolution: "prettier@npm:2.3.2"
+"prettier@npm:^2.6.1":
+  version: 2.6.1
+  resolution: "prettier@npm:2.6.1"
   bin:
     prettier: bin-prettier.js
-  checksum: 17ce5784ac67621c292df58e2da60b2ee150c2d6aebea22a6ad9e52fcd6a5e66c349d0a8436ea3bd8ff9d778920a5f68000d7625b74f43558718a49755aa5259
+  checksum: 78be1f8a3ddfad7c3d8a854b6c8941a3bb1ddfca4225c38d778e0fe1029a55368f71b3bbefff82c689015fbb4d391ec44add957f01308ad2725e01a7c1f37cb6
   languageName: node
   linkType: hard
 
@@ -9177,7 +9177,7 @@ resolve@~1.19.0:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    prettier: ^2.3.2
+    prettier: ^2.6.1
   languageName: unknown
   linkType: soft
 
@@ -11278,7 +11278,6 @@ typescript@^3.3.3:
     lodash: ^4.17.21
     memfs: ^3.2.0
     nyc: "*"
-    prettier: ^2.3.2
     rimraf: ^3.0.2
     tapable: ^2.2.0
     tmp: ^0.2.1
@@ -11587,7 +11586,6 @@ typescript@^3.3.3:
     fastify-static: ^3.4.0
     get-port: ^5.1.1
     http-shutdown: ^1.2.2
-    prettier: ^2.3.2
     puppeteer: ^5.5.0
     serve-static: ^1.14.1
     typescript: ^4.3.5

@@ -17,7 +17,6 @@
     "fastify-static": "^3.4.0",
     "get-port": "^5.1.1",
     "http-shutdown": "^1.2.2",
-    "prettier": "^2.3.2",
     "puppeteer": "^5.5.0",
     "serve-static": "^1.14.1",
     "typescript": "^4.3.5",

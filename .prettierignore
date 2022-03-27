@@ -2,3 +2,5 @@
 *.d.ts
 coverage/
 dist/
+webpack-subresource-integrity/*.js
+wsi-test-helper/*.js
