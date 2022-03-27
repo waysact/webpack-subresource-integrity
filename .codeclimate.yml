@@ -3,15 +3,7 @@ engines:
   eslint:
     enabled: true
 ratings:
-  paths:
-    [
-      "webpack-subresource-integrity/index.ts",
-      "webpack-subresource-integrity/plugin.ts",
-      "webpack-subresource-integrity/util.ts",
-      "webpack-subresource-integrity/reporter.ts",
-      "webpack-subresource-integrity/types.ts",
-      "webpack-subresource-integrity/scc.ts",
-    ]
+  paths: ["webpack-subresource-integrity/src/*.ts"]
 exclude_patterns:
   - "node_modules/"
   - "examples/"

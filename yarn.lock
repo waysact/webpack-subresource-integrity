@@ -780,7 +780,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node12@npm:^1.0.8, @tsconfig/node12@npm:^1.0.9":
+"@tsconfig/node12@npm:^1.0.9":
   version: 1.0.9
   resolution: "@tsconfig/node12@npm:1.0.9"
   checksum: a01b2400ab3582b86b589c6d31dcd0c0656f333adecde85d6d7d4086adb059808b82692380bb169546d189bf771ae21d02544a75b57bd6da4a5dd95f8567bec9
@@ -972,13 +972,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:^7.0.8":
-  version: 7.0.8
-  resolution: "@types/json-schema@npm:7.0.8"
-  checksum: f1d0fe76ab1db93846f36a9179faa44b9b66f2f5f44597e46e65456a1c998f632c63b94ed347058ed1a230cbf95a9a164b4daf4d70aa3d651d5033f7856df83c
-  languageName: node
-  linkType: hard
-
 "@types/json-schema@npm:^7.0.9":
   version: 7.0.11
   resolution: "@types/json-schema@npm:7.0.11"
@@ -993,10 +986,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.14.171":
-  version: 4.14.171
-  resolution: "@types/lodash@npm:4.14.171"
-  checksum: d093d8ff8b31d7829ab5f2625d824bb1f903fb07d4beca50812c99c3d6c6b63155c56eb0ecf14b97f0d4ba5fcb3b13f8259cca6d4313345326f3c48bed6f4b9f
+"@types/lodash@npm:^4.14.180":
+  version: 4.14.180
+  resolution: "@types/lodash@npm:4.14.180"
+  checksum: fc42ae3473695cac6e91553f832fef8eb51a31c1c0381cafa81b00dc3efe18e279786bdda77caf0b90a8340ba2ba7aa46ae6541d69870565f775d04c89128bc1
   languageName: node
   linkType: hard
 
@@ -1058,13 +1051,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/rimraf@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "@types/rimraf@npm:3.0.1"
+"@types/rimraf@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "@types/rimraf@npm:3.0.2"
   dependencies:
     "@types/glob": "*"
     "@types/node": "*"
-  checksum: 7c921220715d969c365b4fa37de9d0578aaf0ff78d445d4d13035cfc5edee76f392b9356291af5176cded5f0482370ef40608e55d502054059bf16425c39e868
+  checksum: b47fa302f46434cba704d20465861ad250df79467d3d289f9d6490d3aeeb41e8cb32dd80bd1a8fd833d1e185ac719fbf9be12e05ad9ce9be094d8ee8f1405347
   languageName: node
   linkType: hard
 
@@ -1085,10 +1078,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/tmp@npm:^0.2.1":
-  version: 0.2.1
-  resolution: "@types/tmp@npm:0.2.1"
-  checksum: 2617d2a04811ca78a8d21f5ffc3bd7c392e03c440053a615b091f3e3726540d36babffc750614a803c81b9f2c5f218cdafc748d8cf4638eade2962f8ccddd2fa
+"@types/tmp@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@types/tmp@npm:0.2.3"
+  checksum: 0ca45e99b3b3c6959d5c4f4555f73c8007db540cfb0fbbb9373217f9ab85e67eef75193f51a1d6564b0ee6c6f5ffa259d1034d7f7530a5b7ce80acb94cfc4daa
   languageName: node
   linkType: hard
 
@@ -6129,6 +6122,13 @@ fsevents@^2.1.2:
   languageName: node
   linkType: hard
 
+"istanbul-lib-coverage@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "istanbul-lib-coverage@npm:3.2.0"
+  checksum: a2a545033b9d56da04a8571ed05c8120bf10e9bce01cf8633a3a2b0d1d83dff4ac4fe78d6d5673c27fc29b7f21a41d75f83a36be09f82a61c367b56aa73c1ff9
+  languageName: node
+  linkType: hard
+
 "istanbul-lib-hook@npm:^2.0.7":
   version: 2.0.7
   resolution: "istanbul-lib-hook@npm:2.0.7"
@@ -6232,6 +6232,17 @@ fsevents@^2.1.2:
     istanbul-lib-coverage: ^3.0.0
     source-map: ^0.6.1
   checksum: 292bfb4083e5f8783cdf829a7686b1a377d0c6c2119d4343c8478e948b38146c4827cddc7eee9f57605acd63c291376d67e4a84163d37c5fc78ad0f27f7e2621
+  languageName: node
+  linkType: hard
+
+"istanbul-lib-source-maps@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "istanbul-lib-source-maps@npm:4.0.1"
+  dependencies:
+    debug: ^4.1.1
+    istanbul-lib-coverage: ^3.0.0
+    source-map: ^0.6.1
+  checksum: 21ad3df45db4b81852b662b8d4161f6446cd250c1ddc70ef96a585e2e85c26ed7cd9c2a396a71533cfb981d1a645508bc9618cae431e55d01a0628e7dec62ef2
   languageName: node
   linkType: hard
 
@@ -7937,8 +7948,8 @@ fsevents@^2.1.2:
   dependencies:
     glob: ^7.2.0
     glob-promise: ^4.2.2
-    istanbul-lib-coverage: ^3.0.0
-    istanbul-lib-source-maps: ^4.0.0
+    istanbul-lib-coverage: ^3.2.0
+    istanbul-lib-source-maps: ^4.0.1
     source-map: ^0.7.3
   languageName: unknown
   linkType: soft
@@ -11420,11 +11431,10 @@ typescript@^3.3.3:
     "@tsconfig/node12": ^1.0.9
     "@types/cross-spawn": ^6.0.2
     "@types/jest": ^26.0.24
-    "@types/json-schema": ^7.0.8
-    "@types/lodash": ^4.14.171
+    "@types/lodash": ^4.14.180
     "@types/node": ^14.17.5
-    "@types/rimraf": ^3.0.1
-    "@types/tmp": ^0.2.1
+    "@types/rimraf": ^3.0.2
+    "@types/tmp": ^0.2.3
     cross-spawn: ^7.0.3
     html-webpack-plugin: ">= 5.0.0-beta.1"
     jest: ^26.6.3
@@ -11752,7 +11762,7 @@ typescript@^3.3.3:
   version: 0.0.0-use.local
   resolution: "wsi-test-helper@workspace:wsi-test-helper"
   dependencies:
-    "@tsconfig/node12": ^1.0.8
+    "@tsconfig/node12": ^1.0.9
     "@types/connect": ^3.4.35
     "@types/node": ^14.17.5
     "@types/puppeteer": ^5.4.5
