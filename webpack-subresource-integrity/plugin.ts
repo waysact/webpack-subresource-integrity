@@ -22,9 +22,9 @@ import {
   normalizePath,
   getTagSrc,
   notNil,
-  getChunkToManifestMap,
   sriHashVariableReference,
 } from "./util";
+import { getChunkToManifestMap } from "./manifest";
 
 type AssetType = "js" | "css";
 

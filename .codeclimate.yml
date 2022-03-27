@@ -10,12 +10,24 @@ ratings:
       "webpack-subresource-integrity/util.ts",
       "webpack-subresource-integrity/reporter.ts",
       "webpack-subresource-integrity/types.ts",
+      "webpack-subresource-integrity/scc.ts",
     ]
 exclude_patterns:
-  - "webpack-subresource-integrity/*.js"
-  - "wsi-test-helper/*.js"
-  - ".git/"
-  - ".yarn/"
   - "node_modules/"
-  - "**/coverage/"
   - "examples/"
+  - "smoke-test/"
+  - ".git/"
+  - ".github/"
+  - ".yarn/"
+  - ".nyc_merged/"
+  - ".nyc_output/"
+  - "**/coverage/"
+  - "**/dist/"
+  - "**/temp/"
+  - "**/*.js"
+  - "**/*.cjs"
+  - "**/*.d.ts"
+  - "**/*.map"
+  - "**/*.tgz"
+  - "**/.log"
+  - "**/.eslintrc.js"
