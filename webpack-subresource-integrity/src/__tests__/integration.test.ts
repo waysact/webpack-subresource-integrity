@@ -13,7 +13,7 @@ import {
 } from "webpack";
 import { resolve } from "path";
 import tmp from "tmp-promise";
-import { SubresourceIntegrityPlugin } from "./index.js";
+import { SubresourceIntegrityPlugin } from "..";
 import { runWebpack } from "./test-utils";
 import merge from "lodash/merge";
 
@@ -28,10 +28,7 @@ async function runWebpackForSimpleProject(
       {
         mode: "production",
         output: { path: tmpDir.path, crossOriginLoading: "anonymous" },
-        entry: resolve(
-          __dirname,
-          "./test-fixtures/simple-project/src/index.js"
-        ),
+        entry: resolve(__dirname, "./__fixtures__/simple-project/src/."),
         plugins: [new SubresourceIntegrityPlugin()],
       },
       options

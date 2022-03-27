@@ -20,8 +20,15 @@
     "integrity",
     "html-webpack-plugin"
   ],
-  "main": "./index.js",
-  "types": "./webpack-subresource-integrity-public.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/mjs/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/mjs/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "types": "./dist/webpack-subresource-integrity-public.d.ts",
   "engines": {
     "node": ">= 12"
   },
@@ -68,22 +75,8 @@
     "webpack": "^5.44.0"
   },
   "scripts": {
-    "prepublish": "tsc && api-extractor run --local"
+    "clean-dist": "find dist ! -name package.json -type f -exec rm -f \\{\\} +",
+    "prepublish": "yarn clean-dist && tsc -p tsconfig.json && tsc -p tsconfig-mjs.json && api-extractor run --local"
   },
-  "files": [
-    "/index.js",
-    "/index.js.map",
-    "/plugin.js",
-    "/plugin.js.map",
-    "/reporter.js",
-    "/reporter.js.map",
-    "/util.js",
-    "/util.js.map",
-    "/types.js",
-    "/types.js.map",
-    "/webpack-subresource-integrity-public.d.ts",
-    "/tsdoc-metadata.json",
-    "/README.md",
-    "/LICENSE"
-  ]
+  "files": ["/dist", "/tsdoc-metadata.json", "/README.md", "/LICENSE"]
 }

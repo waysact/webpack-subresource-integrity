@@ -6,7 +6,7 @@
  */
 
 import { resolve } from "path";
-import { SubresourceIntegrityPlugin } from "./index.js";
+import { SubresourceIntegrityPlugin } from "..";
 import { runWebpack } from "./test-utils";
 
 jest.mock("html-webpack-plugin");
@@ -14,7 +14,7 @@ jest.mock("html-webpack-plugin");
 test("error when loading html-webpack-plugin", async () => {
   await expect(
     runWebpack({
-      entry: resolve(__dirname, "./test-fixtures/simple-project/src/index.js"),
+      entry: resolve(__dirname, "./__fixtures__/simple-project/src/"),
       plugins: [new SubresourceIntegrityPlugin()],
     })
   ).rejects.toThrow("bogus hwp accessed");

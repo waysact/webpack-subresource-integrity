@@ -5,10 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { resolve } from "path";
 import webpack, { Compiler, Compilation, Configuration, Chunk } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
-import { SubresourceIntegrityPlugin } from "./index.js";
-import type { SubresourceIntegrityPluginOptions } from "./index.js";
+import { SubresourceIntegrityPlugin } from "..";
+import type { SubresourceIntegrityPluginOptions } from "..";
 
 jest.unmock("html-webpack-plugin");
 
@@ -40,9 +41,35 @@ const runCompilation = (compiler: Compiler) =>
     });
   });
 
+const disableOutputPlugin = {
+  apply(compiler: Compiler) {
+    compiler.hooks.compilation.tap(
+      "DisableOutputWebpackPlugin",
+      (compilation: Compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: "DisableOutputWebpackPlugin",
+            stage:
+              compilation.compiler.webpack.Compilation
+                .PROCESS_ASSETS_STAGE_SUMMARIZE,
+          },
+          (compilationAssets) => {
+            Object.keys(compilation.assets).forEach((asset) => {
+              delete compilation.assets[asset];
+            });
+            Object.keys(compilationAssets).forEach((asset) => {
+              delete compilationAssets[asset];
+            });
+          }
+        );
+      }
+    );
+  },
+};
+
 const defaultOptions: Partial<Configuration> = {
   mode: "none",
-  entry: "./test-fixtures/simple-project/src/index.js",
+  entry: resolve(__dirname, "./__fixtures__/simple-project/src/."),
   output: {
     crossOriginLoading: "anonymous",
   },
@@ -78,7 +105,7 @@ test("supports new constructor with array of hash function names", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -94,7 +121,7 @@ test("errors if hash function names is not an array", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -113,7 +140,7 @@ test("errors if hash function names contains non-string", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -132,7 +159,7 @@ test("errors if hash function names are empty", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -151,7 +178,7 @@ test("errors if hash function names contains unsupported digest", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -171,7 +198,7 @@ test("errors if hashLoading option uses unknown value", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -190,7 +217,7 @@ test("uses default options", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -207,7 +234,7 @@ test("should warn when output.crossOriginLoading is not set", async () => {
     webpack({
       ...defaultOptions,
       output: { crossOriginLoading: false },
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -230,7 +257,7 @@ test("should ignore tags without attributes", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
