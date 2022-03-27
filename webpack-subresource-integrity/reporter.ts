@@ -6,6 +6,7 @@
  */
 
 import type { Compilation } from "webpack";
+import { thisPluginName, standardHashFuncNames } from "./globals";
 
 export class Reporter {
   /**
@@ -16,26 +17,20 @@ export class Reporter {
   /**
    * @internal
    */
-  private pluginName: string;
-
-  /**
-   * @internal
-   */
   private emittedMessages: Set<string> = new Set();
 
   /**
    * @internal
    */
-  public constructor(compilation: Compilation, pluginName: string) {
+  public constructor(compilation: Compilation) {
     this.compilation = compilation;
-    this.pluginName = pluginName;
   }
 
   /**
    * @internal
    */
   private emitMessage(messages: Error[], message: string): void {
-    messages.push(new Error(`${this.pluginName}: ${message}`));
+    messages.push(new Error(`${thisPluginName}: ${message}`));
   }
 
   /**
@@ -96,6 +91,77 @@ more information."
   public errorCrossOriginLoadingNotSet(): void {
     this.errorOnce(
       "webpack option output.crossOriginLoading not set, code splitting will not work!"
+    );
+  }
+
+  public warnStandardHashFuncs(): void {
+    this.warnOnce(
+      "It is recommended that at least one hash function is part of the set " +
+        "for which support is mandated by the specification. " +
+        "These are: " +
+        standardHashFuncNames.join(", ") +
+        ". " +
+        "See http://www.w3.org/TR/SRI/#cryptographic-hash-functions for more information."
+    );
+  }
+
+  public errorInvalidHashLoading(
+    hashLoading: string,
+    supportedHashLoadingOptions: readonly string[]
+  ): void {
+    const optionsStr = supportedHashLoadingOptions
+      .map((opt) => `'${opt}'`)
+      .join(", ");
+
+    this.error(
+      `options.hashLoading must be one of ${optionsStr}, instead got '${hashLoading}'`
+    );
+  }
+
+  public warnCrossOriginPolicy(): void {
+    this.warnOnce(
+      'SRI requires a cross-origin policy, defaulting to "anonymous". ' +
+        "Set webpack option output.crossOriginLoading to a value other than false " +
+        "to make this warning go away. " +
+        "See https://w3c.github.io/webappsec-subresource-integrity/#cross-origin-data-leakage"
+    );
+  }
+
+  public errorNonStringHashFunc(hashFuncName: unknown): void {
+    this.error(
+      "options.hashFuncNames must be an array of hash function names, " +
+        "but contained " +
+        hashFuncName +
+        "."
+    );
+  }
+
+  public errorUnusableHashFunc(hashFuncName: string, error: Error): void {
+    this.error(
+      "Cannot use hash function '" + hashFuncName + "': " + error.message
+    );
+  }
+
+  public errorHashFuncsNonArray(hashFuncNames: unknown): void {
+    this.error(
+      "options.hashFuncNames must be an array of hash function names, " +
+        "instead got '" +
+        hashFuncNames +
+        "'."
+    );
+  }
+
+  public errorHashFuncsEmpty(): void {
+    this.error("Must specify at least one hash function name.");
+  }
+
+  public warnNonWeb(): void {
+    this.warnOnce("This plugin is not useful for non-web targets.");
+  }
+
+  public errorUnresolvedIntegrity(chunkFile: string): void {
+    this.errorOnce(
+      `Asset ${chunkFile} contains unresolved integrity placeholders`
     );
   }
 }

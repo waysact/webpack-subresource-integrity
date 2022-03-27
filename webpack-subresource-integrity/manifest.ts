@@ -9,8 +9,10 @@ import {
   unionSet,
   allChunksInChunkIterable,
   allChunksInPrimaryChunkIterable,
+  sriHashVariableReference,
 } from "./util";
 import { createDAGfromGraph } from "./scc";
+import { RuntimeModule, Template, Chunk } from "webpack";
 
 // This implementation assumes a directed acyclic graph (such as one produced by createDAGfromGraph),
 // and does not attempt to detect cycles
@@ -186,4 +188,23 @@ export function getChunkToManifestMap(
   chunkManifest: Map<Chunk, Set<Chunk>>
 ] {
   return new ChunkToManifestMapBuilder(chunks).build();
+}
+
+export class AddLazySriRuntimeModule extends RuntimeModule {
+  private sriHashes: unknown;
+
+  constructor(sriHashes: unknown, chunkName: string | number) {
+    super(
+      `webpack-subresource-integrity lazy hashes for direct children of chunk ${chunkName}`
+    );
+    this.sriHashes = sriHashes;
+  }
+
+  generate(): string {
+    return Template.asString([
+      `Object.assign(${sriHashVariableReference}, ${JSON.stringify(
+        this.sriHashes
+      )});`,
+    ]);
+  }
 }
