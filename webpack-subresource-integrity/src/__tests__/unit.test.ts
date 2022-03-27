@@ -10,6 +10,7 @@ import webpack, { Compiler, Compilation, Configuration, Chunk } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import { SubresourceIntegrityPlugin } from "..";
 import type { SubresourceIntegrityPluginOptions } from "..";
+import { assert } from "../util";
 
 jest.unmock("html-webpack-plugin");
 
@@ -46,12 +47,10 @@ const disableOutputPlugin = {
     compiler.hooks.compilation.tap(
       "DisableOutputWebpackPlugin",
       (compilation: Compilation) => {
-        compilation.hooks.processAssets.tap(
+        compilation.hooks.afterProcessAssets.tap(
           {
             name: "DisableOutputWebpackPlugin",
-            stage:
-              compilation.compiler.webpack.Compilation
-                .PROCESS_ASSETS_STAGE_SUMMARIZE,
+            stage: 10000,
           },
           (compilationAssets) => {
             Object.keys(compilation.assets).forEach((asset) => {
@@ -279,4 +278,35 @@ test("should ignore tags without attributes", async () => {
   expect(Object.keys(tag.attributes)).not.toContain(["integrity"]);
   expect(compilation.errors).toEqual([]);
   expect(compilation.warnings).toEqual([]);
+});
+
+test("positive assertion", () => {
+  assert(true, "Pass");
+});
+
+test("negative assertion", () => {
+  expect(() => {
+    assert(false, "Fail");
+  }).toThrow(new Error("Fail"));
+});
+
+test("errors with unresolved integrity", async () => {
+  const plugin = new SubresourceIntegrityPlugin({
+    hashFuncNames: ["sha256", "sha384"],
+  });
+
+  const compilation = await runCompilation(
+    webpack({
+      ...defaultOptions,
+      entry: resolve(__dirname, "./__fixtures__/unresolved/src/."),
+      plugins: [plugin, disableOutputPlugin],
+    })
+  );
+
+  expect(compilation.errors.length).toBe(1);
+  expect(compilation.warnings.length).toBe(0);
+
+  expect(compilation.errors[0]?.message).toMatch(
+    new RegExp("contains unresolved integrity placeholders")
+  );
 });

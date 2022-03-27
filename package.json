@@ -19,7 +19,7 @@
     "test:integration": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit integration.test.ts",
     "test:smoke": "cd webpack-subresource-integrity && yarn prepublish && yarn pack --filename ../smoke-test/webpack-subresource-integrity.tgz && cd ../smoke-test && rm -rf yarn.lock && touch yarn.lock && YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn && yarn test",
     "build": "cd webpack-subresource-integrity && yarn tsc && yarn api-extractor run --local --verbose",
-    "coverage": "rm -Rf coverage/* && yarn cover:run && yarn cover:report",
+    "coverage": "rm -Rf coverage && mkdir coverage && yarn cover:run && yarn cover:report",
     "cover:run": "rm -Rf .nyc_output && mkdir -p .nyc_output && rm -Rf .nyc_merged && mkdir -p .nyc_merged && (cd wsi-test-helper && yarn tsc) && cd webpack-subresource-integrity && yarn tsc && yarn nyc instrument --in-place=true \"$PWD/webpack-subresource-integrity/dist/cjs\" && USE_COVERAGE=1 yarn jest --coverage --detectOpenHandles --forceExit --verbose && cp src/coverage/coverage-final.json ../.nyc_output/ && cd ../nyc-apply-source-map && yarn node ./index.js ../.nyc_output ../.nyc_merged",
     "cover:report": "cd webpack-subresource-integrity && mkdir -p coverage && yarn nyc report --reporter=html --reporter=text-summary --cwd=.. --temp-dir=.nyc_merged --report-dir=coverage",
     "cover:lcov": "cd webpack-subresource-integrity && mkdir -p coverage && yarn nyc report --reporter=text-lcov --cwd=.. > coverage/lcov.info",
