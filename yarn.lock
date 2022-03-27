@@ -10857,13 +10857,6 @@ resolve@~1.19.0:
   languageName: node
   linkType: hard
 
-"typed-assert@npm:^1.0.8":
-  version: 1.0.8
-  resolution: "typed-assert@npm:1.0.8"
-  checksum: bed460f76da5b142da561b75a10164c3a226ac99353fa503ad1874aa375b51823088c72406148c8cbfb277ca2a416fbbd250689be84b2734944be101e79f4117
-  languageName: node
-  linkType: hard
-
 "typedarray-to-buffer@npm:^3.1.5":
   version: 3.1.5
   resolution: "typedarray-to-buffer@npm:3.1.5"
@@ -11407,8 +11400,6 @@ typescript@^3.3.3:
 "webpack-subresource-integrity@portal:webpack-subresource-integrity::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "webpack-subresource-integrity@portal:webpack-subresource-integrity::locator=root-workspace-0b6124%40workspace%3A."
-  dependencies:
-    typed-assert: ^1.0.8
   peerDependencies:
     html-webpack-plugin: ">= 5.0.0-beta.1 < 6"
     webpack: ^5.12.0
@@ -11451,7 +11442,6 @@ typescript@^3.3.3:
     tmp: ^0.2.1
     tmp-promise: ^3.0.3
     ts-jest: ^26.5.6
-    typed-assert: ^1.0.8
     typescript: ^4.3.5
     webpack: ^5.44.0
   peerDependencies:

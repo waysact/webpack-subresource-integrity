@@ -25,9 +25,6 @@
   "engines": {
     "node": ">= 12"
   },
-  "dependencies": {
-    "typed-assert": "^1.0.8"
-  },
   "peerDependencies": {
     "html-webpack-plugin": ">= 5.0.0-beta.1 < 6",
     "webpack": "^5.12.0"

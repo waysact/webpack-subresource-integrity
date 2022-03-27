@@ -8,7 +8,6 @@
 import type { AssetInfo, Chunk, Compiler, Compilation, sources } from "webpack";
 import { relative, join } from "path";
 import { readFileSync } from "fs";
-import * as assert from "typed-assert";
 import {
   HtmlTagObject,
   SubresourceIntegrityPluginResolvedOptions,
@@ -21,6 +20,7 @@ import {
 } from "./types";
 import { Reporter } from "./reporter";
 import {
+  assert,
   computeIntegrity,
   makePlaceholder,
   findChunks,
@@ -239,7 +239,7 @@ export class Plugin {
    * @internal
    */
   private hwpAssetPath = (src: string): string => {
-    assert.isNotNull(this.hwpPublicPath);
+    assert(this.hwpPublicPath !== null, "Missing HtmlWebpackPlugin publicPath");
     return relative(this.hwpPublicPath, src);
   };
 
