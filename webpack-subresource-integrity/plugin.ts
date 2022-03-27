@@ -13,6 +13,11 @@ import {
   HtmlTagObject,
   SubresourceIntegrityPluginResolvedOptions,
   StronglyConnectedComponent,
+  AssetType,
+  TemplateFiles,
+  HWPAssets,
+  WSIHWPAssets,
+  WSIHWPAssetsIntegrityKey,
 } from "./types";
 import { Reporter } from "./reporter";
 import {
@@ -23,31 +28,14 @@ import {
   getTagSrc,
   notNil,
   sriHashVariableReference,
+  updateAssetHash,
+  tryGetSource,
+  map,
+  replaceInSource,
+  usesAnyHash,
 } from "./util";
 import { getChunkToManifestMap } from "./manifest";
-
-type AssetType = "js" | "css";
-
-type TemplateFiles = { [key in AssetType]: string[] };
-
-interface HWPAssets {
-  publicPath: string;
-  js: string[];
-  css: string[];
-  favicon?: string | undefined;
-  manifest?: string | undefined;
-}
-
-interface WSIHWPAssets extends HWPAssets {
-  jsIntegrity: string[];
-  cssIntegrity: string[];
-}
-
-type KeysOfType<T, TProp> = {
-  [P in keyof T]: T[P] extends TProp ? P : never;
-}[keyof T];
-
-type WSIHWPAssetsIntegrityKey = KeysOfType<WSIHWPAssets, string[]>;
+import { AssetIntegrity } from "./integrity";
 
 const assetTypeIntegrityKeys: [AssetType, WSIHWPAssetsIntegrityKey][] = [
   ["js", "jsIntegrity"],
@@ -73,12 +61,7 @@ export class Plugin {
   /**
    * @internal
    */
-  private assetIntegrity: Map<string, string> = new Map();
-
-  /**
-   * @internal
-   */
-  private inverseAssetIntegrity: Map<string, string> = new Map();
+  private assetIntegrity: AssetIntegrity;
 
   /**
    * @internal
@@ -108,6 +91,8 @@ export class Plugin {
     this.compilation = compilation;
     this.options = options;
     this.reporter = reporter;
+
+    this.assetIntegrity = new AssetIntegrity(this.options.hashFuncNames);
   }
 
   /**
@@ -115,20 +100,7 @@ export class Plugin {
    */
   private warnIfHotUpdate(source: string | Buffer): void {
     if (source.indexOf("webpackHotUpdate") >= 0) {
-      this.reporter.warnOnce(
-        "webpack-subresource-integrity may interfere with hot reloading. " +
-          "Consider disabling this plugin in development mode."
-      );
-    }
-  }
-
-  /**
-   * @internal
-   */
-  private updateAssetIntegrity(assetKey: string, integrity: string) {
-    if (!this.assetIntegrity.has(assetKey)) {
-      this.assetIntegrity.set(assetKey, integrity);
-      this.inverseAssetIntegrity.set(integrity, assetKey);
+      this.reporter.warnHotReloading();
     }
   }
 
@@ -139,17 +111,10 @@ export class Plugin {
     assets: Record<string, sources.Source>
   ): void => {
     Object.keys(assets).forEach((assetKey) => {
-      const asset = assets[assetKey];
-      let source;
-      try {
-        source = asset.source();
-      } catch (_) {
-        return;
+      const source = tryGetSource(assets[assetKey]);
+      if (source) {
+        this.assetIntegrity.updateFromSource(assetKey, source);
       }
-      this.updateAssetIntegrity(
-        assetKey,
-        computeIntegrity(this.options.hashFuncNames, source)
-      );
     });
   };
 
@@ -162,48 +127,26 @@ export class Plugin {
     hashByChunkId: Map<string | number, string>,
     chunkFile: string
   ): sources.Source => {
-    const oldSource = assets[chunkFile].source();
-    const hashFuncNames = this.options.hashFuncNames;
-    const newAsset = new compiler.webpack.sources.ReplaceSource(
+    return (assets[chunkFile] = replaceInSource(
+      compiler,
       assets[chunkFile],
-      chunkFile
-    );
-
-    Array.from(hashByChunkId.entries()).forEach((idAndHash) => {
-      const magicMarker = makePlaceholder(hashFuncNames, idAndHash[0]);
-      const magicMarkerPos = oldSource.indexOf(magicMarker);
-      if (magicMarkerPos >= 0) {
-        newAsset.replace(
-          magicMarkerPos,
-          magicMarkerPos + magicMarker.length - 1,
-          idAndHash[1],
-          chunkFile
-        );
-      }
-    });
-
-    assets[chunkFile] = newAsset;
-
-    return newAsset;
+      chunkFile,
+      map(hashByChunkId.entries(), ([id, hash]) => [
+        makePlaceholder(this.options.hashFuncNames, id),
+        hash,
+      ])
+    ));
   };
 
   private warnAboutLongTermCaching = (assetInfo: AssetInfo) => {
     if (
-      (assetInfo.fullhash ||
-        assetInfo.chunkhash ||
-        assetInfo.modulehash ||
-        assetInfo.contenthash) &&
+      usesAnyHash(assetInfo) &&
       !(
         assetInfo.contenthash &&
         this.compilation.compiler.options.optimization.realContentHash
       )
     ) {
-      this.reporter.warnOnce(
-        "Using [hash], [fullhash], [modulehash], or [chunkhash] is dangerous \
-with SRI. The same is true for [contenthash] when realContentHash is disabled. \
-Use [contenthash] and ensure realContentHash is enabled. See the README for \
-more information."
-      );
+      this.reporter.warnContentHash();
     }
   };
 
@@ -223,9 +166,7 @@ more information."
     childChunk: Chunk,
     assets: Record<string, sources.Source>
   ) => {
-    const files = Array.from(childChunk.files);
-
-    files.forEach((sourcePath) => {
+    Array.from(childChunk.files).forEach((sourcePath) => {
       if (assets[sourcePath]) {
         this.warnIfHotUpdate(assets[sourcePath].source());
         const newAsset = this.replaceAsset(
@@ -234,41 +175,23 @@ more information."
           this.hashByChunkId,
           sourcePath
         );
-        const integrity = computeIntegrity(
-          this.options.hashFuncNames,
+        const integrity = this.assetIntegrity.updateFromSource(
+          sourcePath,
           newAsset.source()
         );
 
         if (childChunk.id !== null) {
           this.hashByChunkId.set(childChunk.id, integrity);
         }
-        this.updateAssetIntegrity(sourcePath, integrity);
-        this.compilation.updateAsset(
+
+        updateAssetHash(
+          this.compilation,
           sourcePath,
-          (x) => x,
-          (assetInfo) => {
-            if (!assetInfo) {
-              return undefined;
-            }
-
-            this.warnAboutLongTermCaching(assetInfo);
-
-            return {
-              ...assetInfo,
-              contenthash: Array.isArray(assetInfo.contenthash)
-                ? [...new Set([...assetInfo.contenthash, integrity])]
-                : assetInfo.contenthash
-                ? [assetInfo.contenthash, integrity]
-                : integrity,
-            };
-          }
+          integrity,
+          this.warnAboutLongTermCaching
         );
       } else {
-        this.reporter.warnOnce(
-          `No asset found for source path '${sourcePath}', options are ${Object.keys(
-            assets
-          ).join(", ")}`
-        );
+        this.reporter.warnNoAssetsFound(sourcePath, Object.keys(assets));
       }
     });
   };
@@ -278,9 +201,7 @@ more information."
    */
   addAttribute = (elName: string, source: string): string => {
     if (!this.compilation.outputOptions.crossOriginLoading) {
-      this.reporter.errorOnce(
-        "webpack option output.crossOriginLoading not set, code splitting will not work!"
-      );
+      this.reporter.errorCrossOriginLoadingNotSet();
     }
 
     return this.compilation.compiler.webpack.Template.asString([
@@ -337,10 +258,8 @@ more information."
     const normalizedKey = Object.keys(assets).find(
       (assetKey) => normalizePath(assetKey) === normalizedSrc
     );
-    if (normalizedKey) {
-      return this.assetIntegrity.get(normalizedKey);
-    }
-    return undefined;
+
+    return normalizedKey ? this.assetIntegrity.get(normalizedKey) : undefined;
   };
 
   /**
@@ -410,22 +329,6 @@ more information."
     );
   };
 
-  updateHash = (input: Buffer[], oldHash: string): string | undefined => {
-    const assetKey = this.inverseAssetIntegrity.get(oldHash);
-    if (assetKey && input.length === 1) {
-      const newIntegrity = computeIntegrity(
-        this.options.hashFuncNames,
-        input[0]
-      );
-      this.inverseAssetIntegrity.delete(oldHash);
-      this.assetIntegrity.delete(assetKey);
-      this.updateAssetIntegrity(assetKey, newIntegrity);
-
-      return newIntegrity;
-    }
-    return undefined;
-  };
-
   handleHwpBodyTags = ({
     headTags,
     bodyTags,
@@ -435,8 +338,10 @@ more information."
   }): void => {
     this.addMissingIntegrityHashes(this.compilation.assets);
 
-    headTags
-      .concat(bodyTags)
-      .forEach((tag: HtmlTagObject) => this.processTag(tag));
+    headTags.concat(bodyTags).forEach(this.processTag);
   };
+
+  public updateHash(input: Buffer[], oldHash: string): string | undefined {
+    return this.assetIntegrity.updateHash(input, oldHash);
+  }
 }

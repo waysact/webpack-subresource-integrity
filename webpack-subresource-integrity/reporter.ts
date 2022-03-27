@@ -68,4 +68,34 @@ export class Reporter {
   public error(message: string): void {
     this.emitMessage(this.compilation.errors, message);
   }
+
+  public warnHotReloading(): void {
+    this.warnOnce(
+      "webpack-subresource-integrity may interfere with hot reloading. " +
+        "Consider disabling this plugin in development mode."
+    );
+  }
+
+  public warnContentHash(): void {
+    this.warnOnce(
+      "Using [hash], [fullhash], [modulehash], or [chunkhash] is dangerous \
+with SRI. The same is true for [contenthash] when realContentHash is disabled. \
+Use [contenthash] and ensure realContentHash is enabled. See the README for \
+more information."
+    );
+  }
+
+  public warnNoAssetsFound(sourcePath: string, assetNames: string[]): void {
+    this.warnOnce(
+      `No asset found for source path '${sourcePath}', options are ${assetNames.join(
+        ", "
+      )}`
+    );
+  }
+
+  public errorCrossOriginLoadingNotSet(): void {
+    this.errorOnce(
+      "webpack option output.crossOriginLoading not set, code splitting will not work!"
+    );
+  }
 }

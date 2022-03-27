@@ -6,7 +6,7 @@
  */
 
 import { createHash } from "crypto";
-import type { Chunk, Compilation } from "webpack";
+import type { AssetInfo, Chunk, Compilation, Compiler, sources } from "webpack";
 import { sep } from "path";
 import type { HtmlTagObject } from "./types";
 
@@ -197,4 +197,70 @@ export function* allChunksInPrimaryChunkIterable(
       yield childChunk;
     }
   }
+}
+
+export function updateAssetHash(
+  compilation: Compilation,
+  assetPath: string,
+  integrity: string,
+  onUpdate: (assetInfo: AssetInfo) => void
+): void {
+  compilation.updateAsset(
+    assetPath,
+    (x) => x,
+    (assetInfo) => {
+      if (!assetInfo) {
+        return undefined;
+      }
+
+      onUpdate(assetInfo);
+
+      return {
+        ...assetInfo,
+        contenthash: Array.isArray(assetInfo.contenthash)
+          ? [...new Set([...assetInfo.contenthash, integrity])]
+          : assetInfo.contenthash
+          ? [assetInfo.contenthash, integrity]
+          : integrity,
+      };
+    }
+  );
+}
+
+export function tryGetSource(
+  source: sources.Source
+): string | Buffer | undefined {
+  try {
+    return source.source();
+  } catch (_) {
+    return undefined;
+  }
+}
+
+export function replaceInSource(
+  compiler: Compiler,
+  source: sources.Source,
+  path: string,
+  replacements: Iterable<[string, string]>
+): sources.Source {
+  const oldSource = source.source();
+  const newAsset = new compiler.webpack.sources.ReplaceSource(source, path);
+
+  for (const [fromString, toString] of replacements) {
+    const pos = oldSource.indexOf(fromString);
+    if (pos >= 0) {
+      newAsset.replace(pos, pos + fromString.length - 1, toString);
+    }
+  }
+
+  return newAsset;
+}
+
+export function usesAnyHash(assetInfo: AssetInfo): boolean {
+  return !!(
+    assetInfo.fullhash ||
+    assetInfo.chunkhash ||
+    assetInfo.modulehash ||
+    assetInfo.contenthash
+  );
 }

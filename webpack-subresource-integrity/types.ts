@@ -23,3 +23,26 @@ export interface Graph<T> {
 export interface StronglyConnectedComponent<T> {
   nodes: Set<T>;
 }
+
+export type AssetType = "js" | "css";
+
+export type TemplateFiles = { [key in AssetType]: string[] };
+
+export interface HWPAssets {
+  publicPath: string;
+  js: string[];
+  css: string[];
+  favicon?: string | undefined;
+  manifest?: string | undefined;
+}
+
+export interface WSIHWPAssets extends HWPAssets {
+  jsIntegrity: string[];
+  cssIntegrity: string[];
+}
+
+type KeysOfType<T, TProp> = {
+  [P in keyof T]: T[P] extends TProp ? P : never;
+}[keyof T];
+
+export type WSIHWPAssetsIntegrityKey = KeysOfType<WSIHWPAssets, string[]>;
