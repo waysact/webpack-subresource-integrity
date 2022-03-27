@@ -1,6 +1,7 @@
 import type { Compiler, Compilation } from "webpack";
 import { getHtmlWebpackPluginHooksType } from "./types";
 import { thisPluginName } from "./globals";
+import { hasOwnProperty } from "./util";
 
 interface StatsObjectWithIntegrity {
   integrity: string;
@@ -31,6 +32,21 @@ function installStatsFactoryPlugin(compiler: Compiler) {
   });
 }
 
+interface ErrnoException extends Error {
+  errno?: number | undefined;
+  code?: string | undefined;
+  path?: string | undefined;
+  syscall?: string | undefined;
+}
+
+function isErrorWithCode(obj: unknown): obj is Pick<ErrnoException, "code"> {
+  return (
+    obj instanceof Error &&
+    hasOwnProperty(obj, "code") &&
+    ["string", "undefined"].includes(typeof obj.code)
+  );
+}
+
 export function install(
   compiler: Compiler,
   callback: (
@@ -44,7 +60,7 @@ export function install(
       getHtmlWebpackPluginHooks = (await import("html-webpack-plugin")).default
         .getHooks;
     } catch (e) {
-      if (e.code !== "MODULE_NOT_FOUND") {
+      if (!isErrorWithCode(e) || e.code !== "MODULE_NOT_FOUND") {
         throw e;
       }
     }

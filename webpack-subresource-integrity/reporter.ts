@@ -7,6 +7,18 @@
 
 import type { Compilation } from "webpack";
 import { thisPluginName, standardHashFuncNames } from "./globals";
+import { hasOwnProperty } from "./util";
+
+function errorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    hasOwnProperty(error, "message")
+  ) {
+    return error.message;
+  }
+  return String(error);
+}
 
 export class Reporter {
   /**
@@ -136,9 +148,9 @@ more information."
     );
   }
 
-  public errorUnusableHashFunc(hashFuncName: string, error: Error): void {
+  public errorUnusableHashFunc(hashFuncName: string, error: unknown): void {
     this.error(
-      "Cannot use hash function '" + hashFuncName + "': " + error.message
+      "Cannot use hash function '" + hashFuncName + "': " + errorMessage(error)
     );
   }
 
