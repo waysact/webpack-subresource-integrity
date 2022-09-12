@@ -21,6 +21,8 @@ export interface SubresourceIntegrityPluginOptions {
     readonly hashFuncNames?: [string, ...string[]];
     // (undocumented)
     readonly hashLoading?: "eager" | "lazy";
+    // (undocumented)
+    readonly skipChunkNames?: string[];
 }
 
 // (No @packageDocumentation comment for this package)

@@ -39,6 +39,7 @@ export interface SubresourceIntegrityPluginOptions {
   readonly hashFuncNames?: [string, ...string[]];
   readonly enabled?: "auto" | true | false;
   readonly hashLoading?: "eager" | "lazy";
+  readonly skipChunkNames?: string[]
 }
 
 class AddLazySriRuntimeModule extends RuntimeModule {
