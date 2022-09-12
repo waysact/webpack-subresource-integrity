@@ -10,16 +10,18 @@ import {
   StatsAsset,
   WebpackError,
   WebpackOptionsNormalized,
-  container
+  container,
 } from "webpack";
 import { resolve } from "path";
 import tmp from "tmp-promise";
-import { SubresourceIntegrityPlugin, SubresourceIntegrityPluginOptions } from "./index.js";
+import {
+  SubresourceIntegrityPlugin,
+  SubresourceIntegrityPluginOptions,
+} from "./index.js";
 import { runWebpack } from "./test-utils";
 import merge from "lodash/merge";
 
 const { ModuleFederationPlugin } = container;
-
 
 jest.unmock("html-webpack-plugin");
 
@@ -47,20 +49,20 @@ async function runWebpackForModuleFederationProject(
   options: Partial<SubresourceIntegrityPluginOptions> = {}
 ): Promise<Stats> {
   const tmpDir = await tmp.dir({ unsafeCleanup: true });
-  return await runWebpack(
-      {
-        mode: "production",
-        output: { path: tmpDir.path, crossOriginLoading: "anonymous" },
-        entry: resolve(
-          __dirname,
-          "./test-fixtures/module-federation/src/index.js"
-        ),
-        plugins: [new SubresourceIntegrityPlugin(options), new ModuleFederationPlugin({name: 'host', remotes: {
-          "module": "module@localhost:3000/remoteEntry.js"
-        }})],
-
-      }
-  );
+  return await runWebpack({
+    mode: "production",
+    output: { path: tmpDir.path, crossOriginLoading: "anonymous" },
+    entry: resolve(__dirname, "./test-fixtures/module-federation/src/index.js"),
+    plugins: [
+      new SubresourceIntegrityPlugin(options),
+      new ModuleFederationPlugin({
+        name: "host",
+        remotes: {
+          module: "module@localhost:3000/remoteEntry.js",
+        },
+      }),
+    ],
+  });
 }
 
 test("enabled with webpack mode=production", async () => {
@@ -116,19 +118,20 @@ test("doesn't warn with default options", async () => {
 
 test("fail on module federation", async () => {
   try {
-  const stats = await runWebpackForModuleFederationProject();
-  }
-  catch(error) {
-  
-  expect(error.message.includes("Asset main.js contains unresolved integrity placeholders")).toBeTruthy();;
+    const stats = await runWebpackForModuleFederationProject();
+  } catch (error) {
+    expect(
+      error.message.includes(
+        "Asset main.js contains unresolved integrity placeholders"
+      )
+    ).toBeTruthy();
   }
 });
 
 test("can skip chunks", async () => {
-  
-  const stats = await runWebpackForModuleFederationProject({skipChunkNames: ['main']});
- 
-  
+  const stats = await runWebpackForModuleFederationProject({
+    skipChunkNames: ["main"],
+  });
+
   expect(stats.compilation.warnings).toHaveLength(0);
-  
 });

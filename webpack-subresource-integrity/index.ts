@@ -205,6 +205,10 @@ export class SubresourceIntegrityPlugin {
           : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
 
+      if (this.options.skipChunkNames.includes(chunk.name)) {
+        return source;
+      }
+
       if (Object.keys(includedChunks).length > 0) {
         return compilation.compiler.webpack.Template.asString([
           source,
