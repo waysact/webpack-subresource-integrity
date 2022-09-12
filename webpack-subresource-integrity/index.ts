@@ -85,6 +85,7 @@ export class SubresourceIntegrityPlugin {
       hashFuncNames: ["sha384"],
       enabled: "auto",
       hashLoading: "eager",
+      skipChunkNames: [],
       ...options,
     };
   }

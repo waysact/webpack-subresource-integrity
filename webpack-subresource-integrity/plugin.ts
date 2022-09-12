@@ -300,12 +300,14 @@ more information."
     if (this.options.hashLoading === "lazy") {
       for (const scc of this.sortedSccChunks) {
         for (const chunk of scc.nodes) {
-          this.processChunkAssets(chunk, assets);
+          if (!this.options.skipChunkNames.includes(chunk.name)) {
+            this.processChunkAssets(chunk, assets);
+          }
         }
       }
     } else {
       Array.from(this.compilation.chunks)
-        .filter((chunk) => chunk.hasRuntime())
+        .filter((chunk) => chunk.hasRuntime() && !this.options.skipChunkNames.includes(chunk.name))
         .forEach((chunk) => {
           this.processChunk(chunk, assets);
         });

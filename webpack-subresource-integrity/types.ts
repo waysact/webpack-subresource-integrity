@@ -13,6 +13,7 @@ export interface SubresourceIntegrityPluginResolvedOptions {
   readonly hashFuncNames: [string, ...string[]];
   readonly enabled: "auto" | true | false;
   readonly hashLoading: "eager" | "lazy";
+  readonly skipChunkNames: string[];
 }
 
 export interface Graph<T> {
