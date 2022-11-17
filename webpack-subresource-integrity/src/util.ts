@@ -58,13 +58,20 @@ export const computeIntegrity = (
   return result;
 };
 
+const placeholderCache: Record<string, string> = {};
 export const makePlaceholder = (
   hashFuncNames: string[],
   id: string | number
 ): string => {
+  const cacheKey = hashFuncNames.join() + id;
+  if (placeholderCache[cacheKey]) {
+    return placeholderCache[cacheKey]!;
+  }
   const placeholder = `${placeholderPrefix}${id}`;
   const filler = computeIntegrity(hashFuncNames, placeholder);
-  return placeholderPrefix + filler.substring(placeholderPrefix.length);
+  placeholderCache[cacheKey] =
+    placeholderPrefix + filler.substring(placeholderPrefix.length);
+  return placeholderCache[cacheKey]!;
 };
 
 export function addIfNotExist<T>(set: Set<T>, item: T): boolean {
