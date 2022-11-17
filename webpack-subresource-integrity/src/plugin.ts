@@ -30,7 +30,6 @@ import {
   sriHashVariableReference,
   updateAssetHash,
   tryGetSource,
-  map,
   replaceInSource,
   usesAnyHash,
 } from "./util";
@@ -81,7 +80,7 @@ export class Plugin {
   /**
    * @internal
    */
-  private hashByChunkId = new Map<string | number, string>();
+  private hashByPlaceholder = new Map<string, string>();
 
   public constructor(
     compilation: Compilation,
@@ -124,7 +123,7 @@ export class Plugin {
   private replaceAsset = (
     compiler: Compiler,
     assets: Record<string, sources.Source>,
-    hashByChunkId: Map<string | number, string>,
+    hashByPlaceholder: Map<string, string>,
     chunkFile: string
   ): sources.Source => {
     const asset = assets[chunkFile];
@@ -133,10 +132,7 @@ export class Plugin {
       compiler,
       asset,
       chunkFile,
-      map(hashByChunkId.entries(), ([id, hash]) => [
-        makePlaceholder(this.options.hashFuncNames, id),
-        hash,
-      ])
+      hashByPlaceholder
     ));
   };
 
@@ -175,7 +171,7 @@ export class Plugin {
         const newAsset = this.replaceAsset(
           this.compilation.compiler,
           assets,
-          this.hashByChunkId,
+          this.hashByPlaceholder,
           sourcePath
         );
         const integrity = this.assetIntegrity.updateFromSource(
@@ -184,12 +180,16 @@ export class Plugin {
         );
 
         if (childChunk.id !== null) {
-          this.hashByChunkId.set(childChunk.id, integrity);
+          this.hashByPlaceholder.set(
+            makePlaceholder(this.options.hashFuncNames, childChunk.id),
+            integrity
+          );
         }
 
         updateAssetHash(
           this.compilation,
           sourcePath,
+          newAsset,
           integrity,
           this.warnAboutLongTermCaching
         );
@@ -306,7 +306,7 @@ export class Plugin {
       this.sortedSccChunks = sortedSccChunks;
       this.chunkManifest = chunkManifest;
     }
-    this.hashByChunkId.clear();
+    this.hashByPlaceholder.clear();
   };
 
   getChildChunksToAddToChunkManifest(chunk: Chunk): Set<Chunk> {

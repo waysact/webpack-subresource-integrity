@@ -38,6 +38,14 @@ export const normalizePath = (p: string): string =>
 
 export const placeholderPrefix = "*-*-*-CHUNK-SRI-HASH-";
 
+export const placeholderRegex = new RegExp(
+  `${placeholderPrefix.replace(
+    /[-*/\\]/g,
+    "\\$&"
+  )}[a-zA-Z0-9=/+]+(\\ssha\\d{3}-[a-zA-Z0-9=/+]+)*`,
+  "g"
+);
+
 export const computeIntegrity = (
   hashFuncNames: string[],
   source: string | Buffer
@@ -209,29 +217,26 @@ export function* allChunksInPrimaryChunkIterable(
 export function updateAssetHash(
   compilation: Compilation,
   assetPath: string,
+  source: sources.Source,
   integrity: string,
   onUpdate: (assetInfo: AssetInfo) => void
 ): void {
-  compilation.updateAsset(
-    assetPath,
-    (x) => x,
-    (assetInfo) => {
-      if (!assetInfo) {
-        return undefined;
-      }
-
-      onUpdate(assetInfo);
-
-      return {
-        ...assetInfo,
-        contenthash: Array.isArray(assetInfo.contenthash)
-          ? [...new Set([...assetInfo.contenthash, integrity])]
-          : assetInfo.contenthash
-          ? [assetInfo.contenthash, integrity]
-          : integrity,
-      };
+  compilation.updateAsset(assetPath, source, (assetInfo) => {
+    if (!assetInfo) {
+      return undefined;
     }
-  );
+
+    onUpdate(assetInfo);
+
+    return {
+      ...assetInfo,
+      contenthash: Array.isArray(assetInfo.contenthash)
+        ? [...new Set([...assetInfo.contenthash, integrity])]
+        : assetInfo.contenthash
+        ? [assetInfo.contenthash, integrity]
+        : integrity,
+    };
+  });
 }
 
 export function tryGetSource(
@@ -248,15 +253,19 @@ export function replaceInSource(
   compiler: Compiler,
   source: sources.Source,
   path: string,
-  replacements: Iterable<[string, string]>
+  replacements: Map<string, string>
 ): sources.Source {
-  const oldSource = source.source();
+  const oldSource = source.source() as string;
   const newAsset = new compiler.webpack.sources.ReplaceSource(source, path);
 
-  for (const [fromString, toString] of replacements) {
-    const pos = oldSource.indexOf(fromString);
-    if (pos >= 0) {
-      newAsset.replace(pos, pos + fromString.length - 1, toString);
+  for (const match of oldSource.matchAll(placeholderRegex)) {
+    const placeholder = match[0];
+    if (placeholder) {
+      newAsset.replace(
+        match.index!,
+        match.index! + placeholder.length - 1,
+        replacements.get(placeholder) || placeholder
+      );
     }
   }
 
