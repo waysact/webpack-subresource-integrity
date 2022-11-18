@@ -111,7 +111,7 @@ export class Plugin {
   ): void => {
     Object.entries(assets).forEach(([assetKey, asset]) => {
       const source = tryGetSource(asset);
-      if (source) {
+      if (source && !this.assetIntegrity.has(assetKey)) {
         this.assetIntegrity.updateFromSource(assetKey, source);
       }
     });
