@@ -14,7 +14,6 @@
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitOverride": true
-    /* "exactOptionalPropertyTypes": true */
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/__mocks__/*", "src/__test__/**/*"]
