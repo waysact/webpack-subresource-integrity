@@ -28,7 +28,7 @@ import {
   getTagSrc,
   notNil,
   sriHashVariableReference,
-  updateAssetHash,
+  updateAsset,
   tryGetSource,
   replaceInSource,
   usesAnyHash,
@@ -128,12 +128,12 @@ export class Plugin {
   ): sources.Source => {
     const asset = assets[chunkFile];
     assert(asset, `Missing asset for file ${chunkFile}`);
-    return (assets[chunkFile] = replaceInSource(
+    return replaceInSource(
       compiler,
       asset,
       chunkFile,
       hashByPlaceholder
-    ));
+    );
   };
 
   private warnAboutLongTermCaching = (assetInfo: AssetInfo) => {
@@ -186,7 +186,7 @@ export class Plugin {
           );
         }
 
-        updateAssetHash(
+        updateAsset(
           this.compilation,
           sourcePath,
           newAsset,

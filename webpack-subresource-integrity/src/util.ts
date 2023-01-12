@@ -214,7 +214,7 @@ export function* allChunksInPrimaryChunkIterable(
   }
 }
 
-export function updateAssetHash(
+export function updateAsset(
   compilation: Compilation,
   assetPath: string,
   source: sources.Source,
