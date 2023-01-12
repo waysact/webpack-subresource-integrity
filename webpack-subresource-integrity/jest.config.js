@@ -9,4 +9,11 @@ module.exports = {
     ".yarn/cache",
     ".pnp.cjs",
   ],
+  rootDir: "src",
+  testMatch: [
+    "**/__tests__/**/*.[jt]s?(x)",
+    "**/?(*.)+(spec|test).[jt]s?(x)",
+    "!**/__fixtures__/**",
+    "!**/test-utils.[jt]s?(x)",
+  ],
 };

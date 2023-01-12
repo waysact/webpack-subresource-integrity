@@ -30,7 +30,17 @@ const main = async () => {
   const files = await globPromise(join(inDir, "*.json"));
   await Promise.all(
     files.map(async (file) => {
-      inputCoverageMap.merge(JSON.parse(await readFilePromise(file, "utf-8")));
+      const data = JSON.parse(await readFilePromise(file, "utf-8"));
+      const isTypeScript = Object.keys(data)[0]?.endsWith(".ts");
+      if (isTypeScript) {
+        await writeFilePromise(
+          join(outDir, `${basename(file)}.json`),
+          JSON.stringify(data),
+          "utf-8"
+        );
+      } else {
+        inputCoverageMap.merge(data);
+      }
     })
   );
 

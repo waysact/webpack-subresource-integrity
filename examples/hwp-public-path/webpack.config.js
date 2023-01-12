@@ -19,7 +19,7 @@ module.exports = {
       apply: (compiler) => {
         compiler.hooks.done.tapPromise("wsi-test", async (stats) => {
           expect(stats.compilation.warnings).toEqual([]);
-          jsIntegrity =
+          const jsIntegrity =
             stats.toJson().assets.find((asset) => asset.name === "bundle.js")
               .integrity || stats.compilation.assets["bundle.js"].integrity;
           expect(jsIntegrity).toMatch(/^sha/);

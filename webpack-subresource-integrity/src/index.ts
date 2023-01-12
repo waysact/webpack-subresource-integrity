@@ -7,8 +7,9 @@
 
 import { createHash } from "crypto";
 import type { Compiler, Compilation } from "webpack";
-import { RuntimeModule, Template, sources } from "webpack";
+import { sources } from "webpack";
 import {
+  SubresourceIntegrityPluginOptions,
   SubresourceIntegrityPluginResolvedOptions,
   getHtmlWebpackPluginHooksType,
 } from "./types";
@@ -20,45 +21,14 @@ import {
   generateSriHashPlaceholders,
   sriHashVariableReference,
 } from "./util";
-
-interface StatsObjectWithIntegrity {
-  integrity: string;
-}
-
-const thisPluginName = "webpack-subresource-integrity";
-
-// https://www.w3.org/TR/2016/REC-SRI-20160623/#cryptographic-hash-functions
-const standardHashFuncNames = ["sha256", "sha384", "sha512"];
-
-let getHtmlWebpackPluginHooks: getHtmlWebpackPluginHooksType | null = null;
+import { install } from "./hooks";
+import { AddLazySriRuntimeModule } from "./manifest";
+import { thisPluginName, standardHashFuncNames } from "./globals";
 
 /**
  * @public
  */
-export interface SubresourceIntegrityPluginOptions {
-  readonly hashFuncNames?: [string, ...string[]];
-  readonly enabled?: "auto" | true | false;
-  readonly hashLoading?: "eager" | "lazy";
-}
-
-class AddLazySriRuntimeModule extends RuntimeModule {
-  private sriHashes: unknown;
-
-  constructor(sriHashes: unknown, chunkName: string | number) {
-    super(
-      `webpack-subresource-integrity lazy hashes for direct children of chunk ${chunkName}`
-    );
-    this.sriHashes = sriHashes;
-  }
-
-  generate() {
-    return Template.asString([
-      `Object.assign(${sriHashVariableReference}, ${JSON.stringify(
-        this.sriHashes
-      )});`,
-    ]);
-  }
-}
+export { SubresourceIntegrityPluginOptions };
 
 /**
  * The webpack-subresource-integrity plugin.
@@ -102,8 +72,11 @@ export class SubresourceIntegrityPlugin {
   /**
    * @internal
    */
-  private setup = (compilation: Compilation): void => {
-    const reporter = new Reporter(compilation, thisPluginName);
+  private setup = (
+    compilation: Compilation,
+    hwpHooks: ReturnType<getHtmlWebpackPluginHooksType> | null
+  ): void => {
+    const reporter = new Reporter(compilation);
 
     if (
       !this.validateOptions(compilation, reporter) ||
@@ -118,7 +91,7 @@ export class SubresourceIntegrityPlugin {
       typeof compilation.outputOptions.chunkLoading === "string" &&
       ["require", "async-node"].includes(compilation.outputOptions.chunkLoading)
     ) {
-      reporter.warnOnce("This plugin is not useful for non-web targets.");
+      reporter.warnNonWeb();
       return;
     }
 
@@ -143,13 +116,9 @@ export class SubresourceIntegrityPlugin {
       (records: Record<string, sources.Source>) => {
         for (const chunk of compilation.chunks.values()) {
           for (const chunkFile of chunk.files) {
-            if (
-              chunkFile in records &&
-              records[chunkFile].source().includes(placeholderPrefix)
-            ) {
-              reporter.errorOnce(
-                `Asset ${chunkFile} contains unresolved integrity placeholders`
-              );
+            const record = records[chunkFile];
+            if (record && record.source().includes(placeholderPrefix)) {
+              reporter.errorUnresolvedIntegrity(chunkFile);
             }
           }
         }
@@ -163,10 +132,8 @@ export class SubresourceIntegrityPlugin {
       return plugin.updateHash(input, oldHash) as unknown as string;
     });
 
-    if (getHtmlWebpackPluginHooks) {
-      getHtmlWebpackPluginHooks(
-        compilation
-      ).beforeAssetTagGeneration.tapPromise(
+    if (hwpHooks) {
+      hwpHooks.beforeAssetTagGeneration.tapPromise(
         thisPluginName,
         async (pluginArgs) => {
           plugin.handleHwpPluginArgs(pluginArgs);
@@ -174,7 +141,7 @@ export class SubresourceIntegrityPlugin {
         }
       );
 
-      getHtmlWebpackPluginHooks(compilation).alterAssetTagGroups.tapPromise(
+      hwpHooks.alterAssetTagGroups.tapPromise(
         {
           name: thisPluginName,
           stage: 10000,
@@ -254,12 +221,7 @@ export class SubresourceIntegrityPlugin {
       this.isEnabled(compilation) &&
       !compilation.compiler.options.output.crossOriginLoading
     ) {
-      reporter.warnOnce(
-        'SRI requires a cross-origin policy, defaulting to "anonymous". ' +
-          "Set webpack option output.crossOriginLoading to a value other than false " +
-          "to make this warning go away. " +
-          "See https://w3c.github.io/webappsec-subresource-integrity/#cross-origin-data-leakage"
-      );
+      reporter.warnCrossOriginPolicy();
     }
     return (
       this.validateHashFuncNames(reporter) && this.validateHashLoading(reporter)
@@ -271,15 +233,10 @@ export class SubresourceIntegrityPlugin {
    */
   private validateHashFuncNames = (reporter: Reporter): boolean => {
     if (!Array.isArray(this.options.hashFuncNames)) {
-      reporter.error(
-        "options.hashFuncNames must be an array of hash function names, " +
-          "instead got '" +
-          this.options.hashFuncNames +
-          "'."
-      );
+      reporter.errorHashFuncsNonArray(this.options.hashFuncNames);
       return false;
     } else if (this.options.hashFuncNames.length === 0) {
-      reporter.error("Must specify at least one hash function name.");
+      reporter.errorHashFuncsEmpty();
       return false;
     } else if (
       !this.options.hashFuncNames.every(
@@ -302,12 +259,9 @@ export class SubresourceIntegrityPlugin {
       return true;
     }
 
-    const optionsStr = supportedHashLoadingOptions
-      .map((opt) => `'${opt}'`)
-      .join(", ");
-
-    reporter.error(
-      `options.hashLoading must be one of ${optionsStr}, instead got '${this.options.hashLoading}'`
+    reporter.errorInvalidHashLoading(
+      this.options.hashLoading,
+      supportedHashLoadingOptions
     );
     return false;
   };
@@ -317,20 +271,14 @@ export class SubresourceIntegrityPlugin {
    */
   private warnStandardHashFunc = (reporter: Reporter) => {
     let foundStandardHashFunc = false;
-    for (let i = 0; i < this.options.hashFuncNames.length; i += 1) {
-      if (standardHashFuncNames.indexOf(this.options.hashFuncNames[i]) >= 0) {
+
+    this.options.hashFuncNames.forEach((hashFuncName) => {
+      if (standardHashFuncNames.indexOf(hashFuncName) >= 0) {
         foundStandardHashFunc = true;
       }
-    }
+    });
     if (!foundStandardHashFunc) {
-      reporter.warnOnce(
-        "It is recommended that at least one hash function is part of the set " +
-          "for which support is mandated by the specification. " +
-          "These are: " +
-          standardHashFuncNames.join(", ") +
-          ". " +
-          "See http://www.w3.org/TR/SRI/#cryptographic-hash-functions for more information."
-      );
+      reporter.warnStandardHashFuncs();
     }
   };
 
@@ -342,71 +290,19 @@ export class SubresourceIntegrityPlugin {
       typeof hashFuncName !== "string" &&
       !((hashFuncName as unknown) instanceof String)
     ) {
-      reporter.error(
-        "options.hashFuncNames must be an array of hash function names, " +
-          "but contained " +
-          hashFuncName +
-          "."
-      );
+      reporter.errorNonStringHashFunc(hashFuncName);
       return false;
     }
     try {
       createHash(hashFuncName);
     } catch (error) {
-      reporter.error(
-        "Cannot use hash function '" + hashFuncName + "': " + error.message
-      );
+      reporter.errorUnusableHashFunc(hashFuncName, error);
       return false;
     }
     return true;
   };
 
   apply(compiler: Compiler): void {
-    compiler.hooks.beforeCompile.tapPromise(thisPluginName, async () => {
-      try {
-        getHtmlWebpackPluginHooks = (await import("html-webpack-plugin"))
-          .default.getHooks;
-      } catch (e) {
-        if (e.code !== "MODULE_NOT_FOUND") {
-          throw e;
-        }
-      }
-    });
-
-    compiler.hooks.afterPlugins.tap(thisPluginName, (compiler) => {
-      compiler.hooks.thisCompilation.tap(
-        {
-          name: thisPluginName,
-          stage: -10000,
-        },
-        (compilation) => {
-          this.setup(compilation);
-        }
-      );
-
-      compiler.hooks.compilation.tap(
-        thisPluginName,
-        (compilation: Compilation) => {
-          compilation.hooks.statsFactory.tap(thisPluginName, (statsFactory) => {
-            statsFactory.hooks.extract
-              .for("asset")
-              .tap(thisPluginName, (object, asset) => {
-                const contenthash = asset.info?.contenthash;
-                if (contenthash) {
-                  const shaHashes = (
-                    Array.isArray(contenthash) ? contenthash : [contenthash]
-                  ).filter((hash: unknown) =>
-                    String(hash).match(/^sha[0-9]+-/)
-                  );
-                  if (shaHashes.length > 0) {
-                    (object as unknown as StatsObjectWithIntegrity).integrity =
-                      shaHashes.join(" ");
-                  }
-                }
-              });
-          });
-        }
-      );
-    });
+    install(compiler, this.setup);
   }
 }

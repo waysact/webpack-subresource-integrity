@@ -11,6 +11,21 @@ module.exports = {
   output: {
     crossOriginLoading: "anonymous",
   },
+  optimization: {
+    runtimeChunk: "single",
+    splitChunks: {
+      chunks: "all",
+      maxInitialRequests: Infinity,
+      minSize: 0,
+      cacheGroups: {
+        grouped: {
+          test: /grouped[12].*/,
+          name: "grouped",
+          priority: -10,
+        },
+      },
+    },
+  },
   plugins: [
     new SubresourceIntegrityPlugin({
       enabled: true,
@@ -59,19 +74,14 @@ module.exports = {
             }
           }
 
-          const indexHashes = getSriHashes("index", true);
-          expect(Object.keys(indexHashes).length).toEqual(2);
+          const indexHashes = getSriHashes("index", false);
+          expect(Object.keys(indexHashes).length).toEqual(1);
 
-          const chunkHashes = Object.fromEntries(
-            Object.keys(indexHashes).map((chunkId) => [
-              chunkId,
-              getSriHashes(chunkId, false),
-            ])
-          );
+          const _interJsHashes = getSriHashes("inter", false);
+          expect(Object.keys(_interJsHashes).length).toEqual(1);
 
-          for (const [, intermediateChunkHash] of Object.entries(chunkHashes)) {
-            expect(Object.keys(intermediateChunkHash).length).toEqual(1);
-          }
+          const _groupedJsHashes = getSriHashes("grouped", false);
+          expect(_groupedJsHashes).toEqual(null);
 
           expect(
             stats

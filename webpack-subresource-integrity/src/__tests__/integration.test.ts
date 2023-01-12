@@ -13,7 +13,7 @@ import {
 } from "webpack";
 import { resolve } from "path";
 import tmp from "tmp-promise";
-import { SubresourceIntegrityPlugin } from "./index.js";
+import { SubresourceIntegrityPlugin } from "..";
 import { runWebpack } from "./test-utils";
 import merge from "lodash/merge";
 
@@ -28,10 +28,7 @@ async function runWebpackForSimpleProject(
       {
         mode: "production",
         output: { path: tmpDir.path, crossOriginLoading: "anonymous" },
-        entry: resolve(
-          __dirname,
-          "./test-fixtures/simple-project/src/index.js"
-        ),
+        entry: resolve(__dirname, "./__fixtures__/simple-project/src/."),
         plugins: [new SubresourceIntegrityPlugin()],
       },
       options
@@ -44,7 +41,7 @@ test("enabled with webpack mode=production", async () => {
     .toJson()
     .assets?.find((asset: StatsAsset) => asset.name === "main.js");
   expect(mainAsset).toBeDefined();
-  expect(mainAsset?.integrity).toMatch(/^sha384-\S+$/);
+  expect(mainAsset?.["integrity"]).toMatch(/^sha384-\S+$/);
 });
 
 test("disabled with webpack mode=development", async () => {
@@ -52,7 +49,7 @@ test("disabled with webpack mode=development", async () => {
     .toJson()
     .assets?.find((asset: StatsAsset) => asset.name === "main.js");
   expect(mainAsset).toBeDefined();
-  expect(mainAsset?.integrity).toBeUndefined();
+  expect(mainAsset?.["integrity"]).toBeUndefined();
 });
 
 const isHashWarning = (warning: WebpackError) =>

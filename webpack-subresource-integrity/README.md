@@ -178,9 +178,9 @@ Default value: `"eager"`
 
 One of `"eager"` or `"lazy"`
 
-`"eager""` means that integrity hashes for all assets will be defined in the entry chunk.
+`"eager"` means that integrity hashes for all assets will be defined in the entry chunk.
 
-`"lazy"` means that integrity hashes for any given asset will be defined in its direct parents 
+`"lazy"` means that integrity hashes for any given asset will be defined in its direct parents
 in the chunk graph. This can lead to duplication of hashes across assets, but can significantly
 reduce the size of your entry chunk(s) if you have a large number of async chunks.
 
@@ -272,14 +272,15 @@ mode where SRI is not normally needed.
 For testing SRI without setting up a full-blown web server, consider
 using a tool such as [`http-server`](https://github.com/indexzero/http-server).
 
-### Safari and Assets that Require Cookies
+### Safari 13 (and earlier versions) and Assets that Require Cookies
 
-As detailed in
-[Webpack Issue #6972](https://github.com/webpack/webpack/issues/6972),
-the `crossOrigin` attribute can break loading of assets in certain
-edge cases due to a bug in Safari. Since SRI requires the
-`crossOrigin` attribute to be set, you may run into this case even
-when source URL is same-origin with respect to the asset.
+As detailed in [Webpack Issue
+#6972](https://github.com/webpack/webpack/issues/6972), the `crossOrigin`
+attribute can break loading of assets in Safari versions prior to 14 in certain
+edge cases due to a browser bug. Since SRI requires the `crossOrigin` attribute
+to be set, you may run into this case even when source URL is same-origin with
+respect to the asset. The fix for this issue landed in Safari Technology Preview
+106 and was released with Safari 14
 
 ## Further Reading
 

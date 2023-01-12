@@ -28,7 +28,7 @@ readdirSync("../examples/").forEach((example) => {
 
       const yarn = spawn(
         "yarn",
-        process.env.USE_COVERAGE
+        process.env["USE_COVERAGE"]
           ? [
               "nyc",
               "--instrument=false",

@@ -32,7 +32,7 @@ module.exports = {
     new SubresourceIntegrityPlugin({ hashFuncNames: ["sha256", "sha384"] }),
     {
       apply: (compiler) => {
-        compiler.hooks.done.tap("wsi-test", (stats) => {
+        compiler.hooks.done.tap("wsi-test", () => {
           const runtimeJs = readFileSync(
             join(__dirname, "dist/runtime.js"),
             "utf-8"

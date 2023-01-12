@@ -6,11 +6,7 @@ module.exports = {
     node: true,
     "jest/globals": true,
   },
-  extends: [
-    "eslint:recommended",
-    "prettier",
-    "plugin:@typescript-eslint/recommended",
-  ],
+  extends: ["eslint:recommended", "prettier"],
   rules: {
     "no-var": "error",
     semi: "error",
@@ -29,4 +25,31 @@ module.exports = {
       },
     ],
   },
+  overrides: [
+    {
+      files: ["**/*.ts"],
+      extends: [
+        "eslint:recommended",
+        "prettier",
+        "plugin:@typescript-eslint/recommended",
+      ],
+    },
+    {
+      files: ["**/*.js"],
+      parser: "espree",
+      parserOptions: { ecmaVersion: 2020, sourceType: "module" },
+      rules: {},
+    },
+    {
+      files: ["**/*.js"],
+      rules: {
+        "no-console": "off",
+      },
+      env: {
+        browser: true,
+        node: true,
+        es6: true,
+      },
+    },
+  ],
 };

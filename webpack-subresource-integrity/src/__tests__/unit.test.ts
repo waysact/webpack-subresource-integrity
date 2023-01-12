@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { resolve } from "path";
 import webpack, { Compiler, Compilation, Configuration, Chunk } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
-import { SubresourceIntegrityPlugin } from "./index.js";
-import type { SubresourceIntegrityPluginOptions } from "./index.js";
+import { SubresourceIntegrityPlugin } from "..";
+import type { SubresourceIntegrityPluginOptions } from "..";
+import { assert } from "../util";
 
 jest.unmock("html-webpack-plugin");
 
@@ -40,9 +42,33 @@ const runCompilation = (compiler: Compiler) =>
     });
   });
 
+const disableOutputPlugin = {
+  apply(compiler: Compiler) {
+    compiler.hooks.compilation.tap(
+      "DisableOutputWebpackPlugin",
+      (compilation: Compilation) => {
+        compilation.hooks.afterProcessAssets.tap(
+          {
+            name: "DisableOutputWebpackPlugin",
+            stage: 10000,
+          },
+          (compilationAssets) => {
+            Object.keys(compilation.assets).forEach((asset) => {
+              delete compilation.assets[asset];
+            });
+            Object.keys(compilationAssets).forEach((asset) => {
+              delete compilationAssets[asset];
+            });
+          }
+        );
+      }
+    );
+  },
+};
+
 const defaultOptions: Partial<Configuration> = {
   mode: "none",
-  entry: "./test-fixtures/simple-project/src/index.js",
+  entry: resolve(__dirname, "./__fixtures__/simple-project/src/."),
   output: {
     crossOriginLoading: "anonymous",
   },
@@ -61,8 +87,7 @@ test("warns when no standard hash function name is specified", async () => {
   );
 
   expect(compilation.errors).toEqual([]);
-  expect(compilation.warnings[0]).toBeInstanceOf(Error);
-  expect(compilation.warnings[0].message).toMatch(
+  expect(compilation.warnings[0]?.message).toMatch(
     new RegExp(
       "It is recommended that at least one hash function is part of " +
         "the set for which support is mandated by the specification"
@@ -79,7 +104,7 @@ test("supports new constructor with array of hash function names", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -95,13 +120,13 @@ test("errors if hash function names is not an array", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /options.hashFuncNames must be an array of hash function names, instead got 'sha256'/
   );
 });
@@ -114,13 +139,13 @@ test("errors if hash function names contains non-string", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /options.hashFuncNames must be an array of hash function names, but contained 1234/
   );
 });
@@ -133,13 +158,13 @@ test("errors if hash function names are empty", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /Must specify at least one hash function name/
   );
 });
@@ -152,13 +177,13 @@ test("errors if hash function names contains unsupported digest", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /Cannot use hash function 'frobnicate': Digest method not supported/
   );
 });
@@ -172,13 +197,13 @@ test("errors if hashLoading option uses unknown value", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(0);
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /options.hashLoading must be one of 'eager', 'lazy', instead got 'invalid'/
   );
 });
@@ -191,7 +216,7 @@ test("uses default options", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -208,7 +233,7 @@ test("should warn when output.crossOriginLoading is not set", async () => {
     webpack({
       ...defaultOptions,
       output: { crossOriginLoading: false },
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -217,10 +242,10 @@ test("should warn when output.crossOriginLoading is not set", async () => {
 
   expect(compilation.errors.length).toBe(1);
   expect(compilation.warnings.length).toBe(1);
-  expect(compilation.warnings[0].message).toMatch(
+  expect(compilation.warnings[0]?.message).toMatch(
     /Set webpack option output\.crossOriginLoading/
   );
-  expect(compilation.errors[0].message).toMatch(
+  expect(compilation.errors[0]?.message).toMatch(
     /webpack option output\.crossOriginLoading not set, code splitting will not work!/
   );
 });
@@ -231,7 +256,7 @@ test("should ignore tags without attributes", async () => {
   const compilation = await runCompilation(
     webpack({
       ...defaultOptions,
-      plugins: [plugin],
+      plugins: [plugin, disableOutputPlugin],
     })
   );
 
@@ -253,4 +278,35 @@ test("should ignore tags without attributes", async () => {
   expect(Object.keys(tag.attributes)).not.toContain(["integrity"]);
   expect(compilation.errors).toEqual([]);
   expect(compilation.warnings).toEqual([]);
+});
+
+test("positive assertion", () => {
+  assert(true, "Pass");
+});
+
+test("negative assertion", () => {
+  expect(() => {
+    assert(false, "Fail");
+  }).toThrow(new Error("Fail"));
+});
+
+test("errors with unresolved integrity", async () => {
+  const plugin = new SubresourceIntegrityPlugin({
+    hashFuncNames: ["sha256", "sha384"],
+  });
+
+  const compilation = await runCompilation(
+    webpack({
+      ...defaultOptions,
+      entry: resolve(__dirname, "./__fixtures__/unresolved/src/."),
+      plugins: [plugin, disableOutputPlugin],
+    })
+  );
+
+  expect(compilation.errors.length).toBe(1);
+  expect(compilation.warnings.length).toBe(0);
+
+  expect(compilation.errors[0]?.message).toMatch(
+    new RegExp("contains unresolved integrity placeholders")
+  );
 });

@@ -3,7 +3,10 @@ node_modules/
 .nyc_merged/
 coverage/
 coverage.json
-dist/
+examples/**/dist/
+smoke-test/dist/
+webpack-subresource-integrity/dist/
+!webpack-subresource-integrity/dist/**/package.json
 yarn-error.log
 \*.map
 .yarn/*

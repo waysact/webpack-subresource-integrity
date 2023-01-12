@@ -14,7 +14,7 @@ module.exports = {
     {
       apply: (compiler) => {
         compiler.hooks.thisCompilation.tap("wsi-test", (compilation) => {
-          compilation.hooks.renderManifest.tap("wsi-test", (chunk) => {
+          compilation.hooks.renderManifest.tap("wsi-test", () => {
             throw new Error("Provoke ChunkRenderError");
           });
         });

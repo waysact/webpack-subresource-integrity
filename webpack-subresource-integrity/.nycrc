@@ -1,6 +1,6 @@
 {
   "all": true,
-  "include": ["index.js", "plugin.js", "reporter.js", "util.js", "types.js"],
+  "include": ["dist/cjs/*.js"],
   "exclude": ["*.test.js", ".pnp.js"],
   "cache": false,
   "source-map": false,

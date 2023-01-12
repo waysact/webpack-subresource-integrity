@@ -12,22 +12,32 @@
   },
   "scripts": {
     "check": "yarn lint && yarn test:jest && yarn test:smoke",
-    "lint": "(cd webpack-subresource-integrity && yarn eslint .)",
+    "lint": "yarn eslint .",
     "test:jest": "(cd wsi-test-helper && yarn tsc) && (cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit)",
     "test:unit": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit unit.test.ts",
     "test:examples": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit examples.test.ts",
     "test:integration": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit integration.test.ts",
     "test:smoke": "cd webpack-subresource-integrity && yarn prepublish && yarn pack --filename ../smoke-test/webpack-subresource-integrity.tgz && cd ../smoke-test && rm -rf yarn.lock && touch yarn.lock && YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn && yarn test",
     "build": "cd webpack-subresource-integrity && yarn tsc && yarn api-extractor run --local --verbose",
-    "coverage": "yarn cover:run && yarn cover:report",
-    "cover:run": "rm -Rf .nyc_output && mkdir -p .nyc_output && rm -Rf .nyc_merged && mkdir -p .nyc_merged && (cd wsi-test-helper && yarn tsc) && cd webpack-subresource-integrity && yarn tsc && yarn nyc instrument --in-place=true \"$PWD/webpack-subresource-integrity\" && USE_COVERAGE=1 yarn jest --coverage --detectOpenHandles --forceExit --verbose && cp coverage/coverage-final.json ../.nyc_output/ && cd ../nyc-apply-source-map && yarn node ./index.js ../.nyc_output ../.nyc_merged",
-    "cover:report": "cd webpack-subresource-integrity && yarn nyc report --reporter=html --reporter=text-summary --cwd=.. --temp-dir=.nyc_merged --report-dir=coverage",
-    "cover:lcov": "cd webpack-subresource-integrity && yarn nyc report --reporter=text-lcov --cwd=.. > coverage/lcov.info",
+    "coverage": "rm -Rf coverage && mkdir coverage && yarn cover:run && yarn cover:report",
+    "cover:run": "rm -Rf .nyc_output && mkdir -p .nyc_output && rm -Rf .nyc_merged && mkdir -p .nyc_merged && (cd wsi-test-helper && yarn tsc) && cd webpack-subresource-integrity && yarn tsc && yarn nyc instrument --in-place=true \"$PWD/webpack-subresource-integrity/dist/cjs\" && USE_COVERAGE=1 yarn jest --coverage --detectOpenHandles --forceExit --verbose && cp src/coverage/coverage-final.json ../.nyc_output/ && cd ../nyc-apply-source-map && yarn node ./index.js ../.nyc_output ../.nyc_merged",
+    "cover:report": "cd webpack-subresource-integrity && mkdir -p coverage && yarn nyc report --reporter=html --reporter=text-summary --cwd=.. --temp-dir=.nyc_merged --report-dir=coverage",
+    "cover:lcov": "cd webpack-subresource-integrity && mkdir -p coverage && yarn nyc report --reporter=text-lcov --cwd=.. --temp-dir=.nyc_merged > coverage/lcov.info",
     "codeclimate": "docker run --interactive --tty --rm --env CODECLIMATE_CODE=\"$PWD\" --volume \"$PWD\":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate",
     "prettier": "prettier --write '**/*.{js,ts}'"
   },
   "devDependencies": {
-    "prettier": "^2.3.2"
+    "@typescript-eslint/eslint-plugin": "5.16.0",
+    "@typescript-eslint/parser": "^5.16.0",
+    "eslint": "^8.12.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "2.25.4",
+    "eslint-plugin-jest": "^26.1.3",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-promise": "6.0.0",
+    "prettier": "^2.6.1",
+    "typescript": "^4.3.5"
   },
   "packageManager": "yarn@3.0.0"
 }

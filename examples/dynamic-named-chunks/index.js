@@ -1,4 +1,4 @@
-let scriptsWithIntegrity = [];
+const scriptsWithIntegrity = [];
 
 const observer = new MutationObserver((mutationsList) => {
   Array.from(mutationsList).forEach((mutation) => {

@@ -3,7 +3,7 @@ const path = require("path");
 const ScriptExtHtmlWebpackPlugin = require("script-ext-html-webpack-plugin");
 const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
 
-module.exports = (env) => ({
+module.exports = () => ({
   entry: {
     app: path.resolve(__dirname, "index"),
   },

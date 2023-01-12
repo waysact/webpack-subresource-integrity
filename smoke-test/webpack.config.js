@@ -12,13 +12,13 @@ const { appendFileSync } = require("fs");
 const copyAndServe = (directory, manipulate) =>
   new Promise((resolve, reject) => {
     try {
-      const { name: public } = tmp.dirSync();
-      copySync(directory, public);
-      manipulate(public);
+      const { name: publicDir } = tmp.dirSync();
+      copySync(directory, publicDir);
+      manipulate(publicDir);
 
       const server = http.createServer((request, response) =>
         handler(request, response, {
-          public,
+          public: publicDir,
         })
       );
 
@@ -81,7 +81,7 @@ module.exports = {
             // Ensure the page loads when all chunks are intact
             const messagesWithNoneCorrupt = await copyAndServe(
               stats.compilation.compiler.outputPath,
-              (public) => {}
+              () => {}
             );
             expect(messagesWithNoneCorrupt.find(isOkMessage)).toBeDefined();
             expect(
@@ -91,7 +91,7 @@ module.exports = {
             // Ensure the page fails to load when the main chunk is corrupted
             const messagesWithMainCorrupt = await copyAndServe(
               stats.compilation.compiler.outputPath,
-              (public) => appendFileSync(join(public, "main.js"), "\n")
+              (publicDir) => appendFileSync(join(publicDir, "main.js"), "\n")
             );
             expect(messagesWithMainCorrupt.find(isOkMessage)).toBeUndefined();
             expect(
@@ -104,7 +104,8 @@ module.exports = {
             );
             const messagesWithChunkCorrupt = await copyAndServe(
               stats.compilation.compiler.outputPath,
-              (public) => appendFileSync(join(public, chunkAsset.name), "\n")
+              (publicDir) =>
+                appendFileSync(join(publicDir, chunkAsset.name), "\n")
             );
             expect(messagesWithChunkCorrupt.find(isOkMessage)).toBeUndefined();
             expect(
