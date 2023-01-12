@@ -6955,9 +6955,9 @@ fsevents@^2.1.2:
   languageName: unknown
   linkType: soft
 
-"lazy-hashes-chunk group@workspace:examples/lazy-hashes-group":
+"lazy-hashes-cycles@workspace:examples/lazy-hashes-cycles":
   version: 0.0.0-use.local
-  resolution: "lazy-hashes-chunk group@workspace:examples/lazy-hashes-group"
+  resolution: "lazy-hashes-cycles@workspace:examples/lazy-hashes-cycles"
   dependencies:
     expect: ^26.6.2
     html-webpack-plugin: ">= 5.0.0-beta.1"
@@ -6969,9 +6969,9 @@ fsevents@^2.1.2:
   languageName: unknown
   linkType: soft
 
-"lazy-hashes-cycles@workspace:examples/lazy-hashes-cycles":
+"lazy-hashes-group@workspace:examples/lazy-hashes-group":
   version: 0.0.0-use.local
-  resolution: "lazy-hashes-cycles@workspace:examples/lazy-hashes-cycles"
+  resolution: "lazy-hashes-group@workspace:examples/lazy-hashes-group"
   dependencies:
     expect: ^26.6.2
     html-webpack-plugin: ">= 5.0.0-beta.1"
