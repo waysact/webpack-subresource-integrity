@@ -12,7 +12,7 @@
     "@types/puppeteer": "^5.4.5",
     "@types/serve-static": "^1.13.10",
     "connect": "^3.7.0",
-    "fastify": "^3.27.4",
+    "fastify": "^3.29.4",
     "fastify-graceful-shutdown": "^3.1.0",
     "fastify-static": "^4.6.1",
     "get-port": "^5.1.1",
