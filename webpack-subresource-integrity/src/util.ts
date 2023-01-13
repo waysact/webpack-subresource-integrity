@@ -72,14 +72,14 @@ export const makePlaceholder = (
   id: string | number
 ): string => {
   const cacheKey = hashFuncNames.join() + id;
-  if (placeholderCache[cacheKey]) {
-    return placeholderCache[cacheKey]!;
-  }
-  const placeholder = `${placeholderPrefix}${id}`;
-  const filler = computeIntegrity(hashFuncNames, placeholder);
-  placeholderCache[cacheKey] =
+  const cachedPlaceholder = placeholderCache[cacheKey];
+  if (cachedPlaceholder) return cachedPlaceholder;
+  const placeholderSource = `${placeholderPrefix}${id}`;
+  const filler = computeIntegrity(hashFuncNames, placeholderSource);
+  const placeholder =
     placeholderPrefix + filler.substring(placeholderPrefix.length);
-  return placeholderCache[cacheKey]!;
+  placeholderCache[cacheKey] = placeholder;
+  return placeholder;
 };
 
 export function addIfNotExist<T>(set: Set<T>, item: T): boolean {
@@ -255,15 +255,18 @@ export function replaceInSource(
   path: string,
   replacements: Map<string, string>
 ): sources.Source {
-  const oldSource = source.source() as string;
+  const oldSource = source.source();
+  if (typeof oldSource !== "string") return source;
+
   const newAsset = new compiler.webpack.sources.ReplaceSource(source, path);
 
   for (const match of oldSource.matchAll(placeholderRegex)) {
-    const placeholderIndex = match[0]?.index;
-    if (placeholderIndex !== undefined) {
+    const placeholder = match[0];
+    const position = match.index;
+    if (placeholder && position) {
       newAsset.replace(
-        match.index!,
-        match.index! + placeholder.length - 1,
+        position,
+        position + placeholder.length - 1,
         replacements.get(placeholder) || placeholder
       );
     }
