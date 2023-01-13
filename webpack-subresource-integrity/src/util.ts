@@ -256,8 +256,9 @@ export function replaceInSource(
   replacements: Map<string, string>
 ): sources.Source {
   const oldSource = source.source();
-  if (typeof oldSource !== "string") return source;
-
+  if (typeof oldSource !== "string") {
+    return source;
+  }
   const newAsset = new compiler.webpack.sources.ReplaceSource(source, path);
 
   for (const match of oldSource.matchAll(placeholderRegex)) {
