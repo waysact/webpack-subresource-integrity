@@ -264,7 +264,7 @@ export function replaceInSource(
   for (const match of oldSource.matchAll(placeholderRegex)) {
     const placeholder = match[0];
     const position = match.index;
-    if (placeholder && position) {
+    if (placeholder && position !== undefined) {
       newAsset.replace(
         position,
         position + placeholder.length - 1,
