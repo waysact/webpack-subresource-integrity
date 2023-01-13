@@ -259,8 +259,8 @@ export function replaceInSource(
   const newAsset = new compiler.webpack.sources.ReplaceSource(source, path);
 
   for (const match of oldSource.matchAll(placeholderRegex)) {
-    const placeholder = match[0];
-    if (placeholder) {
+    const placeholderIndex = match[0]?.index;
+    if (placeholderIndex !== undefined) {
       newAsset.replace(
         match.index!,
         match.index! + placeholder.length - 1,
