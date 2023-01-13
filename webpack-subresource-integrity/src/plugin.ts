@@ -128,12 +128,7 @@ export class Plugin {
   ): sources.Source => {
     const asset = assets[chunkFile];
     assert(asset, `Missing asset for file ${chunkFile}`);
-    return replaceInSource(
-      compiler,
-      asset,
-      chunkFile,
-      hashByPlaceholder
-    );
+    return replaceInSource(compiler, asset, chunkFile, hashByPlaceholder);
   };
 
   private warnAboutLongTermCaching = (assetInfo: AssetInfo) => {
