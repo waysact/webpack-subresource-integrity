@@ -2,9 +2,9 @@ const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const expect = require("expect");
-const htmlparser = require("htmlparser");
+const htmlparser2 = require("htmlparser2");
 const { readFileSync } = require("fs");
-const { select } = require("soupselect");
+const { selectAll } = require("css-select");
 
 module.exports = {
   entry: "./index.js",
@@ -52,29 +52,19 @@ module.exports = {
             ).integrity;
           expect(cssIntegrity).toMatch(/^sha/);
 
-          return new Promise((resolve, reject) => {
-            const handler = new htmlparser.DefaultHandler((error, dom) => {
-              if (error) {
-                reject(error);
-                return;
-              }
+          const dom = htmlparser2.parseDocument(
+            readFileSync("./dist/admin.html", "utf-8")
+          );
 
-              const scripts = select(dom, "script");
-              expect(scripts.length).toEqual(1);
-              expect(scripts[0].attribs.crossorigin).toEqual("anonymous");
-              expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
+          const scripts = selectAll("script", dom);
+          expect(scripts.length).toEqual(1);
+          expect(scripts[0].attribs.crossorigin).toEqual("anonymous");
+          expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
 
-              const links = select(dom, "link");
-              expect(links.length).toEqual(1);
-              expect(links[0].attribs.crossorigin).toEqual("anonymous");
-              expect(links[0].attribs.integrity).toEqual(cssIntegrity);
-
-              resolve();
-            });
-            new htmlparser.Parser(handler).parseComplete(
-              readFileSync("./dist/admin.html", "utf-8")
-            );
-          });
+          const links = selectAll("link", dom);
+          expect(links.length).toEqual(1);
+          expect(links[0].attribs.crossorigin).toEqual("anonymous");
+          expect(links[0].attribs.integrity).toEqual(cssIntegrity);
         });
       },
     },
