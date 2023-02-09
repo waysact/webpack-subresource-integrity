@@ -7,6 +7,7 @@ const { readFileSync } = require("fs");
 const { selectAll } = require("css-select");
 
 module.exports = {
+  mode: "production",
   entry: {
     main: "./index.js",
   },

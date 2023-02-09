@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const expect = require("expect");
 
 module.exports = {
+  mode: "production",
   entry: "./index.js",
   output: {
     filename: "bundle.js",
