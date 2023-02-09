@@ -38,6 +38,14 @@ export const normalizePath = (p: string): string =>
 
 export const placeholderPrefix = "*-*-*-CHUNK-SRI-HASH-";
 
+export const placeholderRegex = new RegExp(
+  `${placeholderPrefix.replace(
+    /[-*/\\]/g,
+    "\\$&"
+  )}[a-zA-Z0-9=/+]+(\\ssha\\d{3}-[a-zA-Z0-9=/+]+)*`,
+  "g"
+);
+
 export const computeIntegrity = (
   hashFuncNames: string[],
   source: string | Buffer
@@ -58,13 +66,20 @@ export const computeIntegrity = (
   return result;
 };
 
+const placeholderCache: Record<string, string> = {};
 export const makePlaceholder = (
   hashFuncNames: string[],
   id: string | number
 ): string => {
-  const placeholder = `${placeholderPrefix}${id}`;
-  const filler = computeIntegrity(hashFuncNames, placeholder);
-  return placeholderPrefix + filler.substring(placeholderPrefix.length);
+  const cacheKey = hashFuncNames.join() + id;
+  const cachedPlaceholder = placeholderCache[cacheKey];
+  if (cachedPlaceholder) return cachedPlaceholder;
+  const placeholderSource = `${placeholderPrefix}${id}`;
+  const filler = computeIntegrity(hashFuncNames, placeholderSource);
+  const placeholder =
+    placeholderPrefix + filler.substring(placeholderPrefix.length);
+  placeholderCache[cacheKey] = placeholder;
+  return placeholder;
 };
 
 export function addIfNotExist<T>(set: Set<T>, item: T): boolean {
@@ -199,32 +214,29 @@ export function* allChunksInPrimaryChunkIterable(
   }
 }
 
-export function updateAssetHash(
+export function updateAsset(
   compilation: Compilation,
   assetPath: string,
+  source: sources.Source,
   integrity: string,
   onUpdate: (assetInfo: AssetInfo) => void
 ): void {
-  compilation.updateAsset(
-    assetPath,
-    (x) => x,
-    (assetInfo) => {
-      if (!assetInfo) {
-        return undefined;
-      }
-
-      onUpdate(assetInfo);
-
-      return {
-        ...assetInfo,
-        contenthash: Array.isArray(assetInfo.contenthash)
-          ? [...new Set([...assetInfo.contenthash, integrity])]
-          : assetInfo.contenthash
-          ? [assetInfo.contenthash, integrity]
-          : integrity,
-      };
+  compilation.updateAsset(assetPath, source, (assetInfo) => {
+    if (!assetInfo) {
+      return undefined;
     }
-  );
+
+    onUpdate(assetInfo);
+
+    return {
+      ...assetInfo,
+      contenthash: Array.isArray(assetInfo.contenthash)
+        ? [...new Set([...assetInfo.contenthash, integrity])]
+        : assetInfo.contenthash
+        ? [assetInfo.contenthash, integrity]
+        : integrity,
+    };
+  });
 }
 
 export function tryGetSource(
@@ -241,15 +253,23 @@ export function replaceInSource(
   compiler: Compiler,
   source: sources.Source,
   path: string,
-  replacements: Iterable<[string, string]>
+  replacements: Map<string, string>
 ): sources.Source {
   const oldSource = source.source();
+  if (typeof oldSource !== "string") {
+    return source;
+  }
   const newAsset = new compiler.webpack.sources.ReplaceSource(source, path);
 
-  for (const [fromString, toString] of replacements) {
-    const pos = oldSource.indexOf(fromString);
-    if (pos >= 0) {
-      newAsset.replace(pos, pos + fromString.length - 1, toString);
+  for (const match of oldSource.matchAll(placeholderRegex)) {
+    const placeholder = match[0];
+    const position = match.index;
+    if (placeholder && position !== undefined) {
+      newAsset.replace(
+        position,
+        position + placeholder.length - 1,
+        replacements.get(placeholder) || placeholder
+      );
     }
   }
 
