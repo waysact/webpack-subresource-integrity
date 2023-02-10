@@ -8,7 +8,7 @@
 import getPort from "get-port";
 import puppeteer from "puppeteer";
 import Fastify from "fastify";
-import FastifyStatic from "@fastify/static";
+import FastifyStatic from "fastify-static";
 import { resolve } from "path";
 import type { Compiler, Stats } from "webpack";
 
