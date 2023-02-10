@@ -3,6 +3,7 @@ const expect = require("expect");
 const ChunkRenderError = require("webpack/lib/ChunkRenderError");
 
 module.exports = {
+  mode: "production",
   entry: "./index.js",
   output: {
     filename:

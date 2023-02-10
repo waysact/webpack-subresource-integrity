@@ -42,17 +42,17 @@
     }
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.18.1",
+    "@microsoft/api-extractor": "^7.34.3",
     "@tsconfig/node12": "^1.0.9",
     "@types/cross-spawn": "^6.0.2",
-    "@types/jest": "^26.0.24",
+    "@types/jest": "^29.2.5",
     "@types/lodash": "^4.14.180",
     "@types/node": "^14.17.5",
     "@types/rimraf": "^3.0.2",
     "@types/tmp": "^0.2.3",
     "cross-spawn": "^7.0.3",
     "html-webpack-plugin": ">= 5.0.0-beta.1",
-    "jest": "^26.6.3",
+    "jest": "^28.1.3",
     "lodash": "^4.17.21",
     "memfs": "^3.4.1",
     "nyc": "*",
@@ -60,12 +60,12 @@
     "tapable": "^2.2.1",
     "tmp": "^0.2.1",
     "tmp-promise": "^3.0.3",
-    "ts-jest": "^26.5.6",
+    "ts-jest": "^28.0.8",
     "typescript": "^4.3.5",
     "webpack": "^5.44.0"
   },
   "scripts": {
-    "clean-dist": "find dist ! -name package.json -type f -exec rm -f \\{\\} +",
+    "clean-dist": "test -d dist && find dist ! -name package.json -type f -exec rm -f \\{\\} +",
     "prepublish": "yarn clean-dist && tsc -p tsconfig.json && tsc -p tsconfig-mjs.json && api-extractor run --local"
   },
   "files": [

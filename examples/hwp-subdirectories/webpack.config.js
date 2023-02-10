@@ -1,9 +1,9 @@
 const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const expect = require("expect");
-const htmlparser = require("htmlparser");
+const htmlparser2 = require("htmlparser2");
 const { readFileSync } = require("fs");
-const { select } = require("soupselect");
+const { selectAll } = require("css-select");
 
 module.exports = {
   entry: "./index.js",
@@ -28,23 +28,14 @@ module.exports = {
             stats.compilation.assets["subdir/bundle.js"].integrity;
           expect(jsIntegrity).toMatch(/^sha/);
 
-          await new Promise((resolve, reject) => {
-            const handler = new htmlparser.DefaultHandler((error, dom) => {
-              if (error) {
-                reject(error);
-                return;
-              }
+          const dom = htmlparser2.parseDocument(
+            readFileSync("./dist/assets/admin.html", "utf-8")
+          );
 
-              const scripts = select(dom, "script");
-              expect(scripts.length).toEqual(1);
-              expect(scripts[0].attribs.crossorigin).toEqual("anonymous");
-              expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
-              resolve();
-            });
-            new htmlparser.Parser(handler).parseComplete(
-              readFileSync("./dist/assets/admin.html", "utf-8")
-            );
-          });
+          const scripts = selectAll("script", dom);
+          expect(scripts.length).toEqual(1);
+          expect(scripts[0].attribs.crossorigin).toEqual("anonymous");
+          expect(scripts[0].attribs.integrity).toEqual(jsIntegrity);
         });
       },
     },

@@ -264,6 +264,7 @@ test("should ignore tags without attributes", async () => {
     tagName: "script",
     voidTag: false,
     attributes: {},
+    meta: {},
   };
 
   HtmlWebpackPlugin.getHooks(
@@ -272,6 +273,7 @@ test("should ignore tags without attributes", async () => {
     headTags: [],
     bodyTags: [tag],
     outputName: "foo",
+    publicPath: "public",
     plugin: new HtmlWebpackPlugin(),
   });
 

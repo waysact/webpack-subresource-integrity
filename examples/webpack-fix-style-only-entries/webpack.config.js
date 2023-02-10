@@ -5,6 +5,7 @@ const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
 const expect = require("expect");
 
 module.exports = {
+  mode: "production",
   entry: {
     index: "./index.js",
     style: ["./style.css"],
@@ -43,7 +44,15 @@ module.exports = {
     {
       apply: (compiler) => {
         compiler.hooks.done.tap("wsi-test", (stats) => {
-          expect(stats.compilation.warnings.length).toEqual(0);
+          expect(
+            stats.compilation.warnings.filter(
+              // Ignore Webpack deprecation warnings
+              (message) => {
+                console.log(message);
+                return !message.match(/DEP_WEBPACK_/);
+              }
+            ).length
+          ).toEqual(0);
         });
       },
     },

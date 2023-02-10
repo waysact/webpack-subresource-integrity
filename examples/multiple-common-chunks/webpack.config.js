@@ -4,6 +4,7 @@ const { join } = require("path");
 const expect = require("expect");
 
 module.exports = {
+  mode: "production",
   entry: {
     pageA: "./pageA.js",
     pageB: "./pageB.js",

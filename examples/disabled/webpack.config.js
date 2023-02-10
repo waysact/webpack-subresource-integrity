@@ -2,6 +2,7 @@ const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
 const expect = require("expect");
 
 module.exports = {
+  mode: "production",
   entry: "./index.js",
   output: {
     filename: "bundle.js",

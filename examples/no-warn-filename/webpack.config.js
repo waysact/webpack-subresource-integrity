@@ -2,6 +2,7 @@ const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
 const expect = require("expect");
 
 module.exports = {
+  mode: "production",
   entry: "./a.js",
   output: {
     filename: "[name]-[hash]-[hash:4]-[id]-[query].js",

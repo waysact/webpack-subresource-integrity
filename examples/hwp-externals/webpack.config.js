@@ -2,11 +2,12 @@ const { SubresourceIntegrityPlugin } = require("webpack-subresource-integrity");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const HtmlWebpackExternalsPlugin = require("html-webpack-externals-plugin");
 const expect = require("expect");
-const htmlparser = require("htmlparser");
+const htmlparser2 = require("htmlparser2");
 const { readFileSync } = require("fs");
-const { select } = require("soupselect");
+const { selectAll } = require("css-select");
 
 module.exports = {
+  mode: "production",
   entry: "./index.js",
   output: {
     filename: "bundle.js",
@@ -38,25 +39,16 @@ module.exports = {
         compiler.hooks.done.tapPromise("wsi-test", async (stats) => {
           expect(stats.compilation.warnings).toEqual([]);
 
-          await new Promise((resolve, reject) => {
-            const handler = new htmlparser.DefaultHandler((error, dom) => {
-              if (error) {
-                reject(error);
-                return;
-              }
-              const scripts = select(dom, "script");
-              expect(scripts.length).toEqual(2);
-              for (let i = 0; i < scripts.length; i += 1) {
-                expect(scripts[0].attribs.crossorigin).toEqual("anonymous");
-                expect(scripts[0].attribs.integrity).toMatch(/^sha/);
-              }
+          const dom = htmlparser2.parseDocument(
+            readFileSync("./dist/index.html", "utf-8")
+          );
 
-              resolve();
-            });
-            new htmlparser.Parser(handler).parseComplete(
-              readFileSync("./dist/index.html", "utf-8")
-            );
-          });
+          const scripts = selectAll("script", dom);
+          expect(scripts.length).toEqual(2);
+          for (let i = 0; i < scripts.length; i += 1) {
+            expect(scripts[0].attribs.crossorigin).toEqual("anonymous");
+            expect(scripts[0].attribs.integrity).toMatch(/^sha/);
+          }
         });
       },
     },

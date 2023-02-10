@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const expect = require("expect");
 
 module.exports = {
+  mode: "production",
   entry: {
     index: "./index.js",
   },
