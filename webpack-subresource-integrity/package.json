@@ -66,7 +66,7 @@
   },
   "scripts": {
     "clean-dist": "test -d dist && find dist ! -name package.json -type f -exec rm -f \\{\\} + || true",
-    "prepublish": "yarn clean-dist && tsc -p tsconfig.json && tsc -p tsconfig-mjs.json && api-extractor run --local"
+    "prepublish": "yarn clean-dist && yarn run tsc -p tsconfig.json && yarn run tsc -p tsconfig-mjs.json && yarn run api-extractor run --local"
   },
   "files": [
     "/dist",
