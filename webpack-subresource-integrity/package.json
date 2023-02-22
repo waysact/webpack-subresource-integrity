@@ -69,7 +69,9 @@
     "prepublish": "yarn clean-dist && yarn run tsc -p tsconfig.json && yarn run tsc -p tsconfig-mjs.json && yarn run api-extractor run --local"
   },
   "files": [
-    "/dist",
+    "/dist/*/*.ts",
+    "/dist/*/*.js",
+    "/dist/*/*.map",
     "/tsdoc-metadata.json",
     "/README.md",
     "/LICENSE"
