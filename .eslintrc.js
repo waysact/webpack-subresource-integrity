@@ -4,7 +4,6 @@ module.exports = {
   plugins: ["@typescript-eslint", "prettier", "jest"],
   env: {
     node: true,
-    "jest/globals": true,
   },
   extends: ["eslint:recommended", "prettier"],
   rules: {
