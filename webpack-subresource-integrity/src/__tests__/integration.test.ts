@@ -10,12 +10,18 @@ import {
   StatsAsset,
   WebpackError,
   WebpackOptionsNormalized,
+  // container,
 } from "webpack";
 import { resolve } from "path";
 import tmp from "tmp-promise";
-import { SubresourceIntegrityPlugin } from "..";
+import {
+  SubresourceIntegrityPlugin,
+  // SubresourceIntegrityPluginOptions,
+} from "..";
 import { runWebpack } from "./test-utils";
 import merge from "lodash/merge";
+
+// const { ModuleFederationPlugin } = container;
 
 jest.unmock("html-webpack-plugin");
 
@@ -35,6 +41,35 @@ async function runWebpackForSimpleProject(
     )
   );
 }
+
+// async function runWebpackForModuleFederationProject(
+//   options: Partial<SubresourceIntegrityPluginOptions> = {}
+// ): Promise<Stats> {
+//   const tmpDir = await tmp.dir({ unsafeCleanup: true });
+//   return await runWebpack({
+//     mode: "production",
+//     output: { path: tmpDir.path, crossOriginLoading: "anonymous" },
+//     entry: resolve(__dirname, "./__fixtures__/module-federation/src/index.js"),
+//     plugins: [
+//       new SubresourceIntegrityPlugin(options),
+//       new ModuleFederationPlugin({
+//         name: "remote",
+//         shared: ["lodash"],
+//       }),
+//     ],
+//   });
+// }
+
+// test.only("dont inlcude webpack_share module federation", async () => {
+//   const mainAsset = await runWebpackForModuleFederationProject();
+//   expect(mainAsset.compilation.warnings).toHaveLength(0);
+// });
+
+// test("can skip chunks", async () => {
+//   const stats = await runWebpackForModuleFederationProject();
+
+//   expect(stats.compilation.warnings).toHaveLength(0);
+// });
 
 test("enabled with webpack mode=production", async () => {
   const mainAsset = (await runWebpackForSimpleProject())

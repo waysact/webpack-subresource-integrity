@@ -102,7 +102,7 @@ export function findChunks(chunk: Chunk): Set<Chunk> {
       group.childrenIterable.forEach(recurseGroup);
     }
 
-    if (wmfSharedChunk(childChunk) || addIfNotExist(allChunks, childChunk)){
+    if (wmfSharedChunk(childChunk) || addIfNotExist(allChunks, childChunk)) {
       return;
     }
     Array.from(childChunk.groupsIterable).forEach(recurseGroup);

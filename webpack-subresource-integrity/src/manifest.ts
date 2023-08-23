@@ -59,7 +59,7 @@ function buildTopologicallySortedChunkGraph(
 
     edges.set(vertex, new Set<Chunk>());
     for (const childChunk of allChunksInChunkIterable(vertex)) {
-      if (wmfSharedChunk(childChunk)) {
+      if (!wmfSharedChunk(childChunk)) {
         edges.get(vertex)?.add(childChunk);
       }
     }

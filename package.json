@@ -15,6 +15,7 @@
     "lint": "yarn eslint .",
     "test:jest": "(cd wsi-test-helper && yarn tsc) && (cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit)",
     "test:unit": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit unit.test.ts",
+    "test:unit2": "cd webpack-subresource-integrity && yarn jest webpack-subresource-integrity/src/__tests__/examples.test.ts",
     "test:examples": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit examples.test.ts",
     "test:integration": "cd webpack-subresource-integrity && yarn tsc && yarn jest --detectOpenHandles --forceExit integration.test.ts",
     "test:smoke": "cd webpack-subresource-integrity && yarn prepublish && yarn pack --filename ../smoke-test/webpack-subresource-integrity.tgz && cd ../smoke-test && rm -rf yarn.lock && touch yarn.lock && YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn && yarn test",
