@@ -17,6 +17,7 @@ import {
   allChunksInChunkIterable,
   allChunksInPrimaryChunkIterable,
   sriHashVariableReference,
+  wmfSharedChunk,
 } from "./util";
 import { createDAGfromGraph } from "./scc";
 import { RuntimeModule, Template, Chunk } from "webpack";
@@ -52,13 +53,15 @@ function buildTopologicallySortedChunkGraph(
 
   // Chunks should have *all* chunks, not simply entry chunks
   for (const vertex of chunks) {
-    if (addIfNotExist(vertices, vertex)) {
+    if (wmfSharedChunk(vertex) || addIfNotExist(vertices, vertex)) {
       continue;
     }
 
     edges.set(vertex, new Set<Chunk>());
     for (const childChunk of allChunksInChunkIterable(vertex)) {
-      edges.get(vertex)?.add(childChunk);
+      if (wmfSharedChunk(childChunk)) {
+        edges.get(vertex)?.add(childChunk);
+      }
     }
   }
 
