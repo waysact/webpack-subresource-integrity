@@ -5,6 +5,5 @@
   },
   "prettier.prettierPath": ".yarn/sdks/prettier/index.js",
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }
