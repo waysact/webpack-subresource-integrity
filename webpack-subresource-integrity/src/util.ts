@@ -88,7 +88,9 @@ export function addIfNotExist<T>(set: Set<T>, item: T): boolean {
   return false;
 }
 export function wmfSharedChunk(chunk: Chunk): boolean {
-  return chunk.chunkReason === "split chunk (cache group: default)";
+  return Boolean(
+    chunk.chunkReason?.includes("split chunk (cache group: default)")
+  );
 }
 
 export function findChunks(chunk: Chunk): Set<Chunk> {
