@@ -9574,6 +9574,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"webpack-module-federaition-remote@workspace:examples/webpack-module-federaition-remote":
+  version: 0.0.0-use.local
+  resolution: "webpack-module-federaition-remote@workspace:examples/webpack-module-federaition-remote"
+  dependencies:
+    expect: ^26.6.2
+    lodash: ^4.17.21
+    nyc: "*"
+    webpack: ^5.44.0
+    webpack-cli: 4
+    webpack-subresource-integrity: "*"
+  languageName: unknown
+  linkType: soft
+
 "webpack-preload@workspace:examples/webpack-preload":
   version: 0.0.0-use.local
   resolution: "webpack-preload@workspace:examples/webpack-preload"

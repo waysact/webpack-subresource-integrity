@@ -1,0 +1,21 @@
+{
+  "name": "webpack-module-federaition-remote",
+  "description": "Usage of With Webpack module federation as remote app",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "expect": "^26.6.2",
+    "nyc": "*",
+    "webpack": "^5.44.0",
+    "webpack-cli": "4",
+    "webpack-subresource-integrity": "*"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development"
+  }
+}
