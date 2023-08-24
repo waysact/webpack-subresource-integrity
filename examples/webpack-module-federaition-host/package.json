@@ -1,6 +1,6 @@
 {
-  "name": "webpack-module-federaition-remote",
-  "description": "Ensure integrity works with webpack module federation as remote app",
+  "name": "webpack-module-federaition-host",
+  "description": "Ensure integrity works with webpack module federation as host app",
   "version": "1.0.0",
   "license": "MIT",
   "private": true,
