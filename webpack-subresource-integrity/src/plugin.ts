@@ -238,7 +238,7 @@ export class Plugin {
    */
   private hwpAssetPath = (src: string): string => {
     assert(this.hwpPublicPath !== null, "Missing HtmlWebpackPlugin publicPath");
-    return relative(this.hwpPublicPath, src);
+    return relative(this.hwpPublicPath, decodeURIComponent(src));
   };
 
   /**
