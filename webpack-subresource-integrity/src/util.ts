@@ -87,8 +87,10 @@ export function addIfNotExist<T>(set: Set<T>, item: T): boolean {
   set.add(item);
   return false;
 }
-export function checkForFiles(chunk: Chunk): boolean {
-  return chunk.files?.size === 0;
+export function wmfSharedChunk(chunk: Chunk): boolean {
+  return Boolean(
+    chunk.chunkReason?.includes("split chunk (cache group: default)")
+  );
 }
 
 export function findChunks(chunk: Chunk): Set<Chunk> {
@@ -102,7 +104,7 @@ export function findChunks(chunk: Chunk): Set<Chunk> {
       group.childrenIterable.forEach(recurseGroup);
     }
 
-    if (checkForFiles(childChunk) || addIfNotExist(allChunks, childChunk)) {
+    if (wmfSharedChunk(childChunk) || addIfNotExist(allChunks, childChunk)) {
       return;
     }
     Array.from(childChunk.groupsIterable).forEach(recurseGroup);
