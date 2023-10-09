@@ -87,13 +87,22 @@ export function addIfNotExist<T>(set: Set<T>, item: T): boolean {
   set.add(item);
   return false;
 }
-export function wmfSharedChunk(chunk: Chunk): boolean {
-  return Boolean(
-    chunk.chunkReason?.includes("split chunk (cache group: default)")
+/**
+ * Filter out shared module that are not used in the build
+ */
+export function wmfSharedChunk(
+  chunk: Chunk,
+  compilation: Compilation
+): boolean {
+  const rootModules = compilation.chunkGraph.getChunkRootModules(chunk);
+  const isSharedModule = rootModules.some(
+    (module) => module.type === "consume-shared-module"
   );
+
+  return isSharedModule && rootModules.length === 1;
 }
 
-export function findChunks(chunk: Chunk): Set<Chunk> {
+export function findChunks(chunk: Chunk, compilation: Compilation): Set<Chunk> {
   const allChunks = new Set<Chunk>();
   const groupsVisited = new Set<string>();
 
@@ -104,7 +113,10 @@ export function findChunks(chunk: Chunk): Set<Chunk> {
       group.childrenIterable.forEach(recurseGroup);
     }
 
-    if (wmfSharedChunk(childChunk) || addIfNotExist(allChunks, childChunk)) {
+    if (
+      wmfSharedChunk(childChunk, compilation) ||
+      addIfNotExist(allChunks, childChunk)
+    ) {
       return;
     }
     Array.from(childChunk.groupsIterable).forEach(recurseGroup);

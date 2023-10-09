@@ -150,7 +150,7 @@ export class Plugin {
     chunk: Chunk,
     assets: Record<string, sources.Source>
   ): void => {
-    Array.from(findChunks(chunk))
+    Array.from(findChunks(chunk, this.compilation))
       .reverse()
       .forEach((chunk) => this.processChunkAssets(chunk, assets));
   };
@@ -296,7 +296,7 @@ export class Plugin {
   beforeRuntimeRequirements = (): void => {
     if (this.options.hashLoading === "lazy") {
       const [sortedSccChunks, chunkManifest] = getChunkToManifestMap(
-        this.compilation.chunks
+        this.compilation
       );
       this.sortedSccChunks = sortedSccChunks;
       this.chunkManifest = chunkManifest;

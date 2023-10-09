@@ -20,7 +20,7 @@ import {
   wmfSharedChunk,
 } from "./util";
 import { createDAGfromGraph } from "./scc";
-import { RuntimeModule, Template, Chunk } from "webpack";
+import { RuntimeModule, Template, Chunk, Compilation } from "webpack";
 
 // This implementation assumes a directed acyclic graph (such as one produced by createDAGfromGraph),
 // and does not attempt to detect cycles
@@ -42,7 +42,8 @@ function topologicalSort<T>({ vertices, edges }: Graph<T>): T[] {
 }
 
 function buildTopologicallySortedChunkGraph(
-  chunks: Iterable<Chunk>
+  chunks: Iterable<Chunk>,
+  compilation: Compilation
 ): [
   sortedVertices: StronglyConnectedComponent<Chunk>[],
   sccGraph: Graph<StronglyConnectedComponent<Chunk>>,
@@ -53,13 +54,16 @@ function buildTopologicallySortedChunkGraph(
 
   // Chunks should have *all* chunks, not simply entry chunks
   for (const vertex of chunks) {
-    if (wmfSharedChunk(vertex) || addIfNotExist(vertices, vertex)) {
+    if (
+      wmfSharedChunk(vertex, compilation) ||
+      addIfNotExist(vertices, vertex)
+    ) {
       continue;
     }
 
     edges.set(vertex, new Set<Chunk>());
     for (const childChunk of allChunksInChunkIterable(vertex)) {
-      if (!wmfSharedChunk(childChunk)) {
+      if (!wmfSharedChunk(childChunk, compilation)) {
         edges.get(vertex)?.add(childChunk);
       }
     }
@@ -85,9 +89,9 @@ class ChunkToManifestMapBuilder {
   // or its parents regardless of the tree traversal used from the roots
   private hashesByChunkGroupAndParents = new Map<ChunkGroup, Set<Chunk>>();
 
-  constructor(chunks: Iterable<Chunk>) {
+  constructor(compilation: Compilation) {
     const [sortedVertices, , chunkToSccMap] =
-      buildTopologicallySortedChunkGraph(chunks);
+      buildTopologicallySortedChunkGraph(compilation.chunks, compilation);
     this.sortedVertices = sortedVertices;
     this.chunkToSccMap = chunkToSccMap;
     this.manifest = this.createManifest();
@@ -189,12 +193,12 @@ class ChunkToManifestMapBuilder {
 }
 
 export function getChunkToManifestMap(
-  chunks: Iterable<Chunk>
+  compilation: Compilation
 ): [
   sortedVertices: StronglyConnectedComponent<Chunk>[],
   chunkManifest: Map<Chunk, Set<Chunk>>
 ] {
-  return new ChunkToManifestMapBuilder(chunks).build();
+  return new ChunkToManifestMapBuilder(compilation).build();
 }
 
 export class AddLazySriRuntimeModule extends RuntimeModule {
