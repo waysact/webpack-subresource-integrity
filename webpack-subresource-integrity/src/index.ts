@@ -167,7 +167,7 @@ export class SubresourceIntegrityPlugin {
       const allChunks =
         this.options.hashLoading === "lazy"
           ? plugin.getChildChunksToAddToChunkManifest(chunk)
-          : findChunks(chunk);
+          : findChunks(chunk, compilation);
       const includedChunks = chunk.getChunkMaps(false).hash;
 
       if (Object.keys(includedChunks).length > 0) {
