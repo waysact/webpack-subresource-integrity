@@ -59,6 +59,20 @@ default), the `integrity` attribute will be set automatically. The
 `output.crossOriginLoading` webpack option. There is nothing else to
 be done.
 
+#### With MiniCssExtractPlugin
+
+Currently, developers can only add integrity to link elements via the insert method.
+
+```js
+new MiniCssExtractPlugin({
+  insert: (link) => {
+    link.integrity =
+      __webpack_require__.sriHashes[chunkId + "_css/mini-extract"];
+    document.head.appendChild(link);
+  },
+})
+```
+
 #### With HtmlWebpackPlugin({ inject: false })
 
 When you use html-webpack-plugin with `inject: false`, you are
@@ -221,7 +235,7 @@ With Webpack and long-term caching this means using `[contenthash]` (with
 `[contenthash]` with `realContentHash` disabled, or using a different type of
 hash placeholder (such as `[chunkhash]`) provides weaker guarantees, which is
 why this plugin will output a warning in these cases. See [issue
-#162](https://github.com/waysact/webpack-subresource-integrity/issues/162)
+# 162](https://github.com/waysact/webpack-subresource-integrity/issues/162)
 for more information.
 
 ### Proxies
@@ -251,7 +265,7 @@ tags, but preloading with SRI doesn't work as expected in current
 Chrome versions. The resource will be loaded twice, defeating the
 purpose of preloading. This problem doesn't appear to exist in
 Firefox or Safari. See [issue
-#111](https://github.com/waysact/webpack-subresource-integrity/issues/111)
+# 111](https://github.com/waysact/webpack-subresource-integrity/issues/111)
 for more information.
 
 ### Browser support
@@ -275,7 +289,7 @@ using a tool such as [`http-server`](https://github.com/indexzero/http-server).
 ### Safari 13 (and earlier versions) and Assets that Require Cookies
 
 As detailed in [Webpack Issue
-#6972](https://github.com/webpack/webpack/issues/6972), the `crossOrigin`
+# 6972](https://github.com/webpack/webpack/issues/6972), the `crossOrigin`
 attribute can break loading of assets in Safari versions prior to 14 in certain
 edge cases due to a browser bug. Since SRI requires the `crossOrigin` attribute
 to be set, you may run into this case even when source URL is same-origin with

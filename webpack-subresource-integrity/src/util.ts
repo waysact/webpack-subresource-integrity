@@ -6,13 +6,22 @@
  */
 
 import { createHash } from "crypto";
-import type { AssetInfo, Chunk, Compilation, Compiler, sources } from "webpack";
+import type {
+  AssetInfo,
+  Chunk,
+  Compilation,
+  Compiler,
+  sources,
+  Module,
+} from "webpack";
 import { sep } from "path";
 import type { HtmlTagObject } from "./types";
 
 export type ChunkGroup = ReturnType<Compilation["addChunkInGroup"]>;
 
 export const sriHashVariableReference = "__webpack_require__.sriHashes";
+
+export const miniCssExtractType = "css/mini-extract";
 
 export function assert(value: unknown, message: string): asserts value {
   if (!value) {
@@ -112,13 +121,28 @@ export function notNil<TValue>(
   return value !== null && value !== undefined;
 }
 
+export function hasMiniCssExtractModlue(modules: Module[]) {
+  return modules.find((module) => module.type === miniCssExtractType);
+}
+
 export function generateSriHashPlaceholders(
+  compilation: Compilation,
   chunks: Iterable<Chunk>,
   hashFuncNames: [string, ...string[]]
 ): Record<string, string> {
   return Array.from(chunks).reduce((sriHashes, depChunk: Chunk) => {
     if (depChunk.id) {
-      sriHashes[depChunk.id] = makePlaceholder(hashFuncNames, depChunk.id);
+      const modules = compilation.chunkGraph.getChunkModules(depChunk);
+      const containCssModule = hasMiniCssExtractModlue(modules);
+      if (containCssModule) {
+        sriHashes[`${depChunk.id}_${miniCssExtractType}`] = makePlaceholder(
+          hashFuncNames,
+          `${depChunk.id}_${miniCssExtractType}`
+        );
+      }
+      if (!containCssModule || (containCssModule && modules.length > 1)) {
+        sriHashes[depChunk.id] = makePlaceholder(hashFuncNames, depChunk.id);
+      }
     }
     return sriHashes;
   }, {} as { [key: string]: string });
@@ -291,3 +315,17 @@ export function hasOwnProperty<X extends object, Y extends PropertyKey>(
 ): obj is X & Record<Y, unknown> {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
+
+export const normalizeChunkId = (
+  sourcePath: string,
+  chunk: Chunk,
+  compilation: Compilation
+) => {
+  if (
+    sourcePath.endsWith(".css") &&
+    hasMiniCssExtractModlue(compilation.chunkGraph.getChunkModules(chunk))
+  ) {
+    return `${chunk.id}_${miniCssExtractType}`;
+  }
+  return chunk.id as string | number;
+};

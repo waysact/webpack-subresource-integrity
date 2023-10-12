@@ -169,13 +169,13 @@ export class SubresourceIntegrityPlugin {
           ? plugin.getChildChunksToAddToChunkManifest(chunk)
           : findChunks(chunk);
       const includedChunks = chunk.getChunkMaps(false).hash;
-
       if (Object.keys(includedChunks).length > 0) {
         return compilation.compiler.webpack.Template.asString([
           source,
           `${sriHashVariableReference} = ` +
             JSON.stringify(
               generateSriHashPlaceholders(
+                compilation,
                 Array.from(allChunks).filter(
                   (depChunk) =>
                     depChunk.id !== null &&
@@ -201,6 +201,7 @@ export class SubresourceIntegrityPlugin {
               chunk,
               new AddLazySriRuntimeModule(
                 generateSriHashPlaceholders(
+                  compilation,
                   childChunks,
                   this.options.hashFuncNames
                 ),

@@ -32,6 +32,7 @@ import {
   tryGetSource,
   replaceInSource,
   usesAnyHash,
+  normalizeChunkId,
 } from "./util";
 import { getChunkToManifestMap } from "./manifest";
 import { AssetIntegrity } from "./integrity";
@@ -176,7 +177,10 @@ export class Plugin {
 
         if (childChunk.id !== null) {
           this.hashByPlaceholder.set(
-            makePlaceholder(this.options.hashFuncNames, childChunk.id),
+            makePlaceholder(
+              this.options.hashFuncNames,
+              normalizeChunkId(sourcePath, childChunk, this.compilation)
+            ),
             integrity
           );
         }
