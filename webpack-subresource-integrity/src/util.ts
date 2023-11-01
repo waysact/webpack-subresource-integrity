@@ -117,7 +117,7 @@ export function generateSriHashPlaceholders(
   hashFuncNames: [string, ...string[]]
 ): Record<string, string> {
   return Array.from(chunks).reduce((sriHashes, depChunk: Chunk) => {
-    if (depChunk.id) {
+    if (depChunk.id || depChunk.id === 0) {
       sriHashes[depChunk.id] = makePlaceholder(hashFuncNames, depChunk.id);
     }
     return sriHashes;
