@@ -24,6 +24,9 @@ export function getTagSrc(tag: HtmlTagObject): string | undefined {
   if (!["script", "link"].includes(tag.tagName) || !tag.attributes) {
     return undefined;
   }
+  if (tag.attributes["rel"] === "preconnect") {
+    return undefined;
+  }
   if (typeof tag.attributes["href"] === "string") {
     return tag.attributes["href"];
   }
