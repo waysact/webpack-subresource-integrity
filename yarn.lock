@@ -6555,6 +6555,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash@npm:^4.18.1":
+  version: 4.18.1
+  resolution: "lodash@npm:4.18.1"
+  checksum: bb5f5b49aad29614e709af02b64c56b0f8b78c6a81434a3c1ae527d2f0f78ca08f9d9fb22aa825a053876c9d2166e9c01f31c356014b5e2bdc0556c057433102
+  languageName: node
+  linkType: hard
+
 "lower-case@npm:^2.0.2":
   version: 2.0.2
   resolution: "lower-case@npm:2.0.2"
@@ -9654,7 +9661,7 @@ __metadata:
     cross-spawn: ^7.0.3
     html-webpack-plugin: ">= 5.0.0-beta.1"
     jest: ^28.1.3
-    lodash: ^4.17.21
+    lodash: ^4.18.1
     memfs: ^3.4.1
     nyc: "*"
     rimraf: ^3.0.2
