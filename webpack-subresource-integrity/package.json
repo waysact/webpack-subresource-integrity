@@ -58,7 +58,7 @@
     "nyc": "*",
     "rimraf": "^3.0.2",
     "tapable": "^2.2.1",
-    "tmp": "^0.2.1",
+    "tmp": "^0.2.6",
     "tmp-promise": "^3.0.3",
     "ts-jest": "^28.0.8",
     "typescript": "^4.3.5",
