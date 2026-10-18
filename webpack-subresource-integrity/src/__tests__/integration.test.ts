@@ -6,11 +6,15 @@
  */
 
 import {
+  Module,
   Stats,
   StatsAsset,
   WebpackError,
   WebpackOptionsNormalized,
+  container,
 } from "webpack";
+import { createHash } from "crypto";
+import { readFileSync } from "fs";
 import { resolve } from "path";
 import tmp from "tmp-promise";
 import { SubresourceIntegrityPlugin } from "..";
@@ -86,3 +90,96 @@ test("doesn't warn with default options", async () => {
 
   expect(stats.compilation.warnings).toHaveLength(0);
 });
+
+describe.each(["eager", "lazy"] as const)(
+  "%s integrity hashes",
+  (hashLoading) => {
+    test.each([false, true])(
+      "Module Federation with JavaScript in the shared chunk: %s",
+      async (includeJavaScript) => {
+        await tmp.withDir(
+          async ({ path }) => {
+            const context = resolve(
+              __dirname,
+              "__fixtures__/module-federation"
+            );
+            const stats = await runWebpack({
+              context,
+              mode: "production",
+              devtool: false,
+              entry: "./index.js",
+              output: { path, crossOriginLoading: "anonymous" },
+              optimization: {
+                minimize: false,
+                chunkIds: "named",
+                splitChunks: {
+                  cacheGroups: {
+                    shared: {
+                      test: (module: Module) =>
+                        module.type === "consume-shared-module" ||
+                        (includeJavaScript &&
+                          module.nameForCondition() ===
+                            resolve(context, "mixed.js")),
+                      chunks: "all",
+                      enforce: true,
+                      name: "shared",
+                    },
+                  },
+                },
+              },
+              plugins: [
+                new SubresourceIntegrityPlugin({ hashLoading }),
+                new container.ModuleFederationPlugin({
+                  name: "app",
+                  filename: "remoteEntry.js",
+                  exposes: { "./parent": "./parent.js" },
+                  shared: {
+                    "./first": { singleton: true, requiredVersion: false },
+                    "./second": { singleton: true, requiredVersion: false },
+                  },
+                }),
+              ],
+            });
+
+            expect(stats.compilation.warnings).toHaveLength(0);
+            const sharedChunk = stats.compilation.namedChunks.get("shared");
+            expect(sharedChunk).toBeDefined();
+            expect(sharedChunk?.files.size).toBe(includeJavaScript ? 1 : 0);
+            expect(
+              sharedChunk &&
+                stats.compilation.chunkGraph.getNumberOfChunkModules(
+                  sharedChunk
+                )
+            ).toBe(includeJavaScript ? 3 : 2);
+
+            const hashes: Record<string, string> = {};
+            for (const asset of stats.compilation.getAssets()) {
+              const source = readFileSync(resolve(path, asset.name), "utf8");
+              expect(source).not.toContain("*-*-*-CHUNK-SRI-HASH-");
+              for (const match of source.matchAll(
+                /__webpack_require__\.sriHashes(?: = |, )(\{[^\n]*\})/g
+              )) {
+                Object.assign(hashes, JSON.parse(match[1] as string));
+              }
+            }
+
+            const expectedHashes: Record<string, string> = {};
+            for (const chunk of stats.compilation.chunks) {
+              if (chunk.canBeInitial()) continue;
+              for (const file of chunk.files) {
+                expectedHashes[chunk.id as string] =
+                  "sha384-" +
+                  createHash("sha384")
+                    .update(readFileSync(resolve(path, file)))
+                    .digest("base64");
+              }
+            }
+            expect(Object.keys(expectedHashes).length).toBeGreaterThan(2);
+            expect(hashes).toEqual(expectedHashes);
+          },
+          { unsafeCleanup: true }
+        );
+      }
+    );
+  }
+);

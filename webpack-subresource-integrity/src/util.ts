@@ -112,12 +112,22 @@ export function notNil<TValue>(
   return value !== null && value !== undefined;
 }
 
+/**
+ * Generate integrity placeholders for chunks loaded as JavaScript.
+ * @param chunks candidate chunks
+ * @param hashFuncNames hash algorithms
+ * @param compilation compilation owning the chunks
+ * @returns placeholders indexed by chunk ID
+ */
 export function generateSriHashPlaceholders(
   chunks: Iterable<Chunk>,
-  hashFuncNames: [string, ...string[]]
+  hashFuncNames: [string, ...string[]],
+  compilation: Compilation
 ): Record<string, string> {
+  const { chunkHasJs } =
+    compilation.compiler.webpack.javascript.JavascriptModulesPlugin;
   return Array.from(chunks).reduce((sriHashes, depChunk: Chunk) => {
-    if (depChunk.id) {
+    if (depChunk.id && chunkHasJs(depChunk, compilation.chunkGraph)) {
       sriHashes[depChunk.id] = makePlaceholder(hashFuncNames, depChunk.id);
     }
     return sriHashes;

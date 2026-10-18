@@ -181,7 +181,8 @@ export class SubresourceIntegrityPlugin {
                     depChunk.id !== null &&
                     includedChunks[depChunk.id.toString()]
                 ),
-                this.options.hashFuncNames
+                this.options.hashFuncNames,
+                compilation
               )
             ) +
             ";",
@@ -202,7 +203,8 @@ export class SubresourceIntegrityPlugin {
               new AddLazySriRuntimeModule(
                 generateSriHashPlaceholders(
                   childChunks,
-                  this.options.hashFuncNames
+                  this.options.hashFuncNames,
+                  compilation
                 ),
                 chunk.name ?? chunk.id
               )
